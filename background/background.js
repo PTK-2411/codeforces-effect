@@ -104,15 +104,54 @@ const GEMINI_FREE_MODELS = [
 
 const geminiModelCooldowns = new Map();
 
-// 256-bit SHA-256 hash token: Khi bài/văn bản đã là tiếng Việt,
+// 256-bit SHA-256 hash token: Mỗi trình duyệt người dùng khi cài extension sẽ có 1 mã hash 256-bit riêng biệt
+// lưu trên storage.local (cf_already_vi_hash). Khi bài/văn bản đã là tiếng Việt,
 // Gemini chỉ in ra mã hash này để tiết kiệm token tối đa.
-const ALREADY_VIETNAMESE_HASH = '30ce98fcfad6f96da53639bd33ee5410d16007392a072f53edfde47a1fe66f28';
+let currentAlreadyViHash = '';
+
+function generate256BitHexHash() {
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const bytes = new Uint8Array(32); // 32 bytes = 256 bits
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  }
+  let hex = '';
+  for (let i = 0; i < 64; i++) {
+    hex += Math.floor(Math.random() * 16).toString(16);
+  }
+  return hex;
+}
+
+async function getOrInitAlreadyViHash() {
+  if (currentAlreadyViHash && currentAlreadyViHash.length === 64) {
+    return currentAlreadyViHash;
+  }
+  try {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      const res = await chrome.storage.local.get('cf_already_vi_hash');
+      if (res && res.cf_already_vi_hash && typeof res.cf_already_vi_hash === 'string' && res.cf_already_vi_hash.length === 64) {
+        currentAlreadyViHash = res.cf_already_vi_hash;
+        return currentAlreadyViHash;
+      }
+      currentAlreadyViHash = generate256BitHexHash();
+      await chrome.storage.local.set({ cf_already_vi_hash: currentAlreadyViHash });
+      return currentAlreadyViHash;
+    }
+  } catch (e) {
+    console.warn('[CF Translator] Lỗi lấy cf_already_vi_hash từ storage:', e);
+  }
+  if (!currentAlreadyViHash) {
+    currentAlreadyViHash = generate256BitHexHash();
+  }
+  return currentAlreadyViHash;
+}
 
 let geminiQuotaCooldownUntil = 0;
 
 
 async function initTranslationCache() {
   try {
+    await getOrInitAlreadyViHash();
     const res = await chrome.storage.local.get('cf_translation_cache');
     if (res && res.cf_translation_cache && typeof res.cf_translation_cache === 'object') {
       for (const [k, v] of Object.entries(res.cf_translation_cache)) {
@@ -437,22 +476,25 @@ async function translateWithGemini(text, apiKey, preferredModel, customModel) {
     return await translateWithGoogle(text);
   }
 
+  const viHash = await getOrInitAlreadyViHash();
+
   const prompt = `You are a professional translator for competitive programming, algorithms, and technical texts.
 Translate the following English text to natural, accurate, high-quality Vietnamese.
 
 CRITICAL RULES:
 1. Preserve all placeholders like [[M0]], [[M1]], [[M2]], etc., EXACTLY without translating, deleting, or moving them.
 2. Preserve all variable names, formulas, numbers, and mathematical notation.
-3. If the input text is ALREADY in Vietnamese (tiếng Việt), do NOT translate or repeat it. Output ONLY this exact 256-bit hash code to save tokens:
-${ALREADY_VIETNAMESE_HASH}
-4. Return ONLY the translated Vietnamese text (or the 256-bit hash code if already in Vietnamese). Do not add any conversational remarks, notes, or markdown formatting backticks.
+3. Do NOT translate output keywords and problem verdict tokens such as "YES", "NO", "Yes", "No", "FIRST", "SECOND", "POSSIBLE", "IMPOSSIBLE" when they refer to output answers/strings to print. Keep them in English (e.g., "The letters in the words YES and NO can be printed in any case" -> "Các chữ cái trong từ YES và NO có thể được in trong mọi trường hợp"; NEVER translate output strings "YES" / "NO" into "CÓ" / "KHÔNG").
+4. If the input text is ALREADY in Vietnamese (tiếng Việt), do NOT translate or repeat it. Output ONLY this exact 256-bit hash code to save tokens:
+${viHash}
+5. Return ONLY the translated Vietnamese text (or the 256-bit hash code if already in Vietnamese). Do not add any conversational remarks, notes, or markdown formatting backticks.
 
 Text to translate:
 ${text}`;
 
   try {
     const output = await executeGeminiPrompt(prompt, apiKey, preferredModel, customModel);
-    if (output && output.includes(ALREADY_VIETNAMESE_HASH)) {
+    if (output && output.includes(viHash)) {
       return text;
     }
     return output;
@@ -478,22 +520,26 @@ async function handleTranslation(text, engine, geminiApiKey, geminiModel, gemini
   }
 
   let result = '';
+  let actualEngine = eng;
   if (eng === 'gemini' && geminiApiKey) {
     try {
       result = await translateWithGemini(text, geminiApiKey, geminiModel, geminiCustomModel);
     } catch (err) {
       console.warn('[CF Translator] Gemini lỗi, fallback sang Google Translate:', err.message);
       result = await translateWithGoogle(text);
+      actualEngine = 'google';
     }
   } else {
     result = await translateWithGoogle(text);
+    actualEngine = 'google';
   }
 
   if (translationCache.size > MAX_CACHE_ENTRIES) {
     const firstKey = translationCache.keys().next().value;
     translationCache.delete(firstKey);
   }
-  translationCache.set(cacheKey, result);
+  const finalCacheKey = `${actualEngine}:${text.trim()}`;
+  translationCache.set(finalCacheKey, result);
   saveTranslationCacheDebounced();
   return result;
 }
@@ -555,6 +601,7 @@ async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, 
       const delimiterPrefix = '<<<CF_TRANSLATE_ITEM_';
       const delimiterSuffix = '>>>';
       const promptBody = batchTexts.map((t, idx) => `${delimiterPrefix}${idx}${delimiterSuffix}\n${t}`).join('\n\n');
+      const viHash = await getOrInitAlreadyViHash();
 
       const fullPrompt = `You are a professional translator for competitive programming, algorithms, and technical texts.
 Translate each of the numbered English text items below to natural, accurate, high-quality Vietnamese.
@@ -562,10 +609,11 @@ Translate each of the numbered English text items below to natural, accurate, hi
 CRITICAL RULES:
 1. Preserve all placeholders like [[M0]], [[M1]], [[M2]], etc., EXACTLY without translating, deleting, or moving them.
 2. Preserve all variable names, formulas, numbers, and mathematical notation.
-3. If any item is ALREADY in Vietnamese (tiếng Việt), do NOT translate or repeat that item. Output its delimiter followed ONLY by this exact 256-bit hash code to save tokens:
-${ALREADY_VIETNAMESE_HASH}
-4. For each item, output the exact delimiter "${delimiterPrefix}N${delimiterSuffix}" followed by the translated Vietnamese text (or the 256-bit hash code if already Vietnamese) for item N.
-5. Return ONLY the translated items with their delimiters. Do not add any conversational remarks, notes, or markdown formatting backticks.
+3. Do NOT translate output keywords and problem verdict tokens such as "YES", "NO", "Yes", "No", "FIRST", "SECOND", "POSSIBLE", "IMPOSSIBLE" when they refer to output answers/strings to print. Keep them in English (e.g., "The letters in the words YES and NO can be printed in any case" -> "Các chữ cái trong từ YES và NO có thể được in trong mọi trường hợp"; NEVER translate output strings "YES" / "NO" into "CÓ" / "KHÔNG").
+4. If any item is ALREADY in Vietnamese (tiếng Việt), do NOT translate or repeat that item. Output its delimiter followed ONLY by this exact 256-bit hash code to save tokens:
+${viHash}
+5. For each item, output the exact delimiter "${delimiterPrefix}N${delimiterSuffix}" followed by the translated Vietnamese text (or the 256-bit hash code if already Vietnamese) for item N.
+6. Return ONLY the translated items with their delimiters. Do not add any conversational remarks, notes, or markdown formatting backticks.
 
 Text items to translate:
 ${promptBody}`;
@@ -584,13 +632,15 @@ ${promptBody}`;
           const origIdx = batchIndices[b];
           const text = batchTexts[b];
           let trans = parsedMap.get(b);
-          if (trans && trans.includes(ALREADY_VIETNAMESE_HASH)) {
+          let actualEng = eng;
+          if (trans && trans.includes(viHash)) {
             trans = text;
           }
           if (!trans) {
             trans = await translateWithGoogle(text).catch(() => text);
+            actualEng = 'google';
           }
-          translationCache.set(`${eng}:${text}`, trans);
+          translationCache.set(`${actualEng}:${text}`, trans);
           results[origIdx] = trans;
         }
       } catch (err) {
@@ -601,7 +651,7 @@ ${promptBody}`;
           const origIdx = batchIndices[b];
           const text = batchTexts[b];
           const trans = transList[b] || text;
-          translationCache.set(`${eng}:${text}`, trans);
+          translationCache.set(`google:${text}`, trans);
           results[origIdx] = trans;
         }
       }
@@ -719,6 +769,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       .catch(err => {
         sendResponse({ success: false, error: err.message });
       });
+    return true;
+  } else if (message && message.action === 'triggerAutoUpdate') {
+    if (typeof chrome !== 'undefined' && chrome.runtime?.reload) {
+      try {
+        chrome.runtime.reload();
+      } catch (e) {}
+    }
+    sendResponse({ success: true });
     return true;
   }
   return true;
@@ -912,13 +970,13 @@ function evaluateUpdate(currentManifest, remoteManifest) {
       return makeResult(
         true,
         'official',
-        false,
-        false,
+        true,  // autoUpdate = true: Tự động cập nhật mọi bản mới
+        true,  // isSilent = true
         curr.isAlpha,
         false,
         curr.isAlpha
-          ? `Đã có bản chính thức (${remoteName}) thay thế bản Alpha hiện tại!`
-          : `Đã có bản chính thức mới (${remoteName})!`
+          ? `Đã tự động cập nhật lên bản chính thức (${remoteName}) thay thế bản Alpha hiện tại!`
+          : `Đã tự động cập nhật lên bản chính thức mới (${remoteName})!`
       );
     }
     return makeResult(false, null, false, false, false, false, '');
@@ -926,23 +984,19 @@ function evaluateUpdate(currentManifest, remoteManifest) {
 
   // =========================================================================
   // TRƯỜNG HỢP 2A: Bản Alpha Hotfix (chứa cả Alpha VÀ HF)
-  // Quy ước: Người dùng ở Alpha tự động cập nhật ngầm; người dùng ở Stable không bị ép
+  // Quy ước: Tự động cập nhật ngầm cho người dùng
   // =========================================================================
   if (remote.isAlpha && remote.isHotfix) {
-    // Nếu người dùng đang ở Stable: KHÔNG ép cập nhật bản Alpha HF
-    if (!curr.isAlpha) {
-      return makeResult(false, null, false, false, false, false, '');
-    }
-
-    // Người dùng đang ở Alpha: kiểm tra xem remote có mới hơn không
     let isNewer = false;
     if (semCmp > 0) {
       isNewer = true;
     } else if (semCmp === 0) {
-      if (!curr.isHotfix) {
-        isNewer = true;
-      } else {
-        isNewer = compareHf(remote.hf, curr.hf) > 0;
+      if (curr.isAlpha) {
+        if (!curr.isHotfix) {
+          isNewer = true;
+        } else {
+          isNewer = compareHf(remote.hf, curr.hf) > 0;
+        }
       }
     }
 
@@ -962,7 +1016,7 @@ function evaluateUpdate(currentManifest, remoteManifest) {
 
   // =========================================================================
   // TRƯỜNG HỢP 3: Bản thử nghiệm mới (Alpha thông thường - không chứa HF)
-  // Quy ước: Chỉ hiện thông báo hỏi ý kiến (người dùng tự bấm "Trải nghiệm thử")
+  // Quy ước: Tự động cập nhật ngầm khi có phiên bản mới hơn
   // =========================================================================
   if (remote.isAlpha && !remote.isHotfix) {
     let isNewer = false;
@@ -977,11 +1031,11 @@ function evaluateUpdate(currentManifest, remoteManifest) {
       return makeResult(
         true,
         'alpha_trial',
-        false, // autoUpdate = false (không tự động ép)
-        false,
+        true, // autoUpdate = true
+        true, // isSilent = true
         false,
         true,  // isTrial = true
-        `Đã có bản thử nghiệm mới (${remoteName}). Bạn có muốn trải nghiệm thử không?`
+        `Đã tự động cập nhật lên bản thử nghiệm mới (${remoteName})!`
       );
     }
     return makeResult(false, null, false, false, false, false, '');
@@ -994,7 +1048,7 @@ async function checkForUpdates() {
   try {
     const currentManifest = (typeof chrome !== 'undefined' && chrome.runtime?.getManifest)
       ? chrome.runtime.getManifest()
-      : { version: '0.99.0', version_name: 'v1.0.0 Alpha' };
+      : { version: '1.1.0', version_name: 'v1.1.0 Alpha' };
 
     const resp = await fetch(`${GITHUB_RAW_MANIFEST_URL}?t=${Date.now()}`);
     if (!resp.ok) {
@@ -1029,18 +1083,56 @@ async function checkForUpdates() {
   }
 }
 
+// Setup 10-minute periodic update check and auto-refresh triggers
+const UPDATE_ALARM_NAME = 'cf_periodic_update_check';
+
+if (typeof chrome !== 'undefined' && chrome.alarms) {
+  try {
+    chrome.alarms.create(UPDATE_ALARM_NAME, { periodInMinutes: 10 });
+    chrome.alarms.onAlarm.addListener((alarm) => {
+      if (alarm && alarm.name === UPDATE_ALARM_NAME) {
+        checkForUpdates().catch(() => {});
+      }
+    });
+  } catch (e) {
+    console.warn('[CF Update] Alarm error:', e);
+  }
+}
+
+// Fallback interval (every 10 minutes)
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    checkForUpdates().catch(() => {});
+  }, 10 * 60 * 1000);
+}
+
+// Automatically reload extension when browser has prepared/downloaded new update
+if (typeof chrome !== 'undefined' && chrome.runtime?.onUpdateAvailable) {
+  chrome.runtime.onUpdateAvailable.addListener((details) => {
+    console.log('[CF Update] New version ready to apply:', details && details.version);
+    try {
+      chrome.runtime.reload();
+    } catch (e) {}
+  });
+}
+
 if (typeof chrome !== 'undefined' && chrome.runtime) {
   if (chrome.runtime.onInstalled) {
     chrome.runtime.onInstalled.addListener(() => {
+      getOrInitAlreadyViHash().catch(() => {});
       checkForUpdates().catch(() => {});
     });
   }
   if (chrome.runtime.onStartup) {
     chrome.runtime.onStartup.addListener(() => {
+      getOrInitAlreadyViHash().catch(() => {});
       checkForUpdates().catch(() => {});
     });
   }
 }
+
+// Check for updates immediately every time the extension/worker refreshes
+checkForUpdates().catch(() => {});
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -1051,7 +1143,8 @@ if (typeof module !== 'undefined' && module.exports) {
     compareVersions,
     evaluateUpdate,
     checkForUpdates,
-    ALREADY_VIETNAMESE_HASH,
+    getOrInitAlreadyViHash,
+    generate256BitHexHash,
     geminiModelCooldowns,
     GEMINI_FREE_MODELS
   };

@@ -798,6 +798,85 @@ window.CF_TRANSLATIONS = {
   'Last visit:': 'Lần truy cập cuối:',
   'Last visit': 'Lần truy cập cuối',
   'Registered:': 'Ngày đăng ký:',
-  'Registered': 'Ngày đăng ký'
+  'Registered': 'Ngày đăng ký',
+
+  // ==========================================
+  // 18. Contest Materials & Attention Sideboxes
+  // ==========================================
+  'Contest materials': 'Tài liệu kỳ thi',
+  '→ Contest materials': '→ Tài liệu kỳ thi',
+  'CONTEST MATERIALS': 'TÀI LIỆU KỲ THI',
+  '→ CONTEST MATERIALS': '→ TÀI LIỆU KỲ THI',
+  'Contest Materials': 'Tài liệu kỳ thi',
+  '→ Contest Materials': '→ Tài liệu kỳ thi',
+  'contest materials': 'tài liệu kỳ thi',
+  '→ contest materials': '→ tài liệu kỳ thi',
+  'Contest material': 'Tài liệu kỳ thi',
+  '→ Contest material': '→ Tài liệu kỳ thi',
+  'Contest Material': 'Tài liệu kỳ thi',
+  '→ Contest Material': '→ Tài liệu kỳ thi',
+  'Attention': 'Lưu ý',
+  '→ Attention': '→ Lưu ý',
+  'Attention!': 'Lưu ý!',
+  '→ Attention!': '→ Lưu ý!',
+  'ATTENTION': 'LƯU Ý',
+  '→ ATTENTION': '→ LƯU Ý',
+  'attention': 'lưu ý',
+  '→ attention': '→ lưu ý',
+  'The package for this problem was not updated by the problem writer or Codeforces administration after we\'ve upgraded the judging servers. To adjust the time limit constraint, a solution execution time will be multiplied by 2. For example, if your solution works for 400 ms on judging servers, then the value 800 ms will be displayed and used to determine the verdict.': 'Gói bài tập này chưa được cập nhật bởi tác giả bài tập hoặc ban quản trị Codeforces sau khi chúng tôi nâng cấp máy chấm. Để điều chỉnh giới hạn thời gian, thời gian chạy của lời giải sẽ được nhân với 2. Ví dụ: nếu lời giải của bạn chạy trong 400 ms trên máy chấm, giá trị 800 ms sẽ được hiển thị và dùng để xác định kết quả.',
+  'The package for this problem was not updated by the problem writer or Codeforces administration after we\u2019ve upgraded the judging servers. To adjust the time limit constraint, a solution execution time will be multiplied by 2. For example, if your solution works for 400 ms on judging servers, then the value 800 ms will be displayed and used to determine the verdict.': 'Gói bài tập này chưa được cập nhật bởi tác giả bài tập hoặc ban quản trị Codeforces sau khi chúng tôi nâng cấp máy chấm. Để điều chỉnh giới hạn thời gian, thời gian chạy của lời giải sẽ được nhân với 2. Ví dụ: nếu lời giải của bạn chạy trong 400 ms trên máy chấm, giá trị 800 ms sẽ được hiển thị và dùng để xác định kết quả.',
+  'The package for this problem was not updated by the problem writer or Codeforces administration after we\'ve upgraded the judging servers.': 'Gói bài tập này chưa được cập nhật bởi tác giả bài tập hoặc ban quản trị Codeforces sau khi chúng tôi nâng cấp máy chấm.',
+  'The package for this problem was not updated by the problem writer or Codeforces administration after we\u2019ve upgraded the judging servers.': 'Gói bài tập này chưa được cập nhật bởi tác giả bài tập hoặc ban quản trị Codeforces sau khi chúng tôi nâng cấp máy chấm.',
+  'To adjust the time limit constraint, a solution execution time will be multiplied by 2.': 'Để điều chỉnh giới hạn thời gian, thời gian chạy của lời giải sẽ được nhân với 2.',
+  'For example, if your solution works for 400 ms on judging servers, then the value 800 ms will be displayed and used to determine the verdict.': 'Ví dụ: nếu lời giải của bạn chạy trong 400 ms trên máy chấm, giá trị 800 ms sẽ được hiển thị và dùng để xác định kết quả.',
+
+  // ==========================================
+  // 19. Submit form labels
+  // ==========================================
+  'Submit?': 'Nộp bài?',
+  '→ Submit?': '→ Nộp bài?',
+  'Submit': 'Nộp bài',
+  '→ Submit': '→ Nộp bài?',
+  'Language:': 'Ngôn ngữ:',
+  'Language': 'Ngôn ngữ',
+  'Choose file': 'Chọn tệp',
+  'Choose file:': 'Chọn tệp:',
+  'Source:': 'Chọn tệp:',
+  'Source': 'Chọn tệp',
+  'File:': 'Tệp:',
+  'File': 'Tệp',
+  'No file chosen': 'Chưa chọn tệp',
+
+  // ==========================================
+  // 20. Profile page
+  // ==========================================
+  'Blog entries': 'Bài viết',
+  'comments': 'bình luận',
+  'Write new entry': 'Viết bài mới',
+  'View my talks': 'Xem cuộc trò chuyện',
+  'Change settings': 'Thay đổi cài đặt',
+  'Change photo': 'Đổi ảnh',
+  'Unset photo': 'Xóa ảnh',
+  'Last visit:': 'Lần truy cập cuối:',
+  'ago': 'trước',
+  'years ago': 'năm trước',
+  'months ago': 'tháng trước',
+  'days ago': 'ngày trước',
+  'hours ago': 'giờ trước',
+  'minutes ago': 'phút trước',
+
+  // ==========================================
+  // 21. Contest sidebar extras
+  // ==========================================
+  'Finished': 'Đã kết thúc',
+  'Only rated': 'Chỉ rated',
+  'Country': 'Quốc gia',
+  'City': 'Thành phố',
+  'Organization': 'Tổ chức',
+  'CONTRIB.': 'ĐÓNG GÓP',
+  'Contrib.': 'Đóng góp',
+  '#': '#',
+  'USER (HANDLE)': 'NGƯỜI DÙNG (USER)',
+  'RATING': 'BẢNG XẾP HẠNG'
 };
 

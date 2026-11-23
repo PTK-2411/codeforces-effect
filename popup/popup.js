@@ -574,16 +574,7 @@
       if (btnUpdateNow) {
         const btnSpan = btnUpdateNow.querySelector('span');
         if (btnSpan) {
-          if (info.updateType === 'alpha_trial') {
-            btnSpan.textContent = 'Trải nghiệm thử';
-          } else if (info.autoUpdate) {
-            btnSpan.textContent = 'Tự động cập nhật';
-          } else {
-            btnSpan.textContent = 'Cập nhật ngay';
-          }
-        }
-        if (info.repoUrl) {
-          btnUpdateNow.href = info.downloadUrl || info.repoUrl;
+          btnSpan.textContent = 'Áp dụng ngay';
         }
       }
     } else {
@@ -596,7 +587,7 @@
       const manifest = (typeof chrome !== 'undefined' && chrome.runtime?.getManifest) ? chrome.runtime.getManifest() : null;
       const versionEl = document.querySelector('.version-tag');
       if (versionEl && manifest) {
-        versionEl.textContent = manifest.version_name || manifest.version || 'v1.0.0 Alpha';
+        versionEl.textContent = manifest.version_name || manifest.version || 'v1.1.0 Alpha';
       }
     } catch (e) {}
 
@@ -1278,6 +1269,29 @@
           geminiTestStatus.className = 'url-status-hint error';
         }
       });
+    });
+  }
+  if (btnUpdateNow) {
+    btnUpdateNow.addEventListener('click', () => {
+      const btnSpan = btnUpdateNow.querySelector('span');
+      if (btnSpan) btnSpan.textContent = 'Đang tải lại...';
+      btnUpdateNow.disabled = true;
+
+      if (typeof chrome !== 'undefined' && chrome.runtime) {
+        if (chrome.runtime.reload) {
+          try {
+            chrome.runtime.reload();
+            return;
+          } catch (e) {}
+        }
+        if (chrome.runtime.sendMessage) {
+          chrome.runtime.sendMessage({ action: 'triggerAutoUpdate' }, () => {
+            if (typeof window !== 'undefined' && window.close) {
+              window.close();
+            }
+          });
+        }
+      }
     });
   }
 })();

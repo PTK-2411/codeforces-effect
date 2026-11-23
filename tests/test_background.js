@@ -35,12 +35,29 @@ const mockChrome = {
       addListener: () => {}
     }
   },
+  alarms: {
+    create: () => {},
+    onAlarm: {
+      addListener: () => {}
+    }
+  },
   runtime: {
     getURL: (path) => `chrome-extension://mock/${path}`,
     getManifest: () => ({
       version: '0.99.0',
       version_name: 'v1.0.0 Alpha'
     }),
+    requestUpdateCheck: (cb) => { if (typeof cb === 'function') cb('no_update'); },
+    reload: () => {},
+    onUpdateAvailable: {
+      addListener: () => {}
+    },
+    onInstalled: {
+      addListener: () => {}
+    },
+    onStartup: {
+      addListener: () => {}
+    },
     onMessage: {
       addListener: (fn) => {
         messageListeners.push(fn);
@@ -242,6 +259,7 @@ async function runTests() {
     const prompt = body.contents[0].parts[0].text;
     assert(prompt.includes('<<<CF_TRANSLATE_ITEM_0>>>'));
     assert(prompt.includes('<<<CF_TRANSLATE_ITEM_1>>>'));
+    assert(prompt.includes('YES') && prompt.includes('NO'), 'Prompt must instruct AI to preserve YES/NO output tokens');
     
     return {
       ok: true,
@@ -279,7 +297,11 @@ async function runTests() {
   // Test 4b: Already Vietnamese detection via 256-bit hash to save tokens
   console.log('Test 4b: Already Vietnamese text preserves original content via 256-bit hash');
   fetchCalls = [];
-  const vietnameseHash = '30ce98fcfad6f96da53639bd33ee5410d16007392a072f53edfde47a1fe66f28';
+  const vietnameseHash = await backgroundModule.getOrInitAlreadyViHash();
+  assert.strictEqual(typeof vietnameseHash, 'string');
+  assert.strictEqual(vietnameseHash.length, 64, 'Dynamic hash must be 256 bits (64 hex characters)');
+  assert.strictEqual(storageData['cf_already_vi_hash'], vietnameseHash, 'Hash must be stored in chrome.storage.local');
+
   fetchHandler = async (url, opts) => {
     assert(opts && opts.body, 'Expected Gemini POST request with body');
     const body = JSON.parse(opts.body);
@@ -333,6 +355,48 @@ async function runTests() {
   assert.strictEqual(res4bBatch.texts[0], 'Bài tập này đã bằng tiếng Việt [[M0]]', 'Batch item with hash must retain original text');
   assert.strictEqual(res4bBatch.texts[1], 'Dịch tiếng Anh sang tiếng Việt');
   console.log('✓ Test 4b passed: Already Vietnamese hash token saving verified for single and batch translations');
+
+  // Test 4c: Switching from Google to Gemini re-translates instead of reusing Google translation
+  console.log('Test 4c: Switching from Google to Gemini re-translates instead of reusing Google translation');
+  const textSample = 'Given an array of integers.';
+  fetchCalls = [];
+  fetchHandler = async (url) => {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => [[['Cho một mảng các số nguyên (bản dịch google thô).', 'Given an array of integers.']]]
+    };
+  };
+  const resGoogle = await sendMessage({
+    action: 'translate',
+    text: textSample,
+    engine: 'google'
+  });
+  assert.strictEqual(resGoogle.text, 'Cho một mảng các số nguyên (bản dịch google thô).');
+
+  // Now, translate same text with Gemini -> Must call Gemini and get fluent AI translation
+  fetchCalls = [];
+  fetchHandler = async (url, opts) => {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        candidates: [{
+          content: {
+            parts: [{ text: 'Cho một mảng các số nguyên (bản dịch AI trôi chảy).' }]
+          }
+        }]
+      })
+    };
+  };
+  const resGemini = await sendMessage({
+    action: 'translate',
+    text: textSample,
+    engine: 'gemini',
+    geminiApiKey: 'my-test-key'
+  });
+  assert.strictEqual(resGemini.text, 'Cho một mảng các số nguyên (bản dịch AI trôi chảy).', 'Gemini must NOT reuse Google translation cache');
+  console.log('✓ Test 4c passed: Switching from Google to Gemini re-translates with AI');
 
   // Test 5: Test Gemini API Key connection
   console.log('Test 5: testGeminiKey endpoint');
@@ -454,8 +518,9 @@ async function runTests() {
   assert.strictEqual(eval1.hasUpdate, true, 'Alpha -> Official should have update');
   assert.strictEqual(eval1.updateType, 'official', 'updateType must be official');
   assert.strictEqual(eval1.isTestToOfficial, true, 'isTestToOfficial must be true');
-  assert.strictEqual(eval1.autoUpdate, false, 'Official release requires confirmation / banner');
-  assert(eval1.message.includes('bản chính thức'), 'Message must indicate official release');
+  assert.strictEqual(eval1.autoUpdate, true, 'Official release must auto-update silently');
+  assert.strictEqual(eval1.isSilent, true, 'Official release must auto-update silently');
+  assert(eval1.message.includes('chính thức'), 'Message must indicate official release');
 
   // Scenario 2: Alpha Hotfix for Alpha user (v1.0.0 Alpha -> v1.0.0 Alpha HF.1.0)
   const eval2 = sandbox.evaluateUpdate(
@@ -509,8 +574,18 @@ async function runTests() {
   );
   assert.strictEqual(eval4.hasUpdate, true, 'New Alpha trial should be detected');
   assert.strictEqual(eval4.updateType, 'alpha_trial', 'updateType must be alpha_trial');
-  assert.strictEqual(eval4.autoUpdate, false, 'Alpha trial must NOT auto-update; ask user');
+  assert.strictEqual(eval4.autoUpdate, true, 'Alpha trial must auto-update silently');
+  assert.strictEqual(eval4.isSilent, true, 'isSilent must be true');
   assert.strictEqual(eval4.isTrial, true, 'isTrial must be true');
+
+  // Scenario 4b: Alpha Hotfix incrementing z (v1.1.0 Alpha -> v1.1.1 Alpha)
+  const eval4b = sandbox.evaluateUpdate(
+    { version: '1.1.0', version_name: 'v1.1.0 Alpha' },
+    { version: '1.1.1', version_name: 'v1.1.1 Alpha' }
+  );
+  assert.strictEqual(eval4b.hasUpdate, true, 'Alpha hotfix incrementing z must be detected');
+  assert.strictEqual(eval4b.autoUpdate, true, 'Alpha hotfix incrementing z must auto-update');
+  assert.strictEqual(eval4b.isSilent, true, 'Alpha hotfix incrementing z must be silent');
 
   // Scenario 5: Equal or older versions
   const eval5 = sandbox.evaluateUpdate(

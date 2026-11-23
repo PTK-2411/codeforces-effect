@@ -131,7 +131,7 @@ elements['btn-update-now'].querySelector = (sel) => {
 };
 
 const versionTagEl = createMockEl('version-tag', 'span');
-versionTagEl.textContent = 'v1.0.0 Alpha';
+versionTagEl.textContent = 'v1.1.0 Alpha';
 
 const storage = {};
 let storageChangeCallback = null;
@@ -145,8 +145,8 @@ const mockChrome = {
   runtime: {
     getURL: (p) => `chrome-extension://mock/${p}`,
     getManifest: () => ({
-      version: '0.99.0',
-      version_name: 'v1.0.0 Alpha'
+      version: '1.1.0',
+      version_name: 'v1.1.0 Alpha'
     }),
     sendMessage: (msg, cb) => {
       messagesSent.push(msg);
@@ -308,7 +308,7 @@ async function runPopupTests() {
   console.log('Test 7: Update banner display across branch update scenarios');
 
   // Verify version tag
-  assert(versionTagEl.textContent.includes('v1.0.0 Alpha'), 'Version tag in header must display v1.0.0 Alpha');
+  assert(versionTagEl.textContent.includes('v1.1.0 Alpha'), 'Version tag in header must display v1.1.0 Alpha');
 
   // Scenario 1: Official release banner
   if (storageChangeCallback) {
@@ -330,8 +330,7 @@ async function runPopupTests() {
   assert(elements['update-title'].textContent.includes('Đã có bản chính thức'), 'Title should notify official version');
   assert.strictEqual(elements['update-tag'].textContent, 'OFFICIAL');
   assert(elements['update-tag'].classList.contains('tag-official'));
-  assert.strictEqual(btnUpdateNowSpan.textContent, 'Cập nhật ngay');
-  assert.strictEqual(elements['btn-update-now'].href, 'https://github.com/PTK-2411/codeforces-effect');
+  assert.strictEqual(btnUpdateNowSpan.textContent, 'Áp dụng ngay');
 
   // Scenario 2: Stable Hotfix banner (Automatic background update)
   if (storageChangeCallback) {
@@ -352,7 +351,7 @@ async function runPopupTests() {
   assert.strictEqual(elements['update-title'].textContent, 'Bản vá khẩn cấp (Hotfix)');
   assert.strictEqual(elements['update-tag'].textContent, 'HOTFIX');
   assert(elements['update-tag'].classList.contains('tag-hotfix'));
-  assert.strictEqual(btnUpdateNowSpan.textContent, 'Tự động cập nhật');
+  assert.strictEqual(btnUpdateNowSpan.textContent, 'Áp dụng ngay');
 
   // Scenario 3: Alpha Hotfix banner
   if (storageChangeCallback) {
@@ -373,7 +372,7 @@ async function runPopupTests() {
   assert.strictEqual(elements['update-title'].textContent, 'Bản vá lỗi Alpha (Hotfix)');
   assert.strictEqual(elements['update-tag'].textContent, 'ALPHA HF');
   assert(elements['update-tag'].classList.contains('tag-hotfix'));
-  assert.strictEqual(btnUpdateNowSpan.textContent, 'Tự động cập nhật');
+  assert.strictEqual(btnUpdateNowSpan.textContent, 'Áp dụng ngay');
 
   // Scenario 4: Alpha Trial banner
   if (storageChangeCallback) {
@@ -382,7 +381,7 @@ async function runPopupTests() {
         newValue: {
           hasUpdate: true,
           updateType: 'alpha_trial',
-          autoUpdate: false,
+          autoUpdate: true,
           isTrial: true,
           currentVersionName: 'v1.0.0',
           remoteVersionName: 'v1.1.0 Alpha',
@@ -394,7 +393,12 @@ async function runPopupTests() {
   assert.strictEqual(elements['update-title'].textContent, 'Bản thử nghiệm mới!');
   assert.strictEqual(elements['update-tag'].textContent, 'ALPHA');
   assert(elements['update-tag'].classList.contains('tag-alpha'));
-  assert.strictEqual(btnUpdateNowSpan.textContent, 'Trải nghiệm thử');
+  assert.strictEqual(btnUpdateNowSpan.textContent, 'Áp dụng ngay');
+
+  // Verify clicking btn-update-now triggers reload / loading state
+  elements['btn-update-now'].click();
+  assert.strictEqual(elements['btn-update-now'].disabled, true);
+  assert.strictEqual(btnUpdateNowSpan.textContent, 'Đang tải lại...');
 
   // Scenario 5: No update (banner hidden)
   if (storageChangeCallback) {

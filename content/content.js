@@ -736,13 +736,18 @@
   let currentTranslationSession = 1;
   const contentTranslationCache = new Map();
 
+  function getCachedTranslation(key) {
+    if (!key) return null;
+    return contentTranslationCache.get(`${currentTranslationEngine}:${key}`) || null;
+  }
+
   function setCachedTranslation(key, val) {
     if (!key || !val) return;
     if (contentTranslationCache.size >= 2500) {
       const oldestKey = contentTranslationCache.keys().next().value;
       contentTranslationCache.delete(oldestKey);
     }
-    contentTranslationCache.set(key, val);
+    contentTranslationCache.set(`${currentTranslationEngine}:${key}`, val);
   }
 
   // Selective exclusion rules for machine translation (Google Translate / Gemini)
@@ -962,7 +967,8 @@
         const text = node.nodeValue.replace(/\u00A0/g, ' ').trim();
         if (!text) return;
         const normalized = text.replace(/\s+/g, ' ');
-        const translated = dict[text] || dict[normalized] || dict[text.toLowerCase()];
+        const normalizedApos = normalized.replace(/[\u2018\u2019]/g, "'");
+        const translated = dict[text] || dict[normalized] || dict[normalizedApos] || dict[text.toLowerCase()] || dict[normalized.toLowerCase()] || dict[normalizedApos.toLowerCase()];
         if (translated) {
           node._cfOrigText = node.nodeValue;
           const matchLeading = node.nodeValue.match(/^\s*/);
@@ -1254,6 +1260,7 @@
     restoreInteractiveText(el);
     delete el.dataset.cfTranslated;
     delete el.dataset.cfTransPending;
+    delete el.dataset.cfEngine;
   }
 
   // Translation Progress Indicator (Góc phải dưới)
@@ -1340,6 +1347,7 @@
       if (item.isInteractive) {
         updateTextNodeDirect(item.el, transText);
         item.el.dataset.cfTranslated = 'true';
+        item.el.dataset.cfEngine = currentTranslationEngine;
         return;
       }
 
@@ -1427,10 +1435,16 @@
       }
       item.el._cfPlaceholders = item.placeholders;
       item.el.dataset.cfTranslated = 'true';
+      item.el.dataset.cfEngine = currentTranslationEngine;
     }
 
     for (const el of elements) {
-      if (!el || el.dataset.cfTransPending === 'true' || el.dataset.cfTranslated === 'true') continue;
+      if (!el) continue;
+      // When translating with AI, if element was previously translated with Google, restore it so AI can re-translate fluently
+      if (el.dataset.cfTranslated === 'true' && currentTranslationEngine === 'gemini' && el.dataset.cfEngine === 'google') {
+        restoreElementToOriginal(el);
+      }
+      if (el.dataset.cfTransPending === 'true' || el.dataset.cfTranslated === 'true') continue;
 
       const isQuestionTarget = Boolean(el.closest && el.closest('[data-cf-questions-table="true"], .questions-table, table.questions, .contest-questions table'));
       if (!isQuestionTarget) {
@@ -1468,10 +1482,11 @@
         if (!textToTranslate) continue;
 
         // Check content memory cache for 0ms instant render
-        const cached = contentTranslationCache.get(textToTranslate);
+        const cached = getCachedTranslation(textToTranslate);
         if (cached) {
           updateTextNodeDirect(el, cached);
           el.dataset.cfTranslated = 'true';
+          el.dataset.cfEngine = currentTranslationEngine;
           continue;
         }
 
@@ -1582,7 +1597,7 @@
       }
 
       // Check in-memory fast cache first for 0ms instantaneous render
-      const cached = contentTranslationCache.get(textToTranslate) || contentTranslationCache.get(normText);
+      const cached = getCachedTranslation(textToTranslate) || getCachedTranslation(normText);
       if (cached) {
         applyTranslationToItem({ el, isInteractive: false, text: textToTranslate, placeholders }, cached);
         continue;
@@ -1929,7 +1944,7 @@
       const caption = box.querySelector('.caption, .caption.title, h4');
       if (caption) {
         const text = (caption.textContent || '').trim().toLowerCase();
-        if (text.includes('about group') || text.includes('giới thiệu nhóm') || text.includes('về nhóm') || text.includes('thông tin nhóm')) {
+        if (text.includes('about group') || text.includes('giới thiệu nhóm') || text.includes('về nhóm') || text.includes('thông tin nhóm') || text.includes('attention') || text.includes('lưu ý')) {
           const contentDivs = Array.from(box.querySelectorAll('div:not(.caption):not(.top-links)'));
           if (contentDivs.length > 0) {
             const mainDiv = contentDivs[0];
@@ -2142,6 +2157,38 @@
     ]);
   }
 
+  function translateSideboxTitles(enable, dict) {
+    if (!dict) dict = window.CF_TRANSLATIONS || {};
+    const captions = document.querySelectorAll('.sidebox .caption, .sidebox .caption.titled, .roundbox .caption, .caption.titled');
+    captions.forEach(caption => {
+      Array.from(caption.childNodes).forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          if (enable) {
+            if (node._cfOrigText !== undefined) return;
+            const text = node.nodeValue.replace(/\u00A0/g, ' ').trim();
+            if (!text) return;
+            const norm = text.replace(/\s+/g, ' ');
+            const normApos = norm.replace(/[\u2018\u2019]/g, "'");
+            const trans = dict[text] || dict[norm] || dict[normApos] || dict[text.toLowerCase()] || dict[norm.toLowerCase()] || dict[normApos.toLowerCase()];
+            if (trans) {
+              node._cfOrigText = node.nodeValue;
+              const matchLeading = node.nodeValue.match(/^\s*/);
+              const matchTrailing = node.nodeValue.match(/\s*$/);
+              const leading = matchLeading ? matchLeading[0] : '';
+              const trailing = matchTrailing ? matchTrailing[0] : '';
+              node.nodeValue = leading + trans + trailing;
+            }
+          } else {
+            if (node._cfOrigText !== undefined) {
+              node.nodeValue = node._cfOrigText;
+              delete node._cfOrigText;
+            }
+          }
+        }
+      });
+    });
+  }
+
   let isAutoTranslating = false;
 
   async function applyVietnameseTranslation(isVi) {
@@ -2163,6 +2210,7 @@
     if (rootEl) {
       translateNode(rootEl, isVi, dict);
     }
+    translateSideboxTitles(isVi, dict);
 
     // Dynamic translation for problems, posts, comments, announcements
     await applyDynamicContentTranslation(isVi);
@@ -2205,6 +2253,7 @@
             try {
               removeProblemStatementChangeNotice();
               translateNode(document.body, true, window.CF_TRANSLATIONS || {});
+              translateSideboxTitles(true, window.CF_TRANSLATIONS || {});
               await applyDynamicContentTranslation(true);
               alignTableColumns();
               styleSubmissionVerdicts();
@@ -2893,23 +2942,32 @@
         if (container && container.tagName === 'A') container = container.parentElement;
         if (container && !parentSet.has(container)) {
           parentSet.add(container);
-          container.classList.add('cf-form-actions');
-          if (container.style && container.style.setProperty) {
-            container.style.setProperty('display', 'flex', 'important');
-            container.style.setProperty('flex-direction', 'row', 'important');
-            container.style.setProperty('flex-wrap', 'wrap', 'important');
-            container.style.setProperty('justify-content', 'center', 'important');
-            container.style.setProperty('align-items', 'center', 'important');
-            container.style.setProperty('gap', '10px', 'important');
-            container.style.setProperty('margin-top', '6px', 'important');
-            container.style.setProperty('margin-bottom', '2px', 'important');
-            container.style.setProperty('line-height', 'normal', 'important');
-            container.style.setProperty('height', 'auto', 'important');
-            container.style.setProperty('min-height', 'auto', 'important');
-            container.style.setProperty('max-height', 'none', 'important');
-            container.style.setProperty('overflow', 'visible', 'important');
-            container.style.setProperty('width', '100%', 'important');
-            container.style.setProperty('box-sizing', 'border-box', 'important');
+          if (container.tagName === 'TD') {
+            if (container.style && container.style.setProperty) {
+              container.style.setProperty('text-align', 'center', 'important');
+              container.style.setProperty('vertical-align', 'middle', 'important');
+              container.style.setProperty('padding', '8px 0 2px 0', 'important');
+              container.style.setProperty('width', '100%', 'important');
+            }
+          } else {
+            container.classList.add('cf-form-actions');
+            if (container.style && container.style.setProperty) {
+              container.style.setProperty('display', 'flex', 'important');
+              container.style.setProperty('flex-direction', 'row', 'important');
+              container.style.setProperty('flex-wrap', 'wrap', 'important');
+              container.style.setProperty('justify-content', 'center', 'important');
+              container.style.setProperty('align-items', 'center', 'important');
+              container.style.setProperty('gap', '10px', 'important');
+              container.style.setProperty('margin-top', '6px', 'important');
+              container.style.setProperty('margin-bottom', '2px', 'important');
+              container.style.setProperty('line-height', 'normal', 'important');
+              container.style.setProperty('height', 'auto', 'important');
+              container.style.setProperty('min-height', 'auto', 'important');
+              container.style.setProperty('max-height', 'none', 'important');
+              container.style.setProperty('overflow', 'visible', 'important');
+              container.style.setProperty('width', '100%', 'important');
+              container.style.setProperty('box-sizing', 'border-box', 'important');
+            }
           }
         }
       });
@@ -2929,6 +2987,34 @@
               child.style.setProperty('padding', '1px 0', 'important');
               child.style.setProperty('margin', '0', 'important');
             }
+          }
+        });
+        const formTds = form.querySelectorAll('td');
+        formTds.forEach((td) => {
+          if (!td.querySelector('input[type="submit"], input[type="button"], button') && !td.getAttribute('colspan')) {
+            if (td.style && td.style.setProperty) {
+              td.style.setProperty('text-align', 'left', 'important');
+            }
+          }
+        });
+        const formSelects = form.querySelectorAll('select');
+        formSelects.forEach((sel) => {
+          if (sel.style && sel.style.setProperty) {
+            sel.style.setProperty('width', '100%', 'important');
+            sel.style.setProperty('max-width', '100%', 'important');
+            sel.style.setProperty('float', 'none', 'important');
+            sel.style.setProperty('text-align', 'left', 'important');
+            sel.style.setProperty('margin', '0', 'important');
+          }
+        });
+        const formFileInputs = form.querySelectorAll('input[type="file"]');
+        formFileInputs.forEach((inp) => {
+          if (inp.style && inp.style.setProperty) {
+            inp.style.setProperty('width', '100%', 'important');
+            inp.style.setProperty('max-width', '100%', 'important');
+            inp.style.setProperty('float', 'none', 'important');
+            inp.style.setProperty('text-align', 'left', 'important');
+            inp.style.setProperty('margin', '0', 'important');
           }
         });
         const labels = form.querySelectorAll('label, .label');
@@ -3411,7 +3497,7 @@
   }, { passive: true });
 
   // Listen for changes from popup or background
-  chrome.storage.onChanged.addListener((changes, areaName) => {
+  chrome.storage.onChanged.addListener(async (changes, areaName) => {
     if (areaName === 'local') {
       // CRITICAL PERFORMANCE GUARD: Ignore background translation cache updates to prevent broadcast loops
       if (changes.cf_translation_cache) {
@@ -3428,8 +3514,14 @@
         currentTranslationEngine = newEng;
         if (changed && currentCfLang === 'vi') {
           currentTranslationSession++;
-          applyDynamicContentTranslation(false);
-          applyDynamicContentTranslation(true);
+          if (newEng === 'gemini') {
+            // Restore any Google-translated elements so AI translates them fluently
+            document.querySelectorAll('[data-cf-engine="google"]').forEach(el => {
+              restoreElementToOriginal(el);
+            });
+          }
+          await applyDynamicContentTranslation(false);
+          await applyDynamicContentTranslation(true);
         }
       }
 

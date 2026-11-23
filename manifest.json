@@ -1,14 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Codeforces Effect",
-  "version": "0.99.2",
-  "version_name": "v1.0.0 Alpha HF.1.1",
+  "version": "1.1.0",
+  "version_name": "v1.1.0 Alpha",
   "homepage_url": "https://github.com/PTK-2411/codeforces-effect",
   "description": "Codeforces Effect - Tùy chỉnh hình nền, giao diện hiệu ứng blur glassmorphism, streak tracker và dịch thuật Codeforces.",
   "permissions": [
     "storage",
     "unlimitedStorage",
-    "declarativeNetRequest"
+    "declarativeNetRequest",
+    "alarms"
   ],
   "declarative_net_request": {
     "rule_resources": [

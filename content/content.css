@@ -2293,7 +2293,7 @@ html.cf-custom-bg-active .sidebox table,
 html.cf-custom-bg-active .sidebox form table {
   width: 100% !important;
   max-width: 100% !important;
-  table-layout: fixed !important;
+  table-layout: auto !important;
   box-sizing: border-box !important;
 }
 
@@ -2890,7 +2890,6 @@ html.cf-custom-bg-active .sidebox form div:has(input[type="reset"]),
 html.cf-custom-bg-active .sidebox form div:has(input[type="button"]),
 html.cf-custom-bg-active .sidebox form div:has(button),
 html.cf-custom-bg-active .sidebox form p:has(input[type="submit"]),
-html.cf-custom-bg-active .sidebox form td:has(input[type="submit"]),
 html.cf-custom-bg-active .sidebox form div[style*="text-align: center"],
 html.cf-custom-bg-active .sidebox form .cf-form-actions,
 html.cf-custom-bg-active .sidebox .cf-form-actions,
@@ -2911,6 +2910,161 @@ html.cf-custom-bg-active .sidebox .cf-form-actions,
   overflow: visible !important;
   width: 100% !important;
   box-sizing: border-box !important;
+}
+
+/* Sidebox submit solution table alignment (Ngôn ngữ:, Chọn tệp:, Nộp bài) */
+html.cf-custom-bg-active .sidebox form table,
+html.cf-custom-bg-active .sidebox .table-form {
+  table-layout: auto !important;
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 5px !important;
+  margin: 2px auto !important;
+}
+
+html.cf-custom-bg-active .sidebox form td.field-name,
+html.cf-custom-bg-active .sidebox form th.field-name,
+html.cf-custom-bg-active .sidebox .table-form td.field-name,
+html.cf-custom-bg-active .sidebox .table-form th.field-name {
+  white-space: nowrap !important;
+  width: 1% !important;
+  min-width: 65px !important;
+  max-width: 75px !important;
+  padding: 4px 6px 4px 0 !important;
+  vertical-align: middle !important;
+  text-align: left !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #f1f5f9 !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .sidebox form td.field-name,
+html.cf-light-mode.cf-custom-bg-active .sidebox form th.field-name,
+html.cf-light-mode.cf-custom-bg-active .sidebox .table-form td.field-name,
+html.cf-light-mode.cf-custom-bg-active .sidebox .table-form th.field-name {
+  color: #0f172a !important;
+}
+
+html.cf-custom-bg-active .sidebox form td:not(.field-name),
+html.cf-custom-bg-active .sidebox .table-form td:not(.field-name) {
+  text-align: left !important;
+  vertical-align: middle !important;
+  width: auto !important;
+  padding: 3px 0 !important;
+}
+
+html.cf-custom-bg-active .sidebox form select,
+html.cf-custom-bg-active .sidebox .table-form select {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 5px 8px !important;
+  border-radius: 8px !important;
+  height: 32px !important;
+  font-size: 12.5px !important;
+  float: none !important;
+  text-align: left !important;
+  margin: 0 !important;
+}
+
+html.cf-custom-bg-active .sidebox form input[type="file"],
+html.cf-custom-bg-active .sidebox .table-form input[type="file"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  font-size: 12px !important;
+  float: none !important;
+  text-align: left !important;
+  margin: 0 !important;
+}
+
+html.cf-custom-bg-active .sidebox form input[type="file"]::file-selector-button,
+html.cf-custom-bg-active .sidebox .table-form input[type="file"]::file-selector-button {
+  padding: 4px 8px !important;
+  font-size: 11.5px !important;
+  margin-right: 4px !important;
+}
+
+html.cf-custom-bg-active .sidebox form td:has(input[type="submit"]),
+html.cf-custom-bg-active .sidebox form td:has(input[type="button"]),
+html.cf-custom-bg-active .sidebox form td:has(.cf-sidebox-btn),
+html.cf-custom-bg-active .sidebox form td[colspan] {
+  display: table-cell !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  width: 100% !important;
+  padding: 8px 0 2px 0 !important;
+}
+
+html.cf-custom-bg-active .sidebox form td input[type="submit"],
+html.cf-custom-bg-active .sidebox form td input[type="button"],
+html.cf-custom-bg-active .sidebox form td .cf-sidebox-btn {
+  display: inline-flex !important;
+  margin: 4px auto !important;
+  position: static !important;
+  float: none !important;
+}
+
+/* Contest materials & Sidebox list item framing ("khung lại" thông báo/tài liệu thành thẻ kính bo góc) */
+html.cf-custom-bg-active .sidebox ul {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 8px 0 !important;
+}
+
+html.cf-custom-bg-active .sidebox ul li {
+  list-style: none !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  margin: 6px 0 !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+html.cf-custom-bg-active .sidebox ul li:hover {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+}
+
+html.cf-custom-bg-active .sidebox ul li a {
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  color: #38bdf8 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+html.cf-custom-bg-active .sidebox ul li a:hover {
+  color: #7dd3fc !important;
+  text-decoration: underline !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .sidebox ul li {
+  background: rgba(255, 255, 255, 0.65) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .sidebox ul li:hover {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(0, 0, 0, 0.22) !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .sidebox ul li a {
+  color: #0284c7 !important;
 }
 
 html.cf-custom-bg-active .sidebox input[type="submit"],

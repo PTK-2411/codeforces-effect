@@ -1829,6 +1829,106 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
 
   console.log('✓ Test 34 passed: Rating graph contest tooltip popup elevation & z-index verified');
 
+  // Test 35: Contest materials, Attention translation, Submit form layout & Announcement framing
+  console.log('Test 35: Contest materials, Attention translation, Submit form layout & Announcement framing');
+  body.innerHTML = `
+    <div id="sidebar">
+      <!-- Submit form sidebox -->
+      <div class="sidebox roundbox">
+        <div class="caption titled">→ Submit?</div>
+        <form class="submitForm" method="post">
+          <table class="table-form">
+            <tr>
+              <td class="field-name">Language:</td>
+              <td><select><option>GNU G++23</option></select></td>
+            </tr>
+            <tr>
+              <td class="field-name">Source:</td>
+              <td><input type="file" name="sourceFile"></td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <input class="submit" type="submit" value="Submit">
+              </td>
+            </tr>
+          </table>
+        </form>
+      </div>
+
+      <!-- Contest materials sidebox -->
+      <div class="sidebox roundbox">
+        <div class="caption titled">→ Contest materials</div>
+        <ul>
+          <li><a href="/blog/entry/123">Announcement</a></li>
+        </ul>
+      </div>
+
+      <!-- Attention sidebox -->
+      <div class="sidebox roundbox">
+        <div class="caption titled">→ Attention</div>
+        <div>
+          The package for this problem was not updated by the problem writer or Codeforces administration after we've upgraded the judging servers. To adjust the time limit constraint, a solution execution time will be multiplied by 2. For example, if your solution works for 400 ms on judging servers, then the value 800 ms will be displayed and used to determine the verdict.
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Trigger translation
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'vi' } }, 'local'));
+  await new Promise(r => setTimeout(r, 100));
+
+  // Check translations
+  const captions = Array.from(body.querySelectorAll('.caption.titled')).map(c => c.textContent.trim());
+  assert(captions.some(c => c.includes('Nộp bài')), 'Submit? caption must be translated to Nộp bài?');
+  assert(captions.some(c => c.includes('Tài liệu kỳ thi')), 'Contest materials caption must be translated to Tài liệu kỳ thi');
+  assert(captions.some(c => c.includes('Lưu ý')), 'Attention caption must be translated to Lưu ý');
+
+  // Check Attention body text
+  const attentionBox = body.querySelectorAll('.sidebox')[2];
+  assert(attentionBox.textContent.includes('Gói bài tập này chưa được cập nhật'), 'Attention text must be translated to Vietnamese');
+
+  // Check Submit button container in table is NOT flex
+  const submitTd = body.querySelector('form.submitForm td[colspan="2"]');
+  assert.notStrictEqual(submitTd.style.display, 'flex', 'Submit form table cell must not be display: flex');
+
+  // Check CSS rules for sidebox ul li framing and submit form table
+  const test35Css = fs.readFileSync(path.join(__dirname, '../content/content.css'), 'utf8');
+  assert(test35Css.includes('.sidebox ul li') && test35Css.includes('backdrop-filter: blur(8px)'), 'content.css must define glass card styling for sidebox ul li');
+  assert(test35Css.includes('html.cf-custom-bg-active .sidebox form td.field-name') && test35Css.includes('white-space: nowrap !important;'), 'content.css must define white-space: nowrap for sidebox form td.field-name');
+  assert(test35Css.includes('table-layout: auto !important;'), 'content.css must define table-layout: auto for sidebox form tables');
+  assert(test35Css.includes('html.cf-custom-bg-active .sidebox form td:not(.field-name)') && test35Css.includes('text-align: left !important;'), 'content.css must define text-align: left for td:not(.field-name)');
+
+  console.log('✓ Test 35 passed: Contest materials, Attention translation, Submit form layout & Announcement framing verified');
+
+  // Test 36: Elements translated with Google are re-translated when switching to AI (Gemini)
+  console.log('Test 36: Elements translated with Google are re-translated when switching to AI (Gemini)');
+  body.innerHTML = `
+    <div class="problem-statement">
+      <div class="header"><div class="title">A. Beautiful Matrix</div></div>
+      <p id="test-para">You are given a matrix.</p>
+    </div>
+  `;
+
+  // First translate with Google
+  storageChangeListeners.forEach(fn => fn({
+    cfLang: { newValue: 'vi' },
+    translationEngine: { newValue: 'google' }
+  }, 'local'));
+  await new Promise(r => setTimeout(r, 100));
+
+  const pEl = body.querySelector('#test-para');
+  assert.strictEqual(pEl.dataset.cfTranslated, 'true');
+  assert.strictEqual(pEl.dataset.cfEngine, 'google');
+
+  // Now switch translation engine to Gemini
+  storageChangeListeners.forEach(fn => fn({
+    translationEngine: { newValue: 'gemini' }
+  }, 'local'));
+  await new Promise(r => setTimeout(r, 100));
+
+  assert.strictEqual(pEl.dataset.cfEngine, 'gemini', 'Element must be re-translated with Gemini engine');
+  console.log('✓ Test 36 passed: Elements translated with Google are re-translated when switching to AI (Gemini)');
+
   console.log('\nALL content.js TESTS PASSED SUCCESSFULLY!');
 }
 

@@ -243,6 +243,10 @@ input:checked + .slider:before {
   font-weight: 700;
   padding: 5px 12px;
   border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  outline: none;
   text-decoration: none !important;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
