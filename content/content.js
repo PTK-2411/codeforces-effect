@@ -731,6 +731,7 @@
   let currentGeminiApiKey = '';
   let currentGeminiModel = 'auto';
   let currentGeminiCustomModel = '';
+  let currentXkiroApiKey = '';
   let translateObserver = null;
   let translateDebounceTimer = null;
   let currentTranslationSession = 1;
@@ -1440,8 +1441,9 @@
 
     for (const el of elements) {
       if (!el) continue;
-      // When translating with AI, if element was previously translated with Google, restore it so AI can re-translate fluently
-      if (el.dataset.cfTranslated === 'true' && currentTranslationEngine === 'gemini' && el.dataset.cfEngine === 'google') {
+      // When translating with AI (Gemini or xKiro), if element was previously translated with Google, restore it so AI can re-translate fluently
+      const isAiEngine = currentTranslationEngine === 'gemini' || currentTranslationEngine === 'xkiro';
+      if (el.dataset.cfTranslated === 'true' && isAiEngine && el.dataset.cfEngine === 'google') {
         restoreElementToOriginal(el);
       }
       if (el.dataset.cfTransPending === 'true' || el.dataset.cfTranslated === 'true') continue;
@@ -1630,7 +1632,8 @@
               engine: engine || currentTranslationEngine,
               geminiApiKey: geminiApiKey || currentGeminiApiKey,
               geminiModel: geminiModel || currentGeminiModel,
-              geminiCustomModel: currentGeminiCustomModel
+              geminiCustomModel: currentGeminiCustomModel,
+              xkiroApiKey: currentXkiroApiKey
             }, resolve);
           });
 
@@ -3230,7 +3233,8 @@
         'translationEngine',
         'geminiApiKey',
         'geminiModel',
-        'geminiCustomModel'
+        'geminiCustomModel',
+        'xkiroApiKey'
       ], (result) => {
         applySettings(result);
         if (result && result.themeMode) {
@@ -3240,6 +3244,7 @@
         currentGeminiApiKey = (result && result.geminiApiKey) || '';
         currentGeminiModel = (result && result.geminiModel) || 'auto';
         currentGeminiCustomModel = (result && result.geminiCustomModel) || '';
+        currentXkiroApiKey = (result && result.xkiroApiKey) || '';
         const lang = (result && result.cfLang) || 'vi';
         currentCfLang = lang;
         renderVietnameseFlag(lang);
@@ -3514,7 +3519,7 @@
         currentTranslationEngine = newEng;
         if (changed && currentCfLang === 'vi') {
           currentTranslationSession++;
-          if (newEng === 'gemini') {
+          if (newEng === 'gemini' || newEng === 'xkiro') {
             // Restore any Google-translated elements so AI translates them fluently
             document.querySelectorAll('[data-cf-engine="google"]').forEach(el => {
               restoreElementToOriginal(el);
@@ -3535,6 +3540,10 @@
 
       if (changes.geminiCustomModel) {
         currentGeminiCustomModel = changes.geminiCustomModel.newValue || '';
+      }
+
+      if (changes.xkiroApiKey) {
+        currentXkiroApiKey = changes.xkiroApiKey.newValue || '';
       }
 
       if (changes.cfLang) {

@@ -398,6 +398,70 @@ async function runTests() {
   assert.strictEqual(resGemini.text, 'Cho một mảng các số nguyên (bản dịch AI trôi chảy).', 'Gemini must NOT reuse Google translation cache');
   console.log('✓ Test 4c passed: Switching from Google to Gemini re-translates with AI');
 
+  // Test 4d: xKiro (Mistral) single item translation
+  console.log('Test 4d: xKiro (Mistral) single item translation with model mistralai/mistral-small-2603');
+  fetchCalls = [];
+  fetchHandler = async (url, opts) => {
+    assert.strictEqual(url, 'https://api.xkiro.com/v1/chat/completions');
+    assert.strictEqual(opts.headers['Authorization'], 'Bearer test-xkiro-key');
+    const body = JSON.parse(opts.body);
+    assert.strictEqual(body.model, 'mistralai/mistral-small-2603');
+    assert(body.messages && body.messages[0].content.includes('Calculate the minimum sum'));
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: 'Tính tổng nhỏ nhất'
+            }
+          }
+        ]
+      })
+    };
+  };
+
+  const resXkiro = await sendMessage({
+    action: 'translate',
+    text: 'Calculate the minimum sum',
+    engine: 'xkiro',
+    xkiroApiKey: 'test-xkiro-key'
+  });
+  assert.strictEqual(resXkiro.text, 'Tính tổng nhỏ nhất');
+  console.log('✓ Test 4d passed: xKiro single translation verified');
+
+  // Test 4e: xKiro batch translation
+  console.log('Test 4e: xKiro batch translation');
+  fetchCalls = [];
+  fetchHandler = async (url, opts) => {
+    assert.strictEqual(url, 'https://api.xkiro.com/v1/chat/completions');
+    const body = JSON.parse(opts.body);
+    assert.strictEqual(body.model, 'mistralai/mistral-small-2603');
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: '<<<CF_TRANSLATE_ITEM_0>>>\nĐầu vào bài toán\n\n<<<CF_TRANSLATE_ITEM_1>>>\nĐầu ra bài toán'
+            }
+          }
+        ]
+      })
+    };
+  };
+
+  const resXkiroBatch = await sendMessage({
+    action: 'translateBatch',
+    items: ['Problem input', 'Problem output'],
+    engine: 'xkiro',
+    xkiroApiKey: 'test-xkiro-key'
+  });
+  assert.deepStrictEqual(resXkiroBatch.texts, ['Đầu vào bài toán', 'Đầu ra bài toán']);
+  console.log('✓ Test 4e passed: xKiro batch translation verified');
+
   // Test 5: Test Gemini API Key connection
   console.log('Test 5: testGeminiKey endpoint');
   fetchCalls = [];
@@ -423,6 +487,28 @@ async function runTests() {
   assert(res5.models.includes('gemini-2.0-flash'));
   assert(!res5.models.includes('embedding-001'), 'Only generateContent models should be included');
   console.log('✓ Test 5 passed: testGeminiKey successfully verified key and filtered models');
+
+  // Test 5c: testXKiroKey endpoint
+  console.log('Test 5c: testXKiroKey endpoint');
+  fetchCalls = [];
+  fetchHandler = async (url, opts) => {
+    assert.strictEqual(url, 'https://api.xkiro.com/v1/chat/completions');
+    assert.strictEqual(opts.headers['Authorization'], 'Bearer valid-xkiro-key');
+    const body = JSON.parse(opts.body);
+    assert.strictEqual(body.model, 'mistralai/mistral-small-2603');
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        choices: [{ message: { content: 'Hello!' } }]
+      })
+    };
+  };
+  const res5c = await sendMessage({ action: 'testXKiroKey', apiKey: 'valid-xkiro-key' });
+  assert.strictEqual(res5c.success, true);
+  assert.strictEqual(res5c.valid, true);
+  assert.strictEqual(res5c.model, 'mistralai/mistral-small-2603');
+  console.log('✓ Test 5c passed: testXKiroKey successfully verified xKiro API key');
 
   // Test 6: Persistent cache debounced saving to storage
   console.log('Test 6: Debounced cache saving to chrome.storage.local');

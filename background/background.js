@@ -507,13 +507,82 @@ ${text}`;
   }
 }
 
+// xKiro (Mistral) Prompt Execution
+async function executeXkiroPrompt(prompt, apiKey, model = 'mistralai/mistral-small-2603') {
+  if (!apiKey || !apiKey.trim()) {
+    throw new Error('Chưa cấu hình xKiro API Key. Vui lòng mở popup tiện ích để nhập API Key từ xkiro.com.');
+  }
+
+  const cleanKey = apiKey.trim();
+  const targetModel = model || 'mistralai/mistral-small-2603';
+
+  const resp = await fetch('https://api.xkiro.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${cleanKey}`
+    },
+    body: JSON.stringify({
+      model: targetModel,
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ]
+    })
+  });
+
+  if (!resp.ok) {
+    const errJson = await resp.json().catch(() => ({}));
+    const errMsg = errJson?.error?.message || errJson?.message || `HTTP ${resp.status}: ${resp.statusText}`;
+    throw new Error(`xKiro API error: ${errMsg}`);
+  }
+
+  const data = await resp.json();
+  const text = data?.choices?.[0]?.message?.content;
+  if (!text || typeof text !== 'string') {
+    throw new Error('xKiro API không trả về nội dung hợp lệ.');
+  }
+  return text.trim();
+}
+
+// Single item xKiro (Mistral) translation with fallback to Google Translate
+async function translateWithXkiro(text, apiKey, model = 'mistralai/mistral-small-2603') {
+  const viHash = await getOrInitAlreadyViHash();
+
+  const prompt = `You are a professional translator for competitive programming, algorithms, and technical texts.
+Translate the following English text to natural, accurate, high-quality Vietnamese.
+
+CRITICAL RULES:
+1. Preserve all placeholders like [[M0]], [[M1]], [[M2]], etc., EXACTLY without translating, deleting, or moving them.
+2. Preserve all variable names, formulas, numbers, and mathematical notation.
+3. Do NOT translate output keywords and problem verdict tokens such as "YES", "NO", "Yes", "No", "FIRST", "SECOND", "POSSIBLE", "IMPOSSIBLE" when they refer to output answers/strings to print. Keep them in English (e.g., "The letters in the words YES and NO can be printed in any case" -> "Các chữ cái trong từ YES và NO có thể được in trong mọi trường hợp"; NEVER translate output strings "YES" / "NO" into "CÓ" / "KHÔNG").
+4. If the input text is ALREADY in Vietnamese (tiếng Việt), do NOT translate or repeat it. Output ONLY this exact 256-bit hash code to save tokens:
+${viHash}
+5. Return ONLY the translated Vietnamese text (or the 256-bit hash code if already in Vietnamese). Do not add any conversational remarks, notes, or markdown formatting backticks.
+
+Text to translate:
+${text}`;
+
+  try {
+    const output = await executeXkiroPrompt(prompt, apiKey, model);
+    if (output && output.includes(viHash)) {
+      return text;
+    }
+    return output;
+  } catch (err) {
+    console.warn('[CF Translator] xKiro thất bại, tự động chuyển sang Google Translate:', err.message);
+    return await translateWithGoogle(text);
+  }
+}
 
 // Unified Single Translation Handler
-async function handleTranslation(text, engine, geminiApiKey, geminiModel, geminiCustomModel) {
+async function handleTranslation(text, engine, geminiApiKey, geminiModel, geminiCustomModel, xkiroApiKey) {
   if (!text || !text.trim()) return '';
   await initCachePromise;
 
-  const eng = engine === 'gemini' ? 'gemini' : 'google';
+  const eng = (engine === 'gemini' || engine === 'xkiro') ? engine : 'google';
   const cacheKey = `${eng}:${text.trim()}`;
   if (translationCache.has(cacheKey)) {
     return translationCache.get(cacheKey);
@@ -526,6 +595,14 @@ async function handleTranslation(text, engine, geminiApiKey, geminiModel, gemini
       result = await translateWithGemini(text, geminiApiKey, geminiModel, geminiCustomModel);
     } catch (err) {
       console.warn('[CF Translator] Gemini lỗi, fallback sang Google Translate:', err.message);
+      result = await translateWithGoogle(text);
+      actualEngine = 'google';
+    }
+  } else if (eng === 'xkiro' && xkiroApiKey) {
+    try {
+      result = await translateWithXkiro(text, xkiroApiKey);
+    } catch (err) {
+      console.warn('[CF Translator] xKiro lỗi, fallback sang Google Translate:', err.message);
       result = await translateWithGoogle(text);
       actualEngine = 'google';
     }
@@ -545,11 +622,11 @@ async function handleTranslation(text, engine, geminiApiKey, geminiModel, gemini
 }
 
 // Unified Batch Translation Handler
-async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, geminiCustomModel) {
+async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, geminiCustomModel, xkiroApiKey) {
   if (!Array.isArray(items) || items.length === 0) return [];
   await initCachePromise;
 
-  const eng = engine === 'gemini' ? 'gemini' : 'google';
+  const eng = (engine === 'gemini' || engine === 'xkiro') ? engine : 'google';
   const results = new Array(items.length);
   const uncachedIndices = [];
 
@@ -573,6 +650,7 @@ async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, 
   }
 
   const isGeminiActive = eng === 'gemini' && geminiApiKey && geminiQuotaCooldownUntil <= Date.now();
+  const isXkiroActive = eng === 'xkiro' && xkiroApiKey;
 
   if (isGeminiActive) {
     // Process in batches of up to 12 items to preserve quota and avoid 429 limits
@@ -589,7 +667,7 @@ async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, 
         } catch (err) {
           try {
             const trans = await translateWithGoogle(batchTexts[0]);
-            translationCache.set(`${eng}:${batchTexts[0]}`, trans);
+            translationCache.set(`google:${batchTexts[0]}`, trans);
             results[batchIndices[0]] = trans;
           } catch (e) {
             results[batchIndices[0]] = batchTexts[0];
@@ -646,6 +724,87 @@ ${promptBody}`;
       } catch (err) {
         console.warn('[CF Translator] Batch Gemini thất bại, tự động chuyển Google Translate batch:', err.message);
         // Fall back directly to Google Translate batch
+        const transList = await translateBatchWithGoogle(batchTexts);
+        for (let b = 0; b < batchIndices.length; b++) {
+          const origIdx = batchIndices[b];
+          const text = batchTexts[b];
+          const trans = transList[b] || text;
+          translationCache.set(`google:${text}`, trans);
+          results[origIdx] = trans;
+        }
+      }
+    }
+  } else if (isXkiroActive) {
+    // Process in batches of up to 12 items with xKiro
+    const BATCH_SIZE = 12;
+    for (let i = 0; i < uncachedIndices.length; i += BATCH_SIZE) {
+      const batchIndices = uncachedIndices.slice(i, i + BATCH_SIZE);
+      const batchTexts = batchIndices.map(idx => items[idx].trim());
+
+      if (batchTexts.length === 1) {
+        try {
+          const trans = await translateWithXkiro(batchTexts[0], xkiroApiKey);
+          translationCache.set(`${eng}:${batchTexts[0]}`, trans);
+          results[batchIndices[0]] = trans;
+        } catch (err) {
+          try {
+            const trans = await translateWithGoogle(batchTexts[0]);
+            translationCache.set(`google:${batchTexts[0]}`, trans);
+            results[batchIndices[0]] = trans;
+          } catch (e) {
+            results[batchIndices[0]] = batchTexts[0];
+          }
+        }
+        continue;
+      }
+
+      const delimiterPrefix = '<<<CF_TRANSLATE_ITEM_';
+      const delimiterSuffix = '>>>';
+      const promptBody = batchTexts.map((t, idx) => `${delimiterPrefix}${idx}${delimiterSuffix}\n${t}`).join('\n\n');
+      const viHash = await getOrInitAlreadyViHash();
+
+      const fullPrompt = `You are a professional translator for competitive programming, algorithms, and technical texts.
+Translate each of the numbered English text items below to natural, accurate, high-quality Vietnamese.
+
+CRITICAL RULES:
+1. Preserve all placeholders like [[M0]], [[M1]], [[M2]], etc., EXACTLY without translating, deleting, or moving them.
+2. Preserve all variable names, formulas, numbers, and mathematical notation.
+3. Do NOT translate output keywords and problem verdict tokens such as "YES", "NO", "Yes", "No", "FIRST", "SECOND", "POSSIBLE", "IMPOSSIBLE" when they refer to output answers/strings to print. Keep them in English (e.g., "The letters in the words YES and NO can be printed in any case" -> "Các chữ cái trong từ YES và NO có thể được in trong mọi trường hợp"; NEVER translate output strings "YES" / "NO" into "CÓ" / "KHÔNG").
+4. If any item is ALREADY in Vietnamese (tiếng Việt), do NOT translate or repeat that item. Output its delimiter followed ONLY by this exact 256-bit hash code to save tokens:
+${viHash}
+5. For each item, output the exact delimiter "${delimiterPrefix}N${delimiterSuffix}" followed by the translated Vietnamese text (or the 256-bit hash code if already Vietnamese) for item N.
+6. Return ONLY the translated items with their delimiters. Do not add any conversational remarks, notes, or markdown formatting backticks.
+
+Text items to translate:
+${promptBody}`;
+
+      try {
+        const batchOutput = await executeXkiroPrompt(fullPrompt, xkiroApiKey);
+        const parts = batchOutput.split(/<?<?<?\s*CF_TRANSLATE_ITEM_(\d+)\s*>?\>?>?/i);
+        const parsedMap = new Map();
+        for (let p = 1; p < parts.length; p += 2) {
+          const itemIdx = parseInt(parts[p], 10);
+          const itemContent = (parts[p + 1] || '').trim().replace(/^[:\-–—]\s*/, '').trim();
+          parsedMap.set(itemIdx, itemContent);
+        }
+
+        for (let b = 0; b < batchIndices.length; b++) {
+          const origIdx = batchIndices[b];
+          const text = batchTexts[b];
+          let trans = parsedMap.get(b);
+          let actualEng = eng;
+          if (trans && trans.includes(viHash)) {
+            trans = text;
+          }
+          if (!trans) {
+            trans = await translateWithGoogle(text).catch(() => text);
+            actualEng = 'google';
+          }
+          translationCache.set(`${actualEng}:${text}`, trans);
+          results[origIdx] = trans;
+        }
+      } catch (err) {
+        console.warn('[CF Translator] Batch xKiro thất bại, tự động chuyển Google Translate batch:', err.message);
         const transList = await translateBatchWithGoogle(batchTexts);
         for (let b = 0; b < batchIndices.length; b++) {
           const origIdx = batchIndices[b];
@@ -714,6 +873,34 @@ async function testGeminiConnection(apiKey) {
   return { valid: true, models: availableModels };
 }
 
+// Test xKiro API key connection
+async function testXKiroConnection(apiKey) {
+  if (!apiKey || !apiKey.trim()) {
+    throw new Error('Vui lòng nhập API Key.');
+  }
+  const cleanKey = apiKey.trim();
+  const resp = await fetch('https://api.xkiro.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${cleanKey}`
+    },
+    body: JSON.stringify({
+      model: 'mistralai/mistral-small-2603',
+      messages: [{ role: 'user', content: 'Hello!' }]
+    })
+  });
+  if (!resp.ok) {
+    const errJson = await resp.json().catch(() => ({}));
+    throw new Error(errJson?.error?.message || errJson?.message || `HTTP ${resp.status}`);
+  }
+  const data = await resp.json().catch(() => ({}));
+  if (data?.error) {
+    throw new Error(data.error.message || 'Lỗi kết nối xKiro');
+  }
+  return { valid: true, model: 'mistralai/mistral-small-2603' };
+}
+
 // Listen for messages from popup or content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message && message.action === 'cacheMedia') {
@@ -728,7 +915,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       message.engine,
       message.geminiApiKey,
       message.geminiModel,
-      message.geminiCustomModel
+      message.geminiCustomModel,
+      message.xkiroApiKey
     )
       .then(translatedText => {
         sendResponse({ success: true, text: translatedText });
@@ -743,7 +931,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       message.engine,
       message.geminiApiKey,
       message.geminiModel,
-      message.geminiCustomModel
+      message.geminiCustomModel,
+      message.xkiroApiKey
     )
       .then(translatedItems => {
         sendResponse({ success: true, texts: translatedItems });
@@ -754,6 +943,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   } else if (message && message.action === 'testGeminiKey') {
     testGeminiConnection(message.apiKey)
+      .then(info => {
+        sendResponse({ success: true, ...info });
+      })
+      .catch(err => {
+        sendResponse({ success: false, error: err.message });
+      });
+    return true;
+  } else if (message && message.action === 'testXKiroKey') {
+    testXKiroConnection(message.apiKey)
       .then(info => {
         sendResponse({ success: true, ...info });
       })
@@ -1146,6 +1344,9 @@ if (typeof module !== 'undefined' && module.exports) {
     getOrInitAlreadyViHash,
     generate256BitHexHash,
     geminiModelCooldowns,
-    GEMINI_FREE_MODELS
+    GEMINI_FREE_MODELS,
+    executeXkiroPrompt,
+    translateWithXkiro,
+    testXKiroConnection
   };
 }

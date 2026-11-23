@@ -87,6 +87,8 @@ const ids = [
   'trans-engine-badge', 'trans-engine-options', 'gemini-key-container', 'gemini-api-key',
   'btn-toggle-key-visibility', 'gemini-model-select', 'gemini-custom-model-container',
   'gemini-custom-model', 'btn-test-gemini', 'gemini-test-status',
+  'xkiro-key-container', 'xkiro-api-key', 'btn-toggle-xkiro-visibility',
+  'xkiro-model', 'btn-test-xkiro', 'xkiro-test-status',
   'size-options',
   'popup-streak-badge', 'stat-current-streak', 'stat-streak-subs', 'stat-max-streak', 'stat-total-days', 'popup-streak-status',
   'update-banner', 'update-title', 'update-desc', 'update-tag', 'btn-update-now',
@@ -100,8 +102,10 @@ const googleBtn = createMockEl('btn-google', 'button');
 googleBtn.dataset.engine = 'google';
 const geminiBtn = createMockEl('btn-gemini', 'button');
 geminiBtn.dataset.engine = 'gemini';
+const xkiroBtn = createMockEl('btn-xkiro', 'button');
+xkiroBtn.dataset.engine = 'xkiro';
 elements['trans-engine-options'].querySelectorAll = (sel) => {
-  if (sel === '.pill-btn') return [googleBtn, geminiBtn];
+  if (sel === '.pill-btn') return [googleBtn, geminiBtn, xkiroBtn];
   return [];
 };
 
@@ -154,6 +158,12 @@ const mockChrome = {
       if (msg.action === 'testGeminiKey') {
         if (msg.apiKey === 'valid-test-key') {
           cb({ success: true, models: ['gemini-2.5-flash', 'gemini-2.0-flash'] });
+        } else {
+          cb({ success: false, error: 'API Key không hợp lệ' });
+        }
+      } else if (msg.action === 'testXKiroKey') {
+        if (msg.apiKey === 'valid-xkiro-key') {
+          cb({ success: true, model: 'mistralai/mistral-small-2603' });
         } else {
           cb({ success: false, error: 'API Key không hợp lệ' });
         }
@@ -301,8 +311,32 @@ async function runPopupTests() {
   googleBtn.click();
   assert.strictEqual(storage.translationEngine, 'google');
   assert(elements['gemini-key-container'].classList.contains('hidden'), 'gemini container should be hidden');
+  assert(elements['xkiro-key-container'].classList.contains('hidden'), 'xkiro container should be hidden');
   assert.strictEqual(elements['trans-engine-badge'].textContent, 'Google');
   console.log('✓ Test 6 passed: Switched back to Google Translate engine successfully');
+
+  // Test 6b: Switch to xKiro (Mistral) engine & test connection
+  console.log('Test 6b: Switch to xKiro (Mistral) engine, toggle visibility and test connection');
+  xkiroBtn.click();
+  assert.strictEqual(storage.translationEngine, 'xkiro', 'Storage should record translationEngine as xkiro');
+  assert.strictEqual(elements['trans-engine-badge'].textContent, 'xKiro Mistral');
+  assert(!elements['xkiro-key-container'].classList.contains('hidden'), 'xkiro container should be visible');
+  assert(elements['gemini-key-container'].classList.contains('hidden'), 'gemini container should be hidden');
+
+  // Input xKiro API key
+  elements['xkiro-api-key'].value = 'valid-xkiro-key';
+  elements['xkiro-api-key'].dispatchEvent('input');
+  assert.strictEqual(storage.xkiroApiKey, 'valid-xkiro-key');
+
+  // Toggle xKiro key visibility
+  elements['xkiro-api-key'].type = 'password';
+  elements['btn-toggle-xkiro-visibility'].click();
+  assert.strictEqual(elements['xkiro-api-key'].type, 'text');
+
+  // Test xKiro connection button
+  elements['btn-test-xkiro'].click();
+  assert(elements['xkiro-test-status'].textContent.includes('Kết nối thành công'), 'xKiro status should show success');
+  console.log('✓ Test 6b passed: xKiro engine selection, key storage and connection test verified');
 
   // Test 7: Multi-Branch Update banner display & version tag
   console.log('Test 7: Update banner display across branch update scenarios');

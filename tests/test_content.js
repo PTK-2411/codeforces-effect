@@ -1929,6 +1929,23 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert.strictEqual(pEl.dataset.cfEngine, 'gemini', 'Element must be re-translated with Gemini engine');
   console.log('✓ Test 36 passed: Elements translated with Google are re-translated when switching to AI (Gemini)');
 
+  // Test 37: Elements translated with Google are re-translated when switching to xKiro (Mistral)
+  console.log('Test 37: Elements translated with Google are re-translated when switching to xKiro (Mistral)');
+  // Re-translate with Google
+  storageChangeListeners.forEach(fn => fn({
+    translationEngine: { newValue: 'google' }
+  }, 'local'));
+  await new Promise(r => setTimeout(r, 100));
+  assert.strictEqual(pEl.dataset.cfEngine, 'google');
+
+  // Now switch to xkiro
+  storageChangeListeners.forEach(fn => fn({
+    translationEngine: { newValue: 'xkiro' }
+  }, 'local'));
+  await new Promise(r => setTimeout(r, 100));
+  assert.strictEqual(pEl.dataset.cfEngine, 'xkiro', 'Element must be re-translated with xKiro engine');
+  console.log('✓ Test 37 passed: Elements translated with Google are re-translated when switching to xKiro (Mistral)');
+
   console.log('\nALL content.js TESTS PASSED SUCCESSFULLY!');
 }
 

@@ -63,6 +63,11 @@
   const geminiCustomModelInput = document.getElementById('gemini-custom-model');
   const btnTestGemini = document.getElementById('btn-test-gemini');
   const geminiTestStatus = document.getElementById('gemini-test-status');
+  const xkiroKeyContainer = document.getElementById('xkiro-key-container');
+  const xkiroApiKeyInput = document.getElementById('xkiro-api-key');
+  const btnToggleXkiroVisibility = document.getElementById('btn-toggle-xkiro-visibility');
+  const btnTestXkiro = document.getElementById('btn-test-xkiro');
+  const xkiroTestStatus = document.getElementById('xkiro-test-status');
 
   // Size Options
   const sizeOptions = document.getElementById('size-options');
@@ -110,7 +115,8 @@
     translationEngine: 'google',
     geminiApiKey: '',
     geminiModel: 'auto',
-    geminiCustomModel: ''
+    geminiCustomModel: '',
+    xkiroApiKey: ''
   };
 
   let currentSettings = { ...DEFAULT_SETTINGS };
@@ -381,7 +387,13 @@
     // Translation Engine pills
     const engine = settings.translationEngine || 'google';
     if (transEngineBadge) {
-      transEngineBadge.textContent = engine === 'gemini' ? 'Gemini AI' : 'Google';
+      if (engine === 'gemini') {
+        transEngineBadge.textContent = 'Gemini AI';
+      } else if (engine === 'xkiro') {
+        transEngineBadge.textContent = 'xKiro Mistral';
+      } else {
+        transEngineBadge.textContent = 'Google';
+      }
     }
     transEngineBtns.forEach(btn => {
       if (btn.dataset.engine === engine) {
@@ -397,8 +409,18 @@
         geminiKeyContainer.classList.add('hidden');
       }
     }
+    if (xkiroKeyContainer) {
+      if (engine === 'xkiro') {
+        xkiroKeyContainer.classList.remove('hidden');
+      } else {
+        xkiroKeyContainer.classList.add('hidden');
+      }
+    }
     if (geminiApiKeyInput) {
       geminiApiKeyInput.value = settings.geminiApiKey || '';
+    }
+    if (xkiroApiKeyInput) {
+      xkiroApiKeyInput.value = settings.xkiroApiKey || '';
     }
     const currentModel = settings.geminiModel || 'auto';
     if (geminiModelSelect) {
@@ -1175,13 +1197,26 @@
       transEngineBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       if (transEngineBadge) {
-        transEngineBadge.textContent = engine === 'gemini' ? 'Gemini AI' : 'Google';
+        if (engine === 'gemini') {
+          transEngineBadge.textContent = 'Gemini AI';
+        } else if (engine === 'xkiro') {
+          transEngineBadge.textContent = 'xKiro Mistral';
+        } else {
+          transEngineBadge.textContent = 'Google';
+        }
       }
       if (geminiKeyContainer) {
         if (engine === 'gemini') {
           geminiKeyContainer.classList.remove('hidden');
         } else {
           geminiKeyContainer.classList.add('hidden');
+        }
+      }
+      if (xkiroKeyContainer) {
+        if (engine === 'xkiro') {
+          xkiroKeyContainer.classList.remove('hidden');
+        } else {
+          xkiroKeyContainer.classList.add('hidden');
         }
       }
       saveSettings({ translationEngine: engine });
@@ -1267,6 +1302,52 @@
           const err = (response && response.error) || 'Không thể kết nối';
           geminiTestStatus.textContent = `❌ ${err.slice(0, 45)}`;
           geminiTestStatus.className = 'url-status-hint error';
+        }
+      });
+    });
+  }
+
+  // xKiro API Key & Options
+  if (btnToggleXkiroVisibility && xkiroApiKeyInput) {
+    btnToggleXkiroVisibility.addEventListener('click', () => {
+      const isPass = xkiroApiKeyInput.type === 'password';
+      xkiroApiKeyInput.type = isPass ? 'text' : 'password';
+      btnToggleXkiroVisibility.textContent = isPass ? '🙈' : '👁️';
+    });
+  }
+
+  if (xkiroApiKeyInput) {
+    xkiroApiKeyInput.addEventListener('input', (e) => {
+      saveSettings({ xkiroApiKey: e.target.value.trim() });
+      if (xkiroTestStatus) xkiroTestStatus.textContent = '';
+    });
+  }
+
+  if (btnTestXkiro) {
+    btnTestXkiro.addEventListener('click', () => {
+      const apiKey = xkiroApiKeyInput ? xkiroApiKeyInput.value.trim() : '';
+      if (!apiKey) {
+        if (xkiroTestStatus) {
+          xkiroTestStatus.textContent = '⚠️ Chưa nhập API Key';
+          xkiroTestStatus.className = 'url-status-hint error';
+        }
+        return;
+      }
+
+      if (xkiroTestStatus) {
+        xkiroTestStatus.textContent = '⏳ Đang kiểm tra...';
+        xkiroTestStatus.className = 'url-status-hint';
+      }
+
+      chrome.runtime.sendMessage({ action: 'testXKiroKey', apiKey }, (response) => {
+        if (!xkiroTestStatus) return;
+        if (response && response.success) {
+          xkiroTestStatus.textContent = '✔️ Kết nối thành công!';
+          xkiroTestStatus.className = 'url-status-hint success';
+        } else {
+          const err = (response && response.error) || 'Không thể kết nối';
+          xkiroTestStatus.textContent = `❌ ${err.slice(0, 45)}`;
+          xkiroTestStatus.className = 'url-status-hint error';
         }
       });
     });
