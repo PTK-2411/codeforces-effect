@@ -7,7 +7,7 @@
 <br />
 
 <p align="center">
-  <img src="https://img.shields.io/badge/CODEFORCES_EFFECT-V1.1.0_ALPHA-7B2CBF?style=for-the-badge&logo=codeforces&logoColor=white" alt="Codeforces Effect" />
+  <img src="https://img.shields.io/badge/CODEFORCES_EFFECT-V1.2.0-7B2CBF?style=for-the-badge&logo=codeforces&logoColor=white" alt="Codeforces Effect" />
   <img src="https://img.shields.io/badge/NODE.JS-%3E%3D20.12-238636?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
   <img src="https://img.shields.io/badge/MANIFEST-V3-1f6feb?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/LICENSE-MIT-007ACC?style=for-the-badge" alt="License" />
@@ -30,10 +30,11 @@ https://github.com/user-attachments/assets/ae90bd75-06f7-49f7-b89e-071c69ee9092
 ## ✨ Tính năng nổi bật
 
 1. **Tải ảnh và video tùy thích qua Popup**:
+   - **Tích hợp sẵn Video mẫu chất lượng cao**: Đi kèm sẵn video nền siêu mượt *Interstellar Gargantua (1080p Full HD)* và *Chilling Cat (Live Wallpaper)*.
    - **Tải tệp lên**: Kéo & thả hoặc nhấp duyệt từ máy tính. Hỗ trợ ảnh (JPG, PNG, WebP, GIF) và video (MP4, WebM).
    - **Nhập liên kết (URL)**: Dán link **YouTube** (`https://www.youtube.com/watch?v=...`, `youtu.be/...`, shorts) hoặc link trực tiếp đến ảnh / video MP4/WebM để áp dụng ngay.
    - **Video nền phát lặp lại (Loop)**: Hỗ trợ cả YouTube iframe nhúng lẫn video HTML5, tự động chạy lặp lại không tiếng (`autoplay`, `loop`, `muted`).
-   - **Lưu lịch sử 5 nền gần nhất & Cache ngầm tức thì**: Tự động lưu 5 nền bạn từng dùng gần đây kèm ảnh thumbnail và huy hiệu `▶ YouTube`, `▶ Video ⚡` hoặc `Ảnh ⚡`. Lần đầu tiên phát từ mạng để không phải chờ đợi, đồng thời tải và lưu ngầm bản sao vào bộ nhớ máy; các lần sau sẽ tự động phát trực tiếp từ máy siêu tốc và hỗ trợ offline. Khi lịch sử vượt quá 5 mục hoặc khi bạn xóa, các file cache ngầm tương ứng sẽ được tự động xóa sạch để tiết kiệm dung lượng.
+   - **Lưu lịch sử nền gần nhất & Cache ngầm tức thì**: Tự động lưu các nền bạn từng dùng gần đây kèm ảnh thumbnail và huy hiệu `▶ YouTube`, `▶ Video ⚡` hoặc `Ảnh ⚡`. Lần đầu tiên phát từ mạng để không phải chờ đợi, đồng thời tải và lưu ngầm bản sao vào bộ nhớ máy; các lần sau sẽ tự động phát trực tiếp từ máy siêu tốc và hỗ trợ offline.
 2. **Theo dõi chuỗi ngày nộp bài liên tiếp (Streak Tracker)**:
    - Tự động nhận diện tài khoản sau khi đăng nhập Codeforces.
    - Trích xuất dữ liệu hoạt động từ `userActivityGraph` (hoặc Codeforces status API) trên trang cá nhân của bạn.
@@ -44,10 +45,15 @@ https://github.com/user-attachments/assets/ae90bd75-06f7-49f7-b89e-071c69ee9092
        - **Màu xám**: Khi chuỗi = 0 HOẶC hôm nay chưa nộp bài để giữ chuỗi (nhắc nhở cần làm bài).
    - Khi bấm vào huy hiệu trên web: mở bảng chi tiết hiển thị **Số bài nộp trong chuỗi hiện tại**, kỷ lục dài nhất, tổng ngày nộp và nút làm mới dữ liệu.
    - Đồng thời hiển thị thẻ thống kê trực quan ngay trong Popup của tiện ích.
-3. **Dịch thuật đa ngôn ngữ (Google Translate & Gemini AI)**:
+3. **Dịch thuật đa ngôn ngữ (Google Translate, Gemini AI & Mistral xKiro)**:
    - Tự động dịch đề bài, blog, bình luận, thông báo thi đấu sang tiếng Việt với 1 chạm hoặc chuyển đổi linh hoạt Việt - Anh.
-   - Bảo toàn 100% công thức toán học LaTeX, MathJax, mã nguồn (Code block) và tên thí sinh (User handle).
-   - Hỗ trợ công cụ dịch: **Google Translate** và **Gemini AI** (chuỗi tự động chuyển đổi thông minh: Gemini 4 Hydrogen $\rightarrow$ Gemini 3.8 Flash $\rightarrow$ Gemini 3.5 Flash Lite khi hết quota RPM).
+   - **Dịch Streaming Real-Time (SSE)**: AI dịch xong đoạn/khối nào là hiển thị ngay lập tức lên trang, loại bỏ cảm giác chờ đợi khi dịch bài dài.
+   - Bảo toàn 100% công thức toán học LaTeX, MathJax, mã nguồn (Code block), từ khóa in kết quả (`YES`, `NO`) và tên thí sinh (User handle).
+   - Hỗ trợ công cụ dịch:
+     - **Google Translate**: Dịch tốc độ cao qua hạ tầng Linguist Chrome Extension API.
+     - **Gemini AI**: Chuỗi tự động chuyển đổi thông minh: Gemini 4 Hydrogen $\rightarrow$ Gemini 3.8 Flash $\rightarrow$ Gemini 3.5 Flash Lite khi hết quota RPM, hoặc tùy chỉnh model AI.
+     - **Mistral (xKiro)**: Dịch AI chuẩn xác và tự nhiên với model `mistralai/mistral-small-2603`.
+     - Tự động tải dịch lại bằng AI khi chuyển từ bản dịch Google Translate để câu văn mượt mà và trôi chảy hơn.
 4. **Chế độ Giao diện Tối & Sáng (Dark & Light Mode)**:
    - Công tắc chuyển đổi giao diện sáng/tối trực tiếp trên thanh menu Codeforces.
    - Bảng màu tương phản tối ưu, phối hợp hài hòa với nền kính mờ (Frosted Glassmorphism).

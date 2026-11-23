@@ -135,7 +135,7 @@ elements['btn-update-now'].querySelector = (sel) => {
 };
 
 const versionTagEl = createMockEl('version-tag', 'span');
-versionTagEl.textContent = 'v1.1.0 Alpha';
+versionTagEl.textContent = 'v1.2.0';
 
 const storage = {};
 let storageChangeCallback = null;
@@ -149,8 +149,8 @@ const mockChrome = {
   runtime: {
     getURL: (p) => `chrome-extension://mock/${p}`,
     getManifest: () => ({
-      version: '1.1.0',
-      version_name: 'v1.1.0 Alpha'
+      version: '1.2.0',
+      version_name: 'v1.2.0'
     }),
     sendMessage: (msg, cb) => {
       messagesSent.push(msg);
@@ -342,7 +342,7 @@ async function runPopupTests() {
   console.log('Test 7: Update banner display across branch update scenarios');
 
   // Verify version tag
-  assert(versionTagEl.textContent.includes('v1.1.0 Alpha'), 'Version tag in header must display v1.1.0 Alpha');
+  assert(versionTagEl.textContent.includes('v1.2.0'), 'Version tag in header must display v1.2.0');
 
   // Scenario 1: Official release banner
   if (storageChangeCallback) {

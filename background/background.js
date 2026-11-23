@@ -1547,7 +1547,7 @@ async function checkForUpdates() {
   try {
     const currentManifest = (typeof chrome !== 'undefined' && chrome.runtime?.getManifest)
       ? chrome.runtime.getManifest()
-      : { version: '1.1.0', version_name: 'v1.1.0 Alpha' };
+      : { version: '1.2.0', version_name: 'v1.2.0' };
 
     const resp = await fetch(`${GITHUB_RAW_MANIFEST_URL}?t=${Date.now()}`);
     if (!resp.ok) {

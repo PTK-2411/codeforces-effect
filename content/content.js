@@ -176,12 +176,13 @@
   }
 
   const DEFAULT_BG = chrome.runtime.getURL('assets/default-bg.mp4');
+  const SAMPLE_CAT_BG = chrome.runtime.getURL('assets/chilling-cat.mp4');
 
   function isVideoSource(type, url) {
     if (type === 'video') return true;
     if (type === 'image') return false;
     if (!url || typeof url !== 'string') return false;
-    if (url.includes('assets/default-bg.mp4')) return true;
+    if (url.includes('assets/default-bg.mp4') || url.includes('assets/chilling-cat.mp4')) return true;
     if (url.startsWith('data:video/')) return true;
     return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
   }

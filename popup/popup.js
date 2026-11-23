@@ -90,6 +90,8 @@
 
   const DEFAULT_BG = chrome.runtime.getURL('assets/default-bg.mp4');
   const DEFAULT_THUMB = chrome.runtime.getURL('assets/default-thumb.jpg');
+  const SAMPLE_CAT_BG = chrome.runtime.getURL('assets/chilling-cat.mp4');
+  const SAMPLE_CAT_THUMB = chrome.runtime.getURL('assets/chilling-cat-thumb.jpg');
 
   const DEFAULT_SETTINGS = {
     enabled: true,
@@ -104,6 +106,15 @@
         thumbnail: DEFAULT_THUMB,
         hasCache: true,
         timestamp: Date.now()
+      },
+      {
+        id: 'sample_chilling_cat_1080p',
+        type: 'video',
+        url: SAMPLE_CAT_BG,
+        name: 'Chilling Cat (Live Wallpaper)',
+        thumbnail: SAMPLE_CAT_THUMB,
+        hasCache: true,
+        timestamp: Date.now() - 1000
       }
     ],
     blur: 0,
@@ -145,7 +156,7 @@
     if (type === 'video') return true;
     if (type === 'image') return false;
     if (!url || typeof url !== 'string') return false;
-    if (url.includes('assets/default-bg.mp4')) return true;
+    if (url.includes('assets/default-bg.mp4') || url.includes('assets/chilling-cat.mp4')) return true;
     if (extractYouTubeId(url)) return false;
     if (url.startsWith('data:video/')) return true;
     return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
@@ -609,7 +620,7 @@
       const manifest = (typeof chrome !== 'undefined' && chrome.runtime?.getManifest) ? chrome.runtime.getManifest() : null;
       const versionEl = document.querySelector('.version-tag');
       if (versionEl && manifest) {
-        versionEl.textContent = manifest.version_name || manifest.version || 'v1.1.0 Alpha';
+        versionEl.textContent = manifest.version_name || manifest.version || 'v1.2.0';
       }
     } catch (e) {}
 
@@ -708,12 +719,12 @@
       }
     }
 
-    // Strict limit: at most 5 items. Delete caches of items beyond 5
-    if (history.length > 5) {
-      const removed = history.slice(5);
+    // Strict limit: at most 6 items. Delete caches of items beyond 6
+    if (history.length > 6) {
+      const removed = history.slice(6);
       const keysToRemove = removed.map(r => 'cf_cache_' + r.id);
       chrome.storage.local.remove(keysToRemove);
-      history = history.slice(0, 5);
+      history = history.slice(0, 6);
     }
 
     saveSettings({
@@ -810,8 +821,9 @@
       chrome.storage.local.set({ bgType: 'video', bgImage: DEFAULT_BG });
     }
 
-    // Ensure default Gargantua 1080p is in history
+    // Ensure default samples (Gargantua 1080p & Chilling Cat) are in history
     let history = currentSettings.bgHistory || [];
+    let historyChanged = false;
     if (!history.some(h => h.url === DEFAULT_BG || h.id === 'default_gargantua_1080p')) {
       history.unshift({
         id: 'default_gargantua_1080p',
@@ -822,7 +834,25 @@
         hasCache: true,
         timestamp: Date.now()
       });
-      if (history.length > 5) history = history.slice(0, 5);
+      historyChanged = true;
+    }
+    if (!history.some(h => h.url === SAMPLE_CAT_BG || h.id === 'sample_chilling_cat_1080p')) {
+      history.push({
+        id: 'sample_chilling_cat_1080p',
+        type: 'video',
+        url: SAMPLE_CAT_BG,
+        name: 'Chilling Cat (Live Wallpaper)',
+        thumbnail: SAMPLE_CAT_THUMB,
+        hasCache: true,
+        timestamp: Date.now() - 1000
+      });
+      historyChanged = true;
+    }
+    if (history.length > 6) {
+      history = history.slice(0, 6);
+      historyChanged = true;
+    }
+    if (historyChanged) {
       currentSettings.bgHistory = history;
       chrome.storage.local.set({ bgHistory: history });
     }
