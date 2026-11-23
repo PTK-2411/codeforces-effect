@@ -2159,6 +2159,7 @@
     styleSubmissionVerdicts();
     fixSideboxFormButtons();
     styleProblemsetRows();
+    highlightOnlineStatus();
 
     // If language was switched or session was invalidated while awaiting, do not proceed with state updates
     if (session !== currentTranslationSession || (isVi && currentCfLang !== 'vi') || (!isVi && currentCfLang === 'vi')) {
@@ -2864,15 +2865,15 @@
           btn.style.setProperty('right', 'auto', 'important');
           btn.style.setProperty('float', 'none', 'important');
           btn.style.setProperty('clear', 'none', 'important');
-          btn.style.setProperty('margin', '4px 6px', 'important');
-          btn.style.setProperty('padding', '6px 16px', 'important');
+          btn.style.setProperty('margin', '2px auto', 'important');
+          btn.style.setProperty('padding', '4px 18px', 'important');
           btn.style.setProperty('display', 'inline-flex', 'important');
           btn.style.setProperty('justify-content', 'center', 'important');
           btn.style.setProperty('align-items', 'center', 'important');
           btn.style.setProperty('box-sizing', 'border-box', 'important');
           btn.style.setProperty('vertical-align', 'middle', 'important');
           btn.style.setProperty('height', 'auto', 'important');
-          btn.style.setProperty('min-height', '32px', 'important');
+          btn.style.setProperty('min-height', '28px', 'important');
           btn.style.setProperty('line-height', 'normal', 'important');
         }
 
@@ -2888,8 +2889,8 @@
             container.style.setProperty('justify-content', 'center', 'important');
             container.style.setProperty('align-items', 'center', 'important');
             container.style.setProperty('gap', '10px', 'important');
-            container.style.setProperty('margin-top', '14px', 'important');
-            container.style.setProperty('margin-bottom', '6px', 'important');
+            container.style.setProperty('margin-top', '6px', 'important');
+            container.style.setProperty('margin-bottom', '2px', 'important');
             container.style.setProperty('line-height', 'normal', 'important');
             container.style.setProperty('height', 'auto', 'important');
             container.style.setProperty('min-height', 'auto', 'important');
@@ -2901,16 +2902,20 @@
         }
       });
 
-      // Ensure form labels, inputs and text in sidebox forms are cleanly left-aligned
+      // Ensure form labels, inputs and text in sidebox forms are cleanly left-aligned with compact vertical spacing
       const sideboxForms = document.querySelectorAll('.sidebox form');
       sideboxForms.forEach((form) => {
         if (form.style && form.style.setProperty) {
           form.style.setProperty('text-align', 'left', 'important');
+          form.style.setProperty('padding', '2px 0', 'important');
+          form.style.setProperty('margin', '0', 'important');
         }
         Array.from(form.children).forEach((child) => {
           if (!child.classList.contains('cf-form-actions') && !child.querySelector('input[type="submit"], input[type="reset"], button')) {
             if (child.style && child.style.setProperty) {
               child.style.setProperty('text-align', 'left', 'important');
+              child.style.setProperty('padding', '1px 0', 'important');
+              child.style.setProperty('margin', '0', 'important');
             }
           }
         });
@@ -2920,12 +2925,53 @@
             lbl.style.setProperty('display', 'block', 'important');
             lbl.style.setProperty('text-align', 'left', 'important');
             lbl.style.setProperty('float', 'none', 'important');
-            lbl.style.setProperty('margin-bottom', '4px', 'important');
+            lbl.style.setProperty('clear', 'both', 'important');
+            lbl.style.setProperty('margin-top', '2px', 'important');
+            lbl.style.setProperty('margin-bottom', '3px', 'important');
+          }
+        });
+        const inputs = form.querySelectorAll('input[type="text"]');
+        inputs.forEach((inp) => {
+          if (inp.style && inp.style.setProperty) {
+            inp.style.setProperty('margin-top', '2px', 'important');
+            inp.style.setProperty('margin-bottom', '4px', 'important');
+            inp.style.setProperty('height', '30px', 'important');
+            inp.style.setProperty('min-height', '30px', 'important');
+            inp.style.setProperty('padding', '4px 8px', 'important');
           }
         });
       });
     } catch (e) {
       // Ignore
+    }
+  }
+
+  function highlightOnlineStatus(root) {
+    try {
+      const scope = root || document;
+      const candidates = scope.querySelectorAll
+        ? scope.querySelectorAll('.format-online, .online, .cf-online-now, span[style*="green"], .info span, .userbox span, .personal-sidebar span, li span')
+        : [];
+      candidates.forEach((el) => {
+        const txt = (el.textContent || '').replace(/\u00A0/g, ' ').trim().toLowerCase();
+        if (
+          el.classList.contains('format-online') ||
+          el.classList.contains('online') ||
+          el.classList.contains('cf-online-now') ||
+          txt === 'online now' ||
+          txt === 'đang trực tuyến' ||
+          (el.getAttribute('style') && el.getAttribute('style').includes('green'))
+        ) {
+          el.classList.add('cf-online-now');
+          if (el.style && el.style.setProperty) {
+            el.style.setProperty('color', '#22c55e', 'important');
+            el.style.setProperty('font-weight', '700', 'important');
+            el.style.setProperty('text-shadow', 'none', 'important');
+          }
+        }
+      });
+    } catch (e) {
+      // silent fallback
     }
   }
 
@@ -3006,6 +3052,7 @@
     styleSubmissionVerdicts();
     fixSideboxFormButtons();
     styleProblemsetRows();
+    highlightOnlineStatus();
     colorizeMathElements();
 
     if (!isInitialized) {
@@ -3043,6 +3090,7 @@
         styleSubmissionVerdicts();
         fixSideboxFormButtons();
         styleProblemsetRows();
+        highlightOnlineStatus();
         colorizeMathElements();
       });
     } else {
@@ -3100,6 +3148,7 @@
         styleSubmissionVerdicts();
         fixSideboxFormButtons();
         styleProblemsetRows();
+        highlightOnlineStatus();
       } else {
         teardownForCloudflare();
       }

@@ -13,6 +13,16 @@
   <img src="https://img.shields.io/badge/LICENSE-MIT-007ACC?style=for-the-badge" alt="License" />
 </p>
 
+<br />
+
+### 🎬 Video Demo Trải Nghiệm
+
+https://github.com/PTK-2411/codeforces-effect/assets/demo.mp4
+
+<video src="assets/demo.mp4" controls width="100%" style="max-width: 820px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);"></video>
+
+<sub>*(Nếu không xem được video trực tiếp, bạn có thể [nhấp vào đây để xem hoặc tải về video demo](assets/demo.mp4))*</sub>
+
 </div>
 
 ---
@@ -87,5 +97,5 @@
 ## 📄 Bản quyền & Mã nguồn (License & Source)
 
 - **Repository**: [https://github.com/PTK-2411/codeforces-effect](https://github.com/PTK-2411/codeforces-effect)
-- **License**: Phát hành theo giấy phép [MIT License](LICENSE) (Copyright (c) 2026 Phạm Tấn Khoa).
+- **License**: Phát hành theo giấy phép [MIT License](LICENSE) (Copyright (c) 2026 PTK-2411).
 - **Cơ chế cập nhật**: Tự động kiểm tra bản phát hành trên GitHub; nếu đang ở bản `TEST` và phát hiện có bản chính thức (`Official`) thì sẽ hiển thị thông báo và nút cập nhật trực tiếp trên Popup.

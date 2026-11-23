@@ -1507,7 +1507,8 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
       location: { pathname, href },
       addEventListener: () => {},
       removeEventListener: () => {},
-      dispatchEvent: () => {}
+      dispatchEvent: () => {},
+      CF_TRANSLATIONS: windowObj.CF_TRANSLATIONS
     };
     winObj.window = winObj;
     const sb = {
@@ -1554,6 +1555,225 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   // Normal hacks page SHOULD initialize background layer when active
   assert(normalDoc.classList.contains('cf-custom-bg-active'), 'Normal /hacks page MUST have cf-custom-bg-active class');
   console.log('✓ Test 29 passed: Raw hack test pages excluded cleanly, while normal /hacks page runs extension normally');
+
+  // Test 30: Status filter is used, click here to reset & Contest status translation and spacing
+  console.log('Test 30: Status filter notice & Contest status translation & spacing');
+  body.innerHTML = `
+    <div id="pageContent">
+      <div class="status-filter-notice" style="font-size: 1.1em; margin-bottom: 0.5em;">
+        Status filter is used, click <a href="https://codeforces.com/contest/2167/status#">here</a> to reset
+      </div>
+      <div class="datatable">
+        <div class="caption titled">Contest status <a href="#"><img class="standings-type-icon" src="icon.png"></a></div>
+        <table class="status-frame-datatable">
+          <thead>
+            <tr><th>#</th><th>WHEN</th><th>WHO</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>12345</td><td>12:00</td><td>tourist</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // Trigger translation to Vietnamese
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'vi' } }, 'local'));
+  await new Promise(r => setTimeout(r, 150));
+
+  const filterNotice = body.querySelector('.status-filter-notice');
+  const filterLink = filterNotice.querySelector('a');
+  const statusCaptionEl = body.querySelector('.caption.titled');
+
+  assert(filterNotice.textContent.includes('Bộ lọc trạng thái đang được sử dụng'), 'Filter notice must be translated into Vietnamese');
+  assert(filterNotice.textContent.includes('nhấp vào'), 'Filter notice must contain "nhấp vào"');
+  assert.strictEqual(filterLink.textContent.trim(), 'đây', 'Filter link "here" must be translated to "đây"');
+  assert(filterNotice.textContent.includes('đặt lại'), 'Filter notice must contain "đặt lại"');
+  assert(statusCaptionEl.textContent.includes('Trạng thái kỳ thi'), 'Contest status caption must be translated to "Trạng thái kỳ thi"');
+
+  // Verify CSS spacing rules in content.css
+  const statusCss = fs.readFileSync(path.join(__dirname, '../content/content.css'), 'utf8');
+  assert(statusCss.includes('.caption.titled') && statusCss.includes('padding-top: 8px !important'), 'content.css must define padding-top on captions');
+  assert(statusCss.includes('padding: 16px 18px !important'), 'content.css must enlarge datatable padding');
+
+  // Switch back to English and verify clean restoration
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'en' } }, 'local'));
+  await new Promise(r => setTimeout(r, 150));
+
+  assert(filterNotice.textContent.includes('Status filter is used, click'), 'Filter notice must restore English text');
+  assert.strictEqual(filterLink.textContent.trim(), 'here', 'Filter link must restore "here"');
+  assert(filterNotice.textContent.includes('to reset'), 'Filter notice must restore "to reset"');
+  assert(statusCaptionEl.textContent.includes('Contest status'), 'Caption must restore "Contest status"');
+  console.log('✓ Test 30 passed: Status filter notice & Contest status translated and cleanly restored to English, spacing verified');
+
+  // Test 31: Problem tags sidebox translation and compact badge styling
+  console.log('Test 31: Problem tags sidebox translation & compact styling');
+  body.innerHTML = `
+    <div id="sidebar">
+      <div class="roundbox sidebox">
+        <div class="caption titled">→ Problem tags</div>
+        <div style="padding: 0.5em 0 1em 0;">
+          <div class="roundbox" style="margin:2px; padding:0 3px 2px 3px; background-color:#f0f0f0;float:left;">
+            <a class="notice" href="/problemset/tags/data%20structures" style="text-decoration:none;">data structures</a>
+          </div>
+          <div class="roundbox" style="margin:2px; padding:0 3px 2px 3px; background-color:#f0f0f0;float:left;">
+            <a class="notice" href="/problemset/tags/dp" style="text-decoration:none;">dp</a>
+          </div>
+          <div class="roundbox" style="margin:2px; padding:0 3px 2px 3px; background-color:#f0f0f0;float:left;">
+            <span class="tag-box" style="font-size:12px;" title="Difficulty">*1600</span>
+          </div>
+        </div>
+        <div style="clear:both;text-align:right;font-size:11px;">
+          <span>No tag edit access</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Trigger translation to Vietnamese
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'vi' } }, 'local'));
+  await new Promise(r => setTimeout(r, 150));
+
+  const tagsCaption = body.querySelector('.sidebox .caption.titled');
+  const tagLinks = body.querySelectorAll('.sidebox .roundbox a.notice');
+  const noAccessSpan = body.querySelector('.sidebox div[style*="clear:both"] span');
+
+  assert.strictEqual(tagsCaption.textContent.trim(), '→ Thẻ bài tập', 'Problem tags caption must be translated to → Thẻ bài tập');
+  assert.strictEqual(tagLinks[0].textContent.trim(), 'cấu trúc dữ liệu', 'Tag "data structures" must be translated to "cấu trúc dữ liệu"');
+  assert.strictEqual(tagLinks[1].textContent.trim(), 'quy hoạch động (dp)', 'Tag "dp" must be translated to "quy hoạch động (dp)"');
+  assert.strictEqual(noAccessSpan.textContent.trim(), 'Không có quyền sửa thẻ', 'Notice must be translated to "Không có quyền sửa thẻ"');
+
+  // Verify CSS compact rules for tags in content.css
+  const tagsCss = fs.readFileSync(path.join(__dirname, '../content/content.css'), 'utf8');
+  assert(tagsCss.includes('.sidebox .roundbox') && tagsCss.includes('padding: 3px 8px !important'), 'content.css must define compact padding for problem tags');
+  assert(tagsCss.includes(':not(.sidebox .roundbox)'), 'content.css must exclude sidebox tags from giant profile roundbox padding');
+
+  // Switch back to English and verify clean restoration
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'en' } }, 'local'));
+  await new Promise(r => setTimeout(r, 150));
+
+  assert.strictEqual(tagsCaption.textContent.trim(), '→ Problem tags', 'Caption must restore "→ Problem tags"');
+  assert.strictEqual(tagLinks[0].textContent.trim(), 'data structures', 'Tag must restore "data structures"');
+  assert.strictEqual(tagLinks[1].textContent.trim(), 'dp', 'Tag must restore "dp"');
+  assert.strictEqual(noAccessSpan.textContent.trim(), 'No tag edit access', 'Notice must restore "No tag edit access"');
+  console.log('✓ Test 31 passed: Problem tags caption, tags, and no access notice translated and cleanly restored to English, compact styling verified');
+
+  // Test 32: Contest sub-navigation tabs (SUBMIT CODE, MY SUBMISSIONS, CUSTOM INVOCATION) & Practice? sidebox translation
+  console.log('Test 32: Contest tabs & Practice? sidebox translation');
+  body.innerHTML = `
+    <div class="second-level-menu">
+      <ul class="second-level-menu-list">
+        <li><a href="/contest/2167/problems">PROBLEMS</a></li>
+        <li><a href="/contest/2167/submit">SUBMIT CODE</a></li>
+        <li><a href="/contest/2167/my">MY SUBMISSIONS</a></li>
+        <li><a href="/contest/2167/status">STATUS</a></li>
+        <li><a href="/contest/2167/standings">STANDINGS</a></li>
+        <li><a href="/contest/2167/customtest">CUSTOM INVOCATION</a></li>
+      </ul>
+    </div>
+    <div class="roundbox sidebox">
+      <div class="caption titled">→ Practice?</div>
+      <p>Want to solve the contest problems after the official contest ends? Just register for practice and you will be able to submit solutions.</p>
+      <form action="/contest/2167/practice" method="post">
+        <input type="submit" value="Register for practice">
+      </form>
+    </div>
+  `;
+
+  // Trigger translation to Vietnamese
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'vi' } }, 'local'));
+  await new Promise(r => setTimeout(r, 150));
+
+  const navLinks = body.querySelectorAll('.second-level-menu-list li a');
+  const practiceCaption = body.querySelector('.sidebox .caption.titled');
+  const practiceDesc = body.querySelector('.sidebox p');
+  const practiceBtn = body.querySelector('.sidebox input[type="submit"]');
+
+  assert.strictEqual(navLinks[1].textContent.trim(), 'NỘP BÀI', 'SUBMIT CODE must translate to NỘP BÀI');
+  assert.strictEqual(navLinks[2].textContent.trim(), 'BÀI NỘP CỦA TÔI', 'MY SUBMISSIONS must translate to BÀI NỘP CỦA TÔI');
+  assert.strictEqual(navLinks[5].textContent.trim(), 'CHẠY THỬ', 'CUSTOM INVOCATION must translate to CHẠY THỬ');
+  assert.strictEqual(practiceCaption.textContent.trim(), '→ Luyện tập?', 'Practice? caption must translate to → Luyện tập?');
+  assert(practiceDesc.textContent.includes('Bạn muốn giải các bài tập sau khi kỳ thi chính thức kết thúc?'), 'Practice description must translate to Vietnamese');
+  assert.strictEqual(practiceBtn.value.trim(), 'Đăng ký luyện tập', 'Register for practice button must translate to Đăng ký luyện tập');
+
+  // Switch back to English and verify clean restoration
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'en' } }, 'local'));
+  await new Promise(r => setTimeout(r, 150));
+
+  assert.strictEqual(navLinks[1].textContent.trim(), 'SUBMIT CODE', 'Must restore SUBMIT CODE');
+  assert.strictEqual(navLinks[2].textContent.trim(), 'MY SUBMISSIONS', 'Must restore MY SUBMISSIONS');
+  assert.strictEqual(navLinks[5].textContent.trim(), 'CUSTOM INVOCATION', 'Must restore CUSTOM INVOCATION');
+  assert.strictEqual(practiceCaption.textContent.trim(), '→ Practice?', 'Must restore → Practice?');
+  assert(practiceDesc.textContent.includes('Want to solve the contest problems'), 'Must restore practice description');
+  assert.strictEqual(practiceBtn.value.trim(), 'Register for practice', 'Must restore Register for practice button');
+  console.log('✓ Test 32 passed: Contest sub-navigation tabs & Practice? sidebox translated and cleanly restored to English');
+
+  // Test 33: Profile "online now" vibrant green styling & compact "Find user" sidebox
+  console.log('Test 33: Profile "online now" green indicator & compact sidebox');
+  body.innerHTML = `
+    <div class="userbox">
+      <div class="info">
+        <ul>
+          <li><span>Last visit: </span><span class="format-online">online now</span></li>
+          <li><span>Registered: </span><span>1 year ago</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="roundbox sidebox">
+      <div class="caption titled">→ Find user</div>
+      <form action="/search" method="post" style="padding: 1em 1.2em;">
+        <label style="display:block; text-align:left;">Handle:</label>
+        <div style="padding: 0.25em 0;">
+          <input type="text" name="handle" value=""/>
+        </div>
+        <div style="text-align: center; margin: 1em 0 0 0;">
+          <input type="submit" value="Find"/>
+        </div>
+      </form>
+    </div>
+  `;
+
+  // Trigger Vietnamese translation
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'vi' } }, 'local'));
+  await new Promise(r => setTimeout(r, 150));
+
+  const t33OnlineSpan = body.querySelector('.format-online, .cf-online-now');
+  const t33LastVisitSpan = body.querySelectorAll('.info span')[0];
+  const t33FindCaption = body.querySelector('.sidebox .caption.titled');
+  const t33HandleLabel = body.querySelector('.sidebox label');
+  const t33FindBtn = body.querySelector('.sidebox input[type="submit"]');
+  const t33SideboxForm = body.querySelector('.sidebox form');
+  const t33SideboxActionContainer = t33FindBtn.parentElement;
+
+  assert(t33OnlineSpan, 'Online status element must exist');
+  assert.strictEqual(t33OnlineSpan.textContent.trim(), 'đang trực tuyến', 'online now must translate to đang trực tuyến');
+  assert.strictEqual(t33OnlineSpan.style.color, '#22c55e', 'online now text must be vibrant green #22c55e');
+  assert.strictEqual(t33LastVisitSpan.textContent.trim(), 'Lần truy cập cuối:', 'Last visit: must translate to Lần truy cập cuối:');
+
+  assert.strictEqual(t33FindCaption.textContent.trim(), '→ Tìm kiếm thành viên', 'Find user must translate to Tìm kiếm thành viên');
+  assert.strictEqual(t33HandleLabel.textContent.trim(), 'Tài khoản:', 'Handle: must translate to Tài khoản:');
+  assert.strictEqual(t33FindBtn.value.trim(), 'Tìm kiếm', 'Find button must translate to Tìm kiếm');
+  assert.strictEqual(t33SideboxActionContainer.style['margin-top'], '6px', 'Sidebox action container must have compact top margin (6px)');
+  assert.strictEqual(t33SideboxForm.style.padding, '2px 0', 'Sidebox form must have compact vertical padding');
+
+  // Switch back to English and verify clean restoration while preserving green color
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'en' } }, 'local'));
+  await new Promise(r => setTimeout(r, 150));
+
+  assert.strictEqual(t33OnlineSpan.textContent.trim(), 'online now', 'Must restore online now text in English');
+  assert.strictEqual(t33OnlineSpan.style.color, '#22c55e', 'online now must remain green #22c55e in English mode');
+  assert.strictEqual(t33LastVisitSpan.textContent.trim(), 'Last visit:', 'Must restore Last visit:');
+  assert.strictEqual(t33FindCaption.textContent.trim(), '→ Find user', 'Must restore Find user caption');
+  assert.strictEqual(t33HandleLabel.textContent.trim(), 'Handle:', 'Must restore Handle: label');
+  assert.strictEqual(t33FindBtn.value.trim(), 'Find', 'Must restore Find button');
+
+  // Verify CSS content rules
+  const test33CssContent = fs.readFileSync(path.join(__dirname, '../content/content.css'), 'utf8');
+  assert(test33CssContent.includes('.cf-online-now') && test33CssContent.includes('#22c55e'), 'content.css must include .cf-online-now green #22c55e styling');
+  assert(test33CssContent.includes(':not(.format-online):not(.online):not(.cf-online-now):not([style*="green"])'), 'content.css rule 3512 must exempt online now from dark mode white override');
+  assert(test33CssContent.includes('padding: 10px 12px !important;') && test33CssContent.includes('padding-top: 2px !important;'), 'content.css must include compact sidebox rules');
+
+  console.log('✓ Test 33 passed: Profile "online now" green indicator & compact sidebox verified');
 
   console.log('\nALL content.js TESTS PASSED SUCCESSFULLY!');
 }
