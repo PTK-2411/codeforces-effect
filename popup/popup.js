@@ -1,0 +1,1104 @@
+(() => {
+  'use strict';
+
+  // DOM Elements - Header & Main
+  const toggleEnabled = document.getElementById('toggle-enabled');
+  const controlsSection = document.getElementById('controls-section');
+  const btnReset = document.getElementById('btn-reset');
+
+  // Source Tabs
+  const tabBtnUpload = document.getElementById('tab-btn-upload');
+  const tabBtnUrl = document.getElementById('tab-btn-url');
+  const panelUpload = document.getElementById('panel-upload');
+  const panelUrl = document.getElementById('panel-url');
+
+  // Upload Panel
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('file-input');
+  const emptyState = document.getElementById('empty-state');
+
+  // URL Panel
+  const urlInput = document.getElementById('url-input');
+  const btnApplyUrl = document.getElementById('btn-apply-url');
+  const urlStatus = document.getElementById('url-status');
+
+  // Active Preview
+  const previewState = document.getElementById('preview-state');
+  const previewImg = document.getElementById('preview-img');
+  const previewVideo = document.getElementById('preview-video');
+  const previewTypeBadge = document.getElementById('preview-type-badge');
+  const btnRemove = document.getElementById('btn-remove');
+
+  // History Elements
+  const historySection = document.getElementById('history-section');
+  const historyCount = document.getElementById('history-count');
+  const historyList = document.getElementById('history-list');
+
+  // Sliders
+  const blurSlider = document.getElementById('blur-slider');
+  const blurVal = document.getElementById('blur-val');
+  const overlaySlider = document.getElementById('overlay-slider');
+  const overlayVal = document.getElementById('overlay-val');
+  const opacitySlider = document.getElementById('opacity-slider');
+  const opacityVal = document.getElementById('opacity-val');
+
+  // Theme Mode Options
+  const themeVal = document.getElementById('theme-val');
+  const themeOptions = document.getElementById('theme-options');
+  const themeBtns = themeOptions ? themeOptions.querySelectorAll('.pill-btn') : [];
+
+  // Translation Engine Options
+  const transEngineBadge = document.getElementById('trans-engine-badge');
+  const transEngineOptions = document.getElementById('trans-engine-options');
+  const transEngineBtns = transEngineOptions ? transEngineOptions.querySelectorAll('.pill-btn') : [];
+  const geminiKeyContainer = document.getElementById('gemini-key-container');
+  const geminiApiKeyInput = document.getElementById('gemini-api-key');
+  const btnToggleKeyVisibility = document.getElementById('btn-toggle-key-visibility');
+  const geminiModelSelect = document.getElementById('gemini-model-select');
+  const geminiCustomModelContainer = document.getElementById('gemini-custom-model-container');
+  const geminiCustomModelInput = document.getElementById('gemini-custom-model');
+  const btnTestGemini = document.getElementById('btn-test-gemini');
+  const geminiTestStatus = document.getElementById('gemini-test-status');
+
+  // Size Options
+  const sizeOptions = document.getElementById('size-options');
+  const pillBtns = sizeOptions.querySelectorAll('.pill-btn');
+
+  // Streak elements
+  const popupStreakBadge = document.getElementById('popup-streak-badge');
+  const statCurrentStreak = document.getElementById('stat-current-streak');
+  const statStreakSubs = document.getElementById('stat-streak-subs');
+  const statMaxStreak = document.getElementById('stat-max-streak');
+  const statTotalDays = document.getElementById('stat-total-days');
+  const popupStreakStatus = document.getElementById('popup-streak-status');
+
+  // Update banner elements
+  const updateBanner = document.getElementById('update-banner');
+  const updateTitle = document.getElementById('update-title');
+  const updateDesc = document.getElementById('update-desc');
+  const updateTag = document.getElementById('update-tag');
+  const btnUpdateNow = document.getElementById('btn-update-now');
+
+  const DEFAULT_BG = chrome.runtime.getURL('assets/default-bg.mp4');
+  const DEFAULT_THUMB = chrome.runtime.getURL('assets/default-thumb.jpg');
+
+  const DEFAULT_SETTINGS = {
+    enabled: true,
+    bgType: 'video',
+    bgImage: DEFAULT_BG,
+    bgHistory: [
+      {
+        id: 'default_gargantua_1080p',
+        type: 'video',
+        url: DEFAULT_BG,
+        name: 'Interstellar Gargantua (1080p Full HD)',
+        thumbnail: DEFAULT_THUMB,
+        hasCache: true,
+        timestamp: Date.now()
+      }
+    ],
+    blur: 0,
+    brightness: 100,
+    overlay: 0,
+    contentOpacity: 16,
+    bgSize: 'cover',
+    themeMode: 'dark',
+    translationEngine: 'google',
+    geminiApiKey: '',
+    geminiModel: 'auto',
+    geminiCustomModel: ''
+  };
+
+  let currentSettings = { ...DEFAULT_SETTINGS };
+
+  function extractYouTubeId(url) {
+    if (!url || typeof url !== 'string') return null;
+    const regExp = /(?:youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = url.match(regExp);
+    return match ? match[1] : null;
+  }
+
+  function getYouTubeEmbedUrl(videoId) {
+    return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1&playsinline=1&enablejsapi=1`;
+  }
+
+  function isVideoSource(type, url) {
+    if (type === 'youtube') return false;
+    if (type === 'video') return true;
+    if (type === 'image') return false;
+    if (!url || typeof url !== 'string') return false;
+    if (url.includes('assets/default-bg.mp4')) return true;
+    if (extractYouTubeId(url)) return false;
+    if (url.startsWith('data:video/')) return true;
+    return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
+  }
+
+  // Helper to optimize large images using canvas
+  function processImageFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX_DIM = 2560; // Max 2K resolution
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_DIM || height > MAX_DIM) {
+            if (width > height) {
+              height = Math.round((height * MAX_DIM) / width);
+              width = MAX_DIM;
+            } else {
+              width = Math.round((width * MAX_DIM) / height);
+              height = MAX_DIM;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.92));
+          } else {
+            resolve(e.target.result);
+          }
+        };
+        img.onerror = () => reject(new Error('Không thể đọc tệp hình ảnh.'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Lỗi khi đọc file.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Generate thumbnail from an image
+  function generateImageThumbnail(imgUrl) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 120;
+          canvas.height = Math.round((img.naturalHeight / img.naturalWidth) * 120) || 75;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        } catch (e) {
+          resolve(imgUrl);
+        }
+      };
+      img.onerror = () => resolve(imgUrl);
+      img.src = imgUrl;
+    });
+  }
+
+  // Generate thumbnail from a video file or URL
+  function generateVideoThumbnail(fileOrUrl) {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.muted = true;
+      video.playsInline = true;
+      video.crossOrigin = 'anonymous';
+      const isBlob = typeof fileOrUrl !== 'string';
+      const srcUrl = isBlob ? URL.createObjectURL(fileOrUrl) : fileOrUrl;
+      video.src = srcUrl;
+
+      let finished = false;
+      const cleanup = () => {
+        if (isBlob) {
+          try { URL.revokeObjectURL(srcUrl); } catch (e) {}
+        }
+      };
+
+      const timer = setTimeout(() => {
+        if (!finished) {
+          finished = true;
+          cleanup();
+          resolve('');
+        }
+      }, 3500);
+
+      video.onloadeddata = () => {
+        try {
+          video.currentTime = Math.min(0.5, (video.duration || 1) / 3);
+        } catch (e) {}
+      };
+
+      video.onseeked = () => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 120;
+          canvas.height = Math.round((video.videoHeight / video.videoWidth) * 120) || 75;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const thumb = canvas.toDataURL('image/jpeg', 0.7);
+          cleanup();
+          resolve(thumb);
+        } catch (e) {
+          cleanup();
+          resolve('');
+        }
+      };
+
+      video.onerror = () => {
+        if (!finished) {
+          finished = true;
+          clearTimeout(timer);
+          cleanup();
+          resolve('');
+        }
+      };
+    });
+  }
+
+  // Update UI components to match state
+  function updateUI(settings) {
+    toggleEnabled.checked = settings.enabled !== false;
+
+    if (!settings.enabled) {
+      controlsSection.classList.add('disabled-opacity');
+      if (previewState) previewState.classList.add('disabled-opacity');
+    } else {
+      controlsSection.classList.remove('disabled-opacity');
+      if (previewState) previewState.classList.remove('disabled-opacity');
+    }
+
+    // Active Background Preview
+    if (settings.bgImage) {
+      previewState.classList.remove('hidden');
+      const ytId = extractYouTubeId(settings.bgImage);
+      const isYouTube = settings.bgType === 'youtube' || Boolean(ytId);
+      const isVideo = isYouTube ? false : isVideoSource(settings.bgType, settings.bgImage);
+
+      if (isYouTube && ytId) {
+        previewTypeBadge.textContent = '🎬 YouTube Video (Lặp lại)';
+        previewVideo.classList.add('hidden');
+        previewVideo.pause();
+        previewImg.classList.remove('hidden');
+        previewImg.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+      } else if (isVideo) {
+        previewTypeBadge.textContent = '🎬 Video nền (Lặp lại)';
+        previewImg.classList.add('hidden');
+        previewVideo.classList.remove('hidden');
+        if (previewVideo.src !== settings.bgImage) {
+          previewVideo.src = settings.bgImage;
+          previewVideo.load();
+        }
+        previewVideo.muted = true;
+        previewVideo.loop = true;
+        previewVideo.play().catch(() => {});
+      } else {
+        previewTypeBadge.textContent = '🖼️ Ảnh nền';
+        previewVideo.classList.add('hidden');
+        previewVideo.pause();
+        previewImg.classList.remove('hidden');
+        previewImg.src = settings.bgImage;
+      }
+    } else {
+      previewState.classList.add('hidden');
+      previewVideo.pause();
+      previewImg.src = '';
+    }
+
+    // Render History (Max 5 items)
+    renderHistoryUI(settings.bgHistory || [], settings.bgImage);
+
+    // Sliders
+    const blur = settings.blur ?? 0;
+    blurSlider.value = blur;
+    blurVal.textContent = `${blur}px`;
+
+    const overlay = settings.overlay ?? 0;
+    overlaySlider.value = overlay;
+    overlayVal.textContent = `${overlay}%`;
+
+    const opacity = settings.contentOpacity ?? 16;
+    opacitySlider.value = opacity;
+    opacityVal.textContent = `${opacity}%`;
+
+    // Size mode pills
+    const size = settings.bgSize || 'cover';
+    pillBtns.forEach(btn => {
+      if (btn.dataset.size === size) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    // Theme mode pills (Dark Reader)
+    const theme = settings.themeMode || 'dark';
+    if (themeVal) themeVal.textContent = theme === 'dark' ? 'Tối' : 'Sáng';
+    themeBtns.forEach(btn => {
+      if (btn.dataset.theme === theme) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    // Translation Engine pills
+    const engine = settings.translationEngine || 'google';
+    if (transEngineBadge) {
+      transEngineBadge.textContent = engine === 'gemini' ? 'Gemini AI' : 'Google';
+    }
+    transEngineBtns.forEach(btn => {
+      if (btn.dataset.engine === engine) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    if (geminiKeyContainer) {
+      if (engine === 'gemini') {
+        geminiKeyContainer.classList.remove('hidden');
+      } else {
+        geminiKeyContainer.classList.add('hidden');
+      }
+    }
+    if (geminiApiKeyInput) {
+      geminiApiKeyInput.value = settings.geminiApiKey || '';
+    }
+    const currentModel = settings.geminiModel || 'auto';
+    if (geminiModelSelect) {
+      const options = Array.from(geminiModelSelect.options || []);
+      const exists = options.some(o => o.value === currentModel);
+      if (!exists && currentModel && currentModel !== 'custom') {
+        const customOption = geminiModelSelect.querySelector ? geminiModelSelect.querySelector('option[value="custom"]') : null;
+        const opt = document.createElement('option');
+        opt.value = currentModel;
+        opt.textContent = `${currentModel} (Đã lưu)`;
+        if (customOption && customOption.parentNode) {
+          customOption.parentNode.insertBefore(opt, customOption);
+        } else if (geminiModelSelect.appendChild) {
+          geminiModelSelect.appendChild(opt);
+        }
+      }
+      geminiModelSelect.value = currentModel;
+    }
+
+    if (geminiCustomModelInput) {
+      geminiCustomModelInput.value = settings.geminiCustomModel || '';
+    }
+    if (geminiCustomModelContainer) {
+      if (currentModel === 'custom') {
+        geminiCustomModelContainer.classList.remove('hidden');
+      } else {
+        geminiCustomModelContainer.classList.add('hidden');
+      }
+    }
+
+    // Update streak card
+    if (settings.cfStreak) {
+      updateStreakUI(settings.cfStreak);
+    }
+  }
+
+  function renderHistoryUI(history, activeUrl) {
+    historyList.innerHTML = '';
+    const items = (history || []).slice(0, 5);
+    historyCount.textContent = `${items.length}/5`;
+
+    if (items.length === 0) {
+      const emptyMsg = document.createElement('p');
+      emptyMsg.className = 'history-empty';
+      emptyMsg.textContent = 'Chưa có nền nào được lưu trong lịch sử.';
+      historyList.appendChild(emptyMsg);
+      return;
+    }
+
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'history-item' + (item.url === activeUrl ? ' active' : '');
+      card.title = `${item.name || (item.type === 'video' ? 'Video nền' : 'Ảnh nền')} - Nhấp để áp dụng ngay`;
+
+      // Thumbnail
+      const thumb = document.createElement('img');
+      thumb.className = 'history-thumb';
+      thumb.alt = item.name || 'History preview';
+      thumb.src = item.thumbnail || (item.type === 'image' ? item.url : '');
+      card.appendChild(thumb);
+
+      // Type Badge
+      const badge = document.createElement('span');
+      badge.className = 'history-badge';
+      if (item.type === 'youtube') {
+        badge.textContent = '▶ YouTube';
+      } else if (item.type === 'video') {
+        badge.textContent = item.hasCache ? '▶ Video ⚡' : '▶ Video';
+      } else {
+        badge.textContent = item.hasCache ? 'Ảnh ⚡' : 'Ảnh';
+      }
+      if (item.hasCache) {
+        badge.title = 'Đã lưu cục bộ (phát tức thì offline)';
+      }
+      card.appendChild(badge);
+
+      // Delete button
+      const delBtn = document.createElement('button');
+      delBtn.className = 'history-del-btn';
+      delBtn.title = 'Xóa khỏi lịch sử';
+      delBtn.textContent = '×';
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        deleteHistoryItem(item.id);
+      };
+      card.appendChild(delBtn);
+
+      // Click to apply background
+      card.onclick = () => {
+        selectHistoryItem(item);
+      };
+
+      historyList.appendChild(card);
+    });
+  }
+
+  function updateStreakUI(streak) {
+    if (!streak || !streak.handle) {
+      popupStreakBadge.textContent = 'Chưa đăng nhập';
+      popupStreakStatus.textContent = 'Đăng nhập Codeforces để theo dõi chuỗi nộp bài';
+      popupStreakStatus.className = 'streak-msg';
+      return;
+    }
+
+    statCurrentStreak.textContent = streak.currentStreak ?? 0;
+    if (statStreakSubs) {
+      statStreakSubs.textContent = streak.streakSubmissionsCount ?? 0;
+    }
+    statMaxStreak.textContent = streak.maxStreak ?? 0;
+    statTotalDays.textContent = streak.totalActiveDays ?? 0;
+
+    popupStreakBadge.textContent = `@${streak.handle}`;
+
+    if (streak.currentStreak > 0) {
+      if (streak.hasSubmittedToday) {
+        popupStreakStatus.textContent = '✔️ Đã nộp bài hôm nay! Chuỗi đang duy trì rất tốt.';
+        popupStreakStatus.className = 'streak-msg done';
+      } else {
+        popupStreakStatus.textContent = '⏳ Hôm nay chưa nộp bài! Đừng quên nộp để giữ chuỗi.';
+        popupStreakStatus.className = 'streak-msg pending';
+      }
+    } else {
+      popupStreakStatus.textContent = '💤 Chuỗi hiện tại: 0 ngày. Hãy nộp một bài để bắt đầu chuỗi mới!';
+      popupStreakStatus.className = 'streak-msg';
+    }
+  }
+
+  function renderUpdateBanner(info) {
+    if (!updateBanner) return;
+    if (info && info.hasUpdate) {
+      updateBanner.style.display = 'flex';
+      if (updateTitle) {
+        if (info.updateType === 'stable_hotfix') {
+          updateTitle.textContent = 'Bản vá khẩn cấp (Hotfix)';
+        } else if (info.updateType === 'alpha_hotfix') {
+          updateTitle.textContent = 'Bản vá lỗi Alpha (Hotfix)';
+        } else if (info.updateType === 'alpha_trial') {
+          updateTitle.textContent = 'Bản thử nghiệm mới!';
+        } else if (info.isTestToOfficial || info.updateType === 'official') {
+          updateTitle.textContent = 'Đã có bản chính thức!';
+        } else {
+          updateTitle.textContent = 'Có bản cập nhật mới!';
+        }
+      }
+      if (updateDesc) {
+        updateDesc.textContent = info.message || (
+          info.isTestToOfficial
+            ? `Bản chính thức (${info.remoteVersionName}) đã sẵn sàng thay thế bản Alpha hiện tại.`
+            : `Đã có phiên bản ${info.remoteVersionName} trên GitHub.`
+        );
+      }
+      if (updateTag) {
+        if (info.updateType === 'stable_hotfix') {
+          updateTag.textContent = 'HOTFIX';
+          updateTag.className = 'update-tag tag-hotfix';
+        } else if (info.updateType === 'alpha_hotfix') {
+          updateTag.textContent = 'ALPHA HF';
+          updateTag.className = 'update-tag tag-hotfix';
+        } else if (info.updateType === 'alpha_trial') {
+          updateTag.textContent = 'ALPHA';
+          updateTag.className = 'update-tag tag-alpha';
+        } else if (info.isTestToOfficial || info.updateType === 'official') {
+          updateTag.textContent = 'OFFICIAL';
+          updateTag.className = 'update-tag tag-official';
+        } else {
+          updateTag.textContent = info.remoteVersionName || 'NEW';
+          updateTag.className = 'update-tag';
+        }
+      }
+      if (btnUpdateNow) {
+        const btnSpan = btnUpdateNow.querySelector('span');
+        if (btnSpan) {
+          if (info.updateType === 'alpha_trial') {
+            btnSpan.textContent = 'Trải nghiệm thử';
+          } else if (info.autoUpdate) {
+            btnSpan.textContent = 'Tự động cập nhật';
+          } else {
+            btnSpan.textContent = 'Cập nhật ngay';
+          }
+        }
+        if (info.repoUrl) {
+          btnUpdateNow.href = info.downloadUrl || info.repoUrl;
+        }
+      }
+    } else {
+      updateBanner.style.display = 'none';
+    }
+  }
+
+  function checkUpdates() {
+    try {
+      const manifest = (typeof chrome !== 'undefined' && chrome.runtime?.getManifest) ? chrome.runtime.getManifest() : null;
+      const versionEl = document.querySelector('.version-tag');
+      if (versionEl && manifest) {
+        versionEl.textContent = manifest.version_name || manifest.version || 'v1.0.0 Alpha';
+      }
+    } catch (e) {}
+
+    if (typeof chrome === 'undefined' || !chrome.storage) return;
+    chrome.storage.local.get(['cfUpdateInfo'], (res) => {
+      if (res && res.cfUpdateInfo) {
+        renderUpdateBanner(res.cfUpdateInfo);
+      }
+    });
+
+    try {
+      if (chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage({ action: 'checkForUpdates' }, (response) => {
+          if (chrome.runtime && chrome.runtime.lastError) return;
+          if (response && response.success) {
+            renderUpdateBanner(response);
+          }
+        });
+      }
+    } catch (e) {
+      // Ignore
+    }
+  }
+
+  // Save changes to chrome.storage
+  function saveSettings(partial) {
+    Object.assign(currentSettings, partial);
+    chrome.storage.local.set(currentSettings);
+  }
+
+  // Apply new background and record into history (Max 5 items)
+  function applyAndSaveBackground(item) {
+    let history = currentSettings.bgHistory || [];
+    // Remove if same URL already exists
+    history = history.filter(h => h.url !== item.url);
+
+    const isData = item.url.startsWith('data:');
+    const isYouTube = item.type === 'youtube';
+    const id = Date.now().toString();
+
+    const newItem = {
+      id,
+      type: item.type,
+      url: item.url,
+      name: item.name || (item.type === 'video' ? 'Video nền' : 'Ảnh nền'),
+      thumbnail: item.thumbnail || (item.type === 'image' ? item.url : ''),
+      hasCache: isData,
+      timestamp: Date.now()
+    };
+
+    // Prepend new background to top
+    history.unshift(newItem);
+
+    // If already a Data URL (uploaded file), save to local cache directly
+    if (isData) {
+      chrome.storage.local.set({ ['cf_cache_' + id]: item.url });
+    }
+
+    // Strict limit: at most 5 items. Delete caches of items beyond 5
+    if (history.length > 5) {
+      const removed = history.slice(5);
+      const keysToRemove = removed.map(r => 'cf_cache_' + r.id);
+      chrome.storage.local.remove(keysToRemove);
+      history = history.slice(0, 5);
+    }
+
+    saveSettings({
+      bgType: item.type,
+      bgImage: item.url,
+      enabled: true,
+      bgHistory: history
+    });
+
+    updateUI(currentSettings);
+
+    // If online network URL (video/image), kick off background caching in Service Worker
+    if (!isData && !isYouTube && item.url.startsWith('http')) {
+      try {
+        chrome.runtime.sendMessage({
+          action: 'cacheMedia',
+          id,
+          url: item.url,
+          type: item.type
+        });
+      } catch (e) {}
+    }
+  }
+
+  function selectHistoryItem(item) {
+    if (item.hasCache) {
+      chrome.storage.local.get(['cf_cache_' + item.id], (res) => {
+        const cached = res['cf_cache_' + item.id];
+        saveSettings({
+          bgType: item.type,
+          bgImage: cached || item.url,
+          bgImageOriginal: item.url,
+          enabled: true
+        });
+        updateUI(currentSettings);
+      });
+    } else {
+      saveSettings({
+        bgType: item.type,
+        bgImage: item.url,
+        enabled: true
+      });
+      updateUI(currentSettings);
+
+      if (!item.url.startsWith('data:') && item.type !== 'youtube' && item.url.startsWith('http')) {
+        try {
+          chrome.runtime.sendMessage({
+            action: 'cacheMedia',
+            id: item.id,
+            url: item.url,
+            type: item.type
+          });
+        } catch (e) {}
+      }
+    }
+  }
+
+  function deleteHistoryItem(id) {
+    chrome.storage.local.remove(['cf_cache_' + id]);
+    let history = (currentSettings.bgHistory || []).filter(h => h.id !== id);
+    saveSettings({ bgHistory: history });
+    renderHistoryUI(history, currentSettings.bgImage);
+  }
+
+  // Load saved settings on popup open
+  chrome.storage.local.get(null, (items) => {
+    if (items && items.contentOpacity && items.contentOpacity > 35) {
+      items.contentOpacity = 16;
+      chrome.storage.local.set({ contentOpacity: 16 });
+    }
+
+    currentSettings = { ...DEFAULT_SETTINGS, ...items };
+
+    // If currently using the YouTube link of 784dsKVrdjQ or no background, upgrade to the local 1080p video!
+    if (!currentSettings.bgImage || (typeof currentSettings.bgImage === 'string' && currentSettings.bgImage.includes('784dsKVrdjQ'))) {
+      currentSettings.bgType = 'video';
+      currentSettings.bgImage = DEFAULT_BG;
+      chrome.storage.local.set({ bgType: 'video', bgImage: DEFAULT_BG });
+    }
+
+    // Ensure default Gargantua 1080p is in history
+    let history = currentSettings.bgHistory || [];
+    if (!history.some(h => h.url === DEFAULT_BG || h.id === 'default_gargantua_1080p')) {
+      history.unshift({
+        id: 'default_gargantua_1080p',
+        type: 'video',
+        url: DEFAULT_BG,
+        name: 'Interstellar Gargantua (1080p Full HD)',
+        thumbnail: DEFAULT_THUMB,
+        hasCache: true,
+        timestamp: Date.now()
+      });
+      if (history.length > 5) history = history.slice(0, 5);
+      currentSettings.bgHistory = history;
+      chrome.storage.local.set({ bgHistory: history });
+    }
+
+    updateUI(currentSettings);
+    checkUpdates();
+  });
+
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.cfStreak) {
+      updateStreakUI(changes.cfStreak.newValue);
+    }
+    if (area === 'local' && changes.cfUpdateInfo) {
+      renderUpdateBanner(changes.cfUpdateInfo.newValue);
+    }
+  });
+
+  // Toggle master enable/disable
+  toggleEnabled.addEventListener('change', () => {
+    saveSettings({ enabled: toggleEnabled.checked });
+    updateUI(currentSettings);
+  });
+
+  // Source Tabs Navigation
+  tabBtnUpload.addEventListener('click', () => {
+    tabBtnUpload.classList.add('active');
+    tabBtnUrl.classList.remove('active');
+    panelUpload.classList.remove('hidden');
+    panelUrl.classList.add('hidden');
+  });
+
+  tabBtnUrl.addEventListener('click', () => {
+    tabBtnUrl.classList.add('active');
+    tabBtnUpload.classList.remove('active');
+    panelUrl.classList.remove('hidden');
+    panelUpload.classList.add('hidden');
+  });
+
+  // File selection handling (Image & Video)
+  async function handleFile(file) {
+    if (!file) return;
+
+    const isVideo = file.type.startsWith('video/');
+    const isImage = file.type.startsWith('image/');
+
+    if (!isVideo && !isImage) {
+      alert('Vui lòng chọn tệp hình ảnh (JPG, PNG, GIF, WebP) hoặc video (MP4, WebM).');
+      return;
+    }
+
+    if (isVideo && file.size > 80 * 1024 * 1024) {
+      alert('Kích thước video quá lớn (>80MB). Vui lòng chọn video dung lượng nhỏ hơn hoặc sử dụng đường dẫn liên kết URL trực tiếp.');
+      return;
+    }
+
+    try {
+      if (isVideo) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const videoDataUrl = e.target.result;
+          const thumb = await generateVideoThumbnail(file);
+          applyAndSaveBackground({
+            type: 'video',
+            url: videoDataUrl,
+            name: file.name,
+            thumbnail: thumb
+          });
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const dataUrl = await processImageFile(file);
+        const thumb = await generateImageThumbnail(dataUrl);
+        applyAndSaveBackground({
+          type: 'image',
+          url: dataUrl,
+          name: file.name,
+          thumbnail: thumb
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Đã xảy ra lỗi khi tải tệp lên.');
+    }
+  }
+
+  emptyState.addEventListener('click', () => {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0]);
+    }
+  });
+
+  // Drag and Drop
+  ['dragenter', 'dragover'].forEach(name => {
+    dropzone.addEventListener(name, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.add('dragover');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(name => {
+    dropzone.addEventListener(name, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('dragover');
+    });
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  // Handle URL Link input
+  async function handleUrlInput() {
+    const rawUrl = urlInput.value.trim();
+    if (!rawUrl) {
+      urlStatus.textContent = '⚠️ Vui lòng dán liên kết ảnh, video hoặc YouTube hợp lệ.';
+      urlStatus.className = 'url-status-hint error';
+      return;
+    }
+
+    if (!/^https?:\/\//i.test(rawUrl)) {
+      urlStatus.textContent = '⚠️ Đường dẫn phải bắt đầu bằng http:// hoặc https://';
+      urlStatus.className = 'url-status-hint error';
+      return;
+    }
+
+    urlStatus.textContent = '⏳ Đang kiểm tra liên kết...';
+    urlStatus.className = 'url-status-hint';
+
+    const ytId = extractYouTubeId(rawUrl);
+
+    if (ytId) {
+      // YouTube Link detected
+      const type = 'youtube';
+      const thumb = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+      const name = `YouTube (${ytId})`;
+
+      applyAndSaveBackground({
+        type,
+        url: rawUrl,
+        name,
+        thumbnail: thumb
+      });
+
+      urlStatus.textContent = '✔️ Đã áp dụng video YouTube làm nền thành công!';
+      urlStatus.className = 'url-status-hint success';
+      urlInput.value = '';
+
+      setTimeout(() => {
+        urlStatus.textContent = 'Hỗ trợ link YouTube, video trực tiếp (.mp4, .webm) hoặc ảnh';
+        urlStatus.className = 'url-status-hint';
+      }, 3500);
+      return;
+    }
+
+    const isVideo = isVideoSource(null, rawUrl);
+    const type = isVideo ? 'video' : 'image';
+
+    let name = type === 'video' ? 'Video liên kết' : 'Ảnh liên kết';
+    try {
+      const parsed = new URL(rawUrl);
+      const parts = parsed.pathname.split('/').filter(Boolean);
+      if (parts.length > 0) {
+        name = decodeURIComponent(parts[parts.length - 1]);
+      }
+    } catch (e) {}
+
+    // Apply immediately to screen so video starts playing with 0ms delay!
+    applyAndSaveBackground({
+      type,
+      url: rawUrl,
+      name,
+      thumbnail: type === 'image' ? rawUrl : ''
+    });
+
+    urlStatus.textContent = type === 'video'
+      ? '✔️ Đã phát video làm nền! Đang tải ngầm về máy để lưu cục bộ...'
+      : '✔️ Đã áp dụng nền thành công! Đang tải ngầm về máy...';
+    urlStatus.className = 'url-status-hint success';
+    urlInput.value = '';
+
+    // Generate thumbnail asynchronously in background without blocking video playback
+    (async () => {
+      let thumb = '';
+      try {
+        if (type === 'video') {
+          thumb = await generateVideoThumbnail(rawUrl);
+        } else {
+          thumb = await generateImageThumbnail(rawUrl);
+        }
+        if (thumb) {
+          const hist = (currentSettings.bgHistory || []).map(h => {
+            if (h.url === rawUrl && !h.thumbnail) {
+              return { ...h, thumbnail: thumb };
+            }
+            return h;
+          });
+          saveSettings({ bgHistory: hist });
+          renderHistoryUI(hist, currentSettings.bgImage);
+        }
+      } catch (e) {}
+    })();
+
+    setTimeout(() => {
+      urlStatus.textContent = 'Hỗ trợ link YouTube, video trực tiếp (.mp4, .webm) hoặc ảnh';
+      urlStatus.className = 'url-status-hint';
+    }, 4000);
+  }
+
+  btnApplyUrl.addEventListener('click', handleUrlInput);
+  urlInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleUrlInput();
+    }
+  });
+
+  // Button actions
+  btnRemove.addEventListener('click', (e) => {
+    e.stopPropagation();
+    saveSettings({ bgImage: null });
+    updateUI(currentSettings);
+    fileInput.value = '';
+  });
+
+  btnReset.addEventListener('click', () => {
+    saveSettings({
+      blur: DEFAULT_SETTINGS.blur,
+      overlay: DEFAULT_SETTINGS.overlay,
+      contentOpacity: DEFAULT_SETTINGS.contentOpacity,
+      bgSize: DEFAULT_SETTINGS.bgSize,
+      themeMode: DEFAULT_SETTINGS.themeMode
+    });
+    updateUI(currentSettings);
+  });
+
+  // Sliders input events
+  blurSlider.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value, 10);
+    blurVal.textContent = `${val}px`;
+    saveSettings({ blur: val });
+  });
+
+  overlaySlider.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value, 10);
+    overlayVal.textContent = `${val}%`;
+    saveSettings({ overlay: val });
+  });
+
+  opacitySlider.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value, 10);
+    opacityVal.textContent = `${val}%`;
+    saveSettings({ contentOpacity: val });
+  });
+
+  // Background size pills
+  pillBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const size = btn.dataset.size;
+      pillBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      saveSettings({ bgSize: size });
+    });
+  });
+
+  // Theme mode pills (Dark Reader)
+  themeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.theme;
+      themeBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (themeVal) themeVal.textContent = mode === 'dark' ? 'Tối' : 'Sáng';
+      saveSettings({ themeMode: mode });
+    });
+  });
+
+  // Translation Engine pills
+  transEngineBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const engine = btn.dataset.engine;
+      transEngineBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (transEngineBadge) {
+        transEngineBadge.textContent = engine === 'gemini' ? 'Gemini AI' : 'Google';
+      }
+      if (geminiKeyContainer) {
+        if (engine === 'gemini') {
+          geminiKeyContainer.classList.remove('hidden');
+        } else {
+          geminiKeyContainer.classList.add('hidden');
+        }
+      }
+      saveSettings({ translationEngine: engine });
+    });
+  });
+
+  // Gemini API Key & Options
+  if (btnToggleKeyVisibility && geminiApiKeyInput) {
+    btnToggleKeyVisibility.addEventListener('click', () => {
+      const isPass = geminiApiKeyInput.type === 'password';
+      geminiApiKeyInput.type = isPass ? 'text' : 'password';
+      btnToggleKeyVisibility.textContent = isPass ? '🙈' : '👁️';
+    });
+  }
+
+  if (geminiApiKeyInput) {
+    geminiApiKeyInput.addEventListener('input', (e) => {
+      saveSettings({ geminiApiKey: e.target.value.trim() });
+      if (geminiTestStatus) geminiTestStatus.textContent = '';
+    });
+  }
+
+  if (geminiModelSelect) {
+    geminiModelSelect.addEventListener('change', (e) => {
+      const model = e.target.value;
+      if (geminiCustomModelContainer) {
+        if (model === 'custom') {
+          geminiCustomModelContainer.classList.remove('hidden');
+        } else {
+          geminiCustomModelContainer.classList.add('hidden');
+        }
+      }
+      saveSettings({ geminiModel: model });
+      if (geminiTestStatus) geminiTestStatus.textContent = '';
+    });
+  }
+
+  if (geminiCustomModelInput) {
+    geminiCustomModelInput.addEventListener('input', (e) => {
+      saveSettings({ geminiCustomModel: e.target.value.trim() });
+    });
+  }
+
+  if (btnTestGemini) {
+    btnTestGemini.addEventListener('click', () => {
+      const apiKey = geminiApiKeyInput ? geminiApiKeyInput.value.trim() : '';
+      if (!apiKey) {
+        if (geminiTestStatus) {
+          geminiTestStatus.textContent = '⚠️ Chưa nhập API Key';
+          geminiTestStatus.className = 'url-status-hint error';
+        }
+        return;
+      }
+
+      if (geminiTestStatus) {
+        geminiTestStatus.textContent = '⏳ Đang kiểm tra...';
+        geminiTestStatus.className = 'url-status-hint';
+      }
+
+      chrome.runtime.sendMessage({ action: 'testGeminiKey', apiKey }, (response) => {
+        if (!geminiTestStatus) return;
+        if (response && response.success) {
+          geminiTestStatus.textContent = '✔️ Kết nối thành công!';
+          geminiTestStatus.className = 'url-status-hint success';
+          if (Array.isArray(response.models) && response.models.length > 0 && geminiModelSelect) {
+            const existingVals = new Set(Array.from(geminiModelSelect.options || []).map(o => o.value));
+            const customOption = geminiModelSelect.querySelector ? geminiModelSelect.querySelector('option[value="custom"]') : null;
+            response.models.forEach(m => {
+              if (!existingVals.has(m) && m) {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = `${m} (Khả dụng từ tài khoản)`;
+                if (customOption && customOption.parentNode) {
+                  customOption.parentNode.insertBefore(opt, customOption);
+                } else if (geminiModelSelect.appendChild) {
+                  geminiModelSelect.appendChild(opt);
+                }
+                existingVals.add(m);
+              }
+            });
+          }
+        } else {
+          const err = (response && response.error) || 'Không thể kết nối';
+          geminiTestStatus.textContent = `❌ ${err.slice(0, 45)}`;
+          geminiTestStatus.className = 'url-status-hint error';
+        }
+      });
+    });
+  }
+})();

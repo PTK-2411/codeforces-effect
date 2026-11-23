@@ -1,0 +1,21 @@
+# System and temporary files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# Chrome unpacked build artifacts & internal metadata
+_metadata/
+generated_indexed_rulesets/
+
+# Agent and IDE directories
+.agents/
+.idea/
+.vscode/
+
+# Nested git clone directory
+codeforces-effect/
+
+# Node modules & scratch
+node_modules/
+scratch/

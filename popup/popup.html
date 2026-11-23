@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codeforces Effect</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-brand">
+        <img src="../icons/icon32.png" alt="CF Logo" class="brand-icon">
+        <div class="brand-text">
+          <h1>Codeforces Effect</h1>
+          <span class="version-tag">v1.0.0 Alpha</span>
+        </div>
+      </div>
+      <div class="header-toggle">
+        <label class="switch" title="Bật / Tắt hình nền">
+          <input type="checkbox" id="toggle-enabled" checked>
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Update Banner (Shown when an official release or newer version is available) -->
+      <div id="update-banner" class="update-banner" style="display: none;">
+        <div class="update-banner-header">
+          <div class="update-title-wrap">
+            <span class="update-rocket">🚀</span>
+            <span class="update-title" id="update-title">Đã có bản chính thức!</span>
+          </div>
+          <span class="update-tag" id="update-tag">OFFICIAL</span>
+        </div>
+        <p class="update-desc" id="update-desc">Bản chính thức đã sẵn sàng thay thế bản TEST hiện tại.</p>
+        <div class="update-actions">
+          <a id="btn-update-now" href="https://github.com/PTK-2411/codeforces-effect" target="_blank" class="btn-update">
+            <span>Cập nhật ngay</span>
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Streak Status Card -->
+      <div id="streak-card" class="streak-card">
+        <div class="streak-header">
+          <div class="streak-title">
+            <span class="streak-fire-icon">🔥</span>
+            <span>Chuỗi nộp bài</span>
+          </div>
+          <span id="popup-streak-badge" class="badge-pill">Đang kiểm tra...</span>
+        </div>
+        <div id="popup-streak-body" class="streak-body">
+          <div class="streak-stats">
+            <div class="stat-item">
+              <span class="stat-num" id="stat-current-streak">0</span>
+              <span class="stat-text">Chuỗi</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-num" id="stat-streak-subs">0</span>
+              <span class="stat-text">Bài trong chuỗi</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-num" id="stat-max-streak">0</span>
+              <span class="stat-text">Kỷ lục</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-num" id="stat-total-days">0</span>
+              <span class="stat-text">Tổng ngày</span>
+            </div>
+          </div>
+          <p id="popup-streak-status" class="streak-msg">Chưa phát hiện tài khoản đăng nhập</p>
+        </div>
+      </div>
+
+      <!-- Current Background Preview State (if active) -->
+      <div id="preview-state" class="preview-state hidden">
+        <div class="preview-wrapper">
+          <img id="preview-img" alt="Ảnh nền đã chọn" class="preview-media hidden">
+          <video id="preview-video" class="preview-media hidden" autoplay loop muted playsinline></video>
+          <div id="preview-type-badge" class="preview-type-badge">Ảnh</div>
+          <div class="preview-overlay">
+            <button id="btn-remove" type="button" class="btn btn-danger btn-sm">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              Gỡ nền
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Source Selection Tabs -->
+      <div class="source-container">
+        <div class="source-tabs">
+          <button type="button" id="tab-btn-upload" class="source-tab active">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            Tải tệp lên
+          </button>
+          <button type="button" id="tab-btn-url" class="source-tab">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            Nhập liên kết
+          </button>
+        </div>
+
+        <!-- Tab 1: Upload Dropzone -->
+        <div id="panel-upload" class="tab-panel active">
+          <div id="dropzone" class="dropzone">
+            <input type="file" id="file-input" accept="image/*,video/*" class="file-input" style="display: none;">
+            <div id="empty-state" class="empty-state">
+              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <p class="upload-title">Tải ảnh hoặc video lên</p>
+              <p class="upload-sub">Kéo thả tệp hoặc nhấp để duyệt</p>
+              <span class="upload-formats">JPG, PNG, GIF, WebP, MP4, WebM</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: URL Input -->
+        <div id="panel-url" class="tab-panel hidden">
+          <div class="url-card">
+            <div class="url-input-row">
+              <input type="url" id="url-input" class="url-input" placeholder="Dán link YouTube, video hoặc ảnh (https://...)">
+              <button type="button" id="btn-apply-url" class="btn btn-primary btn-sm">Áp dụng</button>
+            </div>
+            <p id="url-status" class="url-status-hint">Hỗ trợ link YouTube, video MP4/WebM hoặc ảnh trực tiếp</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- History of previous backgrounds (Max 5) -->
+      <div id="history-section" class="history-section">
+        <div class="history-header">
+          <div class="history-title">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Lịch sử nền gần đây</span>
+          </div>
+          <span id="history-count" class="history-count">0/5</span>
+        </div>
+        <div id="history-list" class="history-list">
+          <!-- Dynamically populated up to 5 items -->
+        </div>
+      </div>
+
+      <!-- Settings Sliders -->
+      <div id="controls-section" class="controls-section">
+        <!-- Theme Mode Toggle (Dark Reader) -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label class="section-label">Chế độ màu chữ (Dark Reader)</label>
+            <span id="theme-val" class="value-badge">Tối</span>
+          </div>
+          <div class="pill-group" id="theme-options">
+            <button type="button" class="pill-btn active" data-theme="dark">🌙 Tối (Dark Reader)</button>
+            <button type="button" class="pill-btn" data-theme="light">☀️ Sáng</button>
+          </div>
+        </div>
+
+        <!-- Translation Engine Section (Google Translate / Gemini AI) -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label class="section-label">Công cụ dịch đề bài & bài viết</label>
+            <span id="trans-engine-badge" class="value-badge">Google</span>
+          </div>
+          <div class="pill-group" id="trans-engine-options">
+            <button type="button" class="pill-btn active" data-engine="google">🌐 Google Translate (Mặc định)</button>
+            <button type="button" class="pill-btn" data-engine="gemini">✨ Google AI Studio (Gemini)</button>
+          </div>
+          <div id="gemini-key-container" class="gemini-key-container hidden" style="margin-top: 8px;">
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <input type="password" id="gemini-api-key" class="url-input" placeholder="Nhập Gemini API Key từ aistudio.google.com" style="font-size: 11px; padding: 6px 10px; flex: 1;">
+              <button type="button" id="btn-toggle-key-visibility" class="btn btn-secondary btn-sm" style="padding: 6px 8px; font-size: 11px;" title="Hiện / Ẩn API Key">👁️</button>
+            </div>
+
+            <div style="margin-top: 8px;">
+              <label class="control-hint" style="display: block; margin-bottom: 4px; font-weight: 500;">Mô hình Gemini (Free Tier aistudio.google.com):</label>
+              <select id="gemini-model-select" class="url-input" style="width: 100%; padding: 6px 8px; font-size: 11px; cursor: pointer;">
+                <option value="auto">✨ Tự động (Gemini 4 Hydrogen → 3.8 Flash → 3.5 Flash Lite)</option>
+                <option value="gemini-4-hydrogen">Gemini 4 Hydrogen (Next-gen, 5 RPM, 20 RPD)</option>
+                <option value="gemini-3.8-flash">Gemini 3.8 Flash (5 RPM, 20 RPD)</option>
+                <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite (Top Free Tier: 15 RPM, 500 RPD)</option>
+                <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite (Top 2 Free Tier: 15 RPM, 500 RPD)</option>
+                <option value="gemini-3.6-flash">Gemini 3.6 Flash (5 RPM, 20 RPD)</option>
+                <option value="gemini-3-flash">Gemini 3 Flash (5 RPM, 20 RPD)</option>
+                <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite (10 RPM, 20 RPD)</option>
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash (5 RPM, 20 RPD)</option>
+                <option value="gemini-2.0-flash">Gemini 2.0 Flash (Ổn định)</option>
+                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Legacy)</option>
+                <option value="custom">✏️ Tùy chỉnh (Nhập tên model)...</option>
+              </select>
+            </div>
+
+            <div id="gemini-custom-model-container" class="hidden" style="margin-top: 6px;">
+              <input type="text" id="gemini-custom-model" class="url-input" placeholder="Ví dụ: gemini-2.0-flash-exp" style="font-size: 11px; padding: 6px 10px; width: 100%;">
+            </div>
+
+            <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+              <button type="button" id="btn-test-gemini" class="btn btn-primary btn-sm" style="font-size: 11px; padding: 5px 10px; white-space: nowrap;">Kiểm tra kết nối</button>
+              <span id="gemini-test-status" class="url-status-hint" style="flex: 1; text-align: right;"></span>
+            </div>
+
+            <p class="control-hint" style="margin-top: 6px; font-size: 10.5px; line-height: 1.3;">
+              Lấy API Key miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #60a5fa; text-decoration: underline;">aistudio.google.com</a>. Hệ thống tự động chuyển model dự phòng tin cậy nếu gặp lỗi hạn ngạch (429).
+            </p>
+          </div>
+        </div>
+
+        <!-- Blur Slider -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label for="blur-slider">Độ mờ ảnh (Blur)</label>
+            <span id="blur-val" class="value-badge">0px</span>
+          </div>
+          <input type="range" id="blur-slider" min="0" max="25" value="0" class="slider-input">
+        </div>
+
+        <!-- Dimming / Overlay Slider -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label for="overlay-slider">Lớp tối nền (Dim)</label>
+            <span id="overlay-val" class="value-badge">0%</span>
+          </div>
+          <input type="range" id="overlay-slider" min="0" max="80" value="0" class="slider-input">
+        </div>
+
+        <!-- Content Opacity Slider -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label for="opacity-slider" title="Độ trong suốt của các khung kính mờ blur">Độ kính mờ (Glass Opacity)</label>
+            <span id="opacity-val" class="value-badge">16%</span>
+          </div>
+          <input type="range" id="opacity-slider" min="5" max="35" value="16" class="slider-input">
+          <span class="control-hint">Khung blur trong suốt bo tròn nhìn xuyên thấu hình nền</span>
+        </div>
+
+        <!-- Size Mode Buttons -->
+        <div class="control-group">
+          <label class="section-label">Kiểu hiển thị ảnh</label>
+          <div class="pill-group" id="size-options">
+            <button type="button" class="pill-btn active" data-size="cover">Tràn viền (Cover)</button>
+            <button type="button" class="pill-btn" data-size="contain">Vừa vặn (Contain)</button>
+            <button type="button" class="pill-btn" data-size="repeat">Lặp lại (Tile)</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer Actions -->
+    <footer class="footer">
+      <button id="btn-reset" type="button" class="btn-text">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        Đặt lại mặc định
+      </button>
+      <div id="status-tag" class="status-tag">Tự động áp dụng</div>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

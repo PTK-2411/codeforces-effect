@@ -1,0 +1,3815 @@
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,700&display=swap');
+
+/* Codeforces Effect - Content Styles */
+
+/* Cloudflare Challenge Page Isolation - Hoàn toàn không can thiệp, không nền, không hiệu ứng khi ở trang captcha */
+html:has(#challenge-stage),
+html:has(#challenge-form),
+html:has(#challenge-running),
+html:has(#cf-wrapper),
+html:has([id*="challenge"]),
+body:has(#challenge-stage),
+body:has(#challenge-form),
+body:has(#challenge-running),
+body:has(#cf-wrapper),
+body:has([id*="challenge"]) {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #000000 !important;
+}
+
+html:has(#challenge-stage) #cf-custom-bg-layer,
+html:has(#challenge-form) #cf-custom-bg-layer,
+html:has(#challenge-running) #cf-custom-bg-layer,
+html:has(#cf-wrapper) #cf-custom-bg-layer,
+html:has([id*="challenge"]) #cf-custom-bg-layer,
+body:has(#challenge-stage) #cf-custom-bg-layer,
+body:has(#challenge-form) #cf-custom-bg-layer,
+body:has(#challenge-running) #cf-custom-bg-layer,
+body:has(#cf-wrapper) #cf-custom-bg-layer,
+body:has([id*="challenge"]) #cf-custom-bg-layer {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Ensure transparent base when custom background is active */
+html.cf-custom-bg-active,
+html.cf-custom-bg-active body {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* Force all Codeforces content wrappers to be stacked safely above the background layer */
+html.cf-custom-bg-active #body,
+html.cf-custom-bg-active #header,
+html.cf-custom-bg-active #pageContent,
+html.cf-custom-bg-active #footer,
+html.cf-custom-bg-active .side-bell {
+  position: relative !important;
+  z-index: 1 !important;
+  pointer-events: auto !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* =========================================================
+   Global Typography with Google Sans Font
+   ========================================================= */
+html, body, div, p, span, a, li, ul, ol, h1, h2, h3, h4, h5, h6,
+table, th, td, tr, thead, tbody, tfoot,
+input:not([type="checkbox"]):not([type="radio"]),
+button, select, textarea,
+.ttypography, .problem-statement, .roundbox, .sidebox, .header, #pageContent, #header, #footer {
+  font-family: 'Google Sans', 'Google Sans Text', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* Preserve code blocks, pre, ace editor, MathJax, and LaTeX fonts */
+pre, code, kbd, samp, var,
+.ace_editor, .ace_editor *,
+.sample-test pre, .input pre, .output pre,
+.test-example-line {
+  font-family: 'Fira Code', 'JetBrains Mono', Consolas, "Courier New", monospace !important;
+}
+
+.MathJax, .MathJax *, .katex, .katex *, mjx-container, mjx-container *, math, math *, .tex-span, .tex-formula {
+  font-family: MathJax_Main, MathJax_Math, KaTeX_Main, "Times New Roman", serif !important;
+}
+
+/* Ensure Math formulas (MathJax, KaTeX, SVG math, tex-span, tex-formula) are ALWAYS bright and legible */
+html.cf-custom-bg-active .MathJax,
+html.cf-custom-bg-active .MathJax *,
+html.cf-custom-bg-active .MathJax_Display,
+html.cf-custom-bg-active .MathJax_Display *,
+html.cf-custom-bg-active .mjx-chtml,
+html.cf-custom-bg-active .mjx-chtml *,
+html.cf-custom-bg-active mjx-container,
+html.cf-custom-bg-active mjx-container *,
+html.cf-custom-bg-active .katex,
+html.cf-custom-bg-active .katex *,
+html.cf-custom-bg-active .tex-span,
+html.cf-custom-bg-active .tex-span *,
+html.cf-custom-bg-active .tex-formula,
+html.cf-custom-bg-active .tex-formula *,
+html.cf-custom-bg-active math,
+html.cf-custom-bg-active math *,
+html.cf-dark-mode .MathJax,
+html.cf-dark-mode .MathJax *,
+html.cf-dark-mode .MathJax_Display,
+html.cf-dark-mode .MathJax_Display *,
+html.cf-dark-mode .mjx-chtml,
+html.cf-dark-mode .mjx-chtml *,
+html.cf-dark-mode mjx-container,
+html.cf-dark-mode mjx-container *,
+html.cf-dark-mode .katex,
+html.cf-dark-mode .katex *,
+html.cf-dark-mode .tex-span,
+html.cf-dark-mode .tex-span *,
+html.cf-dark-mode .tex-formula,
+html.cf-dark-mode .tex-formula *,
+html.cf-dark-mode math,
+html.cf-dark-mode math *,
+html.cf-custom-bg-active .problem-statement .tex-span,
+html.cf-custom-bg-active .problem-statement .tex-span *,
+html.cf-dark-mode .problem-statement .tex-span,
+html.cf-dark-mode .problem-statement .tex-span * {
+  color: #f1f5f9 !important;
+  fill: #f1f5f9 !important;
+  stroke: #f1f5f9 !important;
+  text-shadow: none !important;
+}
+
+/* For rasterized/legacy image formulas in Codeforces (img.tex-formula) */
+html.cf-custom-bg-active img.tex-formula,
+html.cf-dark-mode img.tex-formula {
+  filter: invert(1) hue-rotate(180deg) brightness(1.2) !important;
+}
+
+/* Light mode overrides so math stays dark in light mode */
+html.cf-light-mode.cf-custom-bg-active .MathJax,
+html.cf-light-mode.cf-custom-bg-active .MathJax *,
+html.cf-light-mode.cf-custom-bg-active .tex-span,
+html.cf-light-mode.cf-custom-bg-active .tex-span *,
+html.cf-light-mode.cf-custom-bg-active .tex-formula,
+html.cf-light-mode.cf-custom-bg-active .tex-formula *,
+html.cf-light-mode .MathJax,
+html.cf-light-mode .MathJax *,
+html.cf-light-mode .tex-span,
+html.cf-light-mode .tex-span *,
+html.cf-light-mode .tex-formula,
+html.cf-light-mode .tex-formula * {
+  color: #0f172a !important;
+  fill: #0f172a !important;
+  stroke: #0f172a !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active img.tex-formula,
+html.cf-light-mode img.tex-formula {
+  filter: none !important;
+}
+
+/* =========================================================
+   Table Column Centering: #, Bắt đầu (Start), Thời lượng (Duration/Length)
+   ========================================================= */
+.cf-col-center,
+th.cf-col-center,
+td.cf-col-center,
+table.problems th.id,
+table.problems td.id,
+table.problems .id,
+table.problems .id.left,
+table.rtable th.id,
+table.rtable td.id,
+td.id,
+th.id,
+.id.left,
+.contests-table table th:nth-child(3),
+.contests-table table td:nth-child(3),
+.contests-table table th:nth-child(4),
+.contests-table table td:nth-child(4),
+.contests-table table th:nth-child(5),
+.contests-table table td:nth-child(5),
+.contestList table.rtable th:nth-child(3),
+.contestList table.rtable td:nth-child(3),
+.contestList table.rtable th:nth-child(4),
+.contestList table.rtable td:nth-child(4),
+.contestList table.rtable th:nth-child(5),
+.contestList table.rtable td:nth-child(5) {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.cf-col-center *,
+td.cf-col-center *,
+th.cf-col-center *,
+table.problems td.id *,
+table.problems th.id * {
+  text-align: center !important;
+}
+
+/* =========================================================
+   Submission Verdict Colors (High Specificity & No Shadow)
+   ========================================================= */
+
+/* Green: Perfect result: 100 points (and Accepted) */
+html.cf-custom-bg-active .cf-verdict-green,
+html.cf-custom-bg-active .cf-verdict-green *,
+html.cf-custom-bg-active td.cf-verdict-green,
+html.cf-custom-bg-active td.cf-verdict-green *,
+html.cf-custom-bg-active .datatable td .cf-verdict-green,
+html.cf-custom-bg-active .datatable td span.cf-verdict-green,
+html.cf-custom-bg-active .datatable td a.cf-verdict-green,
+html.cf-custom-bg-active table.status-frame-datatable td.cf-verdict-green,
+html.cf-custom-bg-active table.status-frame-datatable td.cf-verdict-green *,
+.cf-verdict-green,
+.cf-verdict-green *,
+a.cf-verdict-green,
+span.cf-verdict-green,
+td.cf-verdict-green,
+td.cf-verdict-green a,
+td.cf-verdict-green span,
+.verdict-accepted,
+.verdict-accepted * {
+  color: #22c55e !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+/* Yellow: Partial result (85 points, 51 points, 7.5 points, etc.) */
+html.cf-custom-bg-active .cf-verdict-yellow,
+html.cf-custom-bg-active .cf-verdict-yellow *,
+html.cf-custom-bg-active td.cf-verdict-yellow,
+html.cf-custom-bg-active td.cf-verdict-yellow *,
+html.cf-custom-bg-active .datatable td .cf-verdict-yellow,
+html.cf-custom-bg-active .datatable td span.cf-verdict-yellow,
+html.cf-custom-bg-active .datatable td a.cf-verdict-yellow,
+html.cf-custom-bg-active table.status-frame-datatable td.cf-verdict-yellow,
+html.cf-custom-bg-active table.status-frame-datatable td.cf-verdict-yellow *,
+.cf-verdict-yellow,
+.cf-verdict-yellow *,
+a.cf-verdict-yellow,
+span.cf-verdict-yellow,
+td.cf-verdict-yellow,
+td.cf-verdict-yellow a,
+td.cf-verdict-yellow span,
+.verdict-partially-accepted,
+.verdict-partially-accepted * {
+  color: #facc15 !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+/* Red: Compilation error, Partial result: 0 points */
+html.cf-custom-bg-active .cf-verdict-red,
+html.cf-custom-bg-active .cf-verdict-red *,
+html.cf-custom-bg-active td.cf-verdict-red,
+html.cf-custom-bg-active td.cf-verdict-red *,
+html.cf-custom-bg-active .datatable td .cf-verdict-red,
+html.cf-custom-bg-active .datatable td span.cf-verdict-red,
+html.cf-custom-bg-active .datatable td a.cf-verdict-red,
+html.cf-custom-bg-active table.status-frame-datatable td.cf-verdict-red,
+html.cf-custom-bg-active table.status-frame-datatable td.cf-verdict-red *,
+.cf-verdict-red,
+.cf-verdict-red *,
+a.cf-verdict-red,
+span.cf-verdict-red,
+td.cf-verdict-red,
+td.cf-verdict-red a,
+td.cf-verdict-red span,
+.verdict-compilation-error,
+.verdict-compilation-error * {
+  color: #ef4444 !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+/* =========================================================
+   Selective Bold Typography
+   ========================================================= */
+/* Table headers */
+table th,
+.datatable table th,
+.rtable th,
+.problems th {
+  font-weight: 700 !important;
+  letter-spacing: 0.2px !important;
+}
+
+/* Problem index letters (A, B, C, D...) */
+table.problems td.id,
+table.problems td.id a,
+table.rtable td.id,
+table.rtable td.id a,
+.id.left a,
+td.id a {
+  font-weight: 700 !important;
+}
+
+/* Problem names and contest titles */
+table.problems td:nth-child(2) a,
+table.problems td.name a,
+table.problems .title a,
+.contestList table.rtable td:first-child a,
+.contests-table table td:first-child a {
+  font-weight: 600 !important;
+}
+
+/* Problem statement headings & properties */
+.problem-statement .header .title {
+  font-weight: 700 !important;
+}
+.problem-statement .property-title {
+  font-weight: 700 !important;
+}
+.problem-statement .section-title {
+  font-weight: 700 !important;
+}
+
+/* Roundbox & sidebox captions */
+.roundbox .caption,
+.sidebox .caption,
+.caption.titled {
+  font-weight: 700 !important;
+  letter-spacing: 0.2px !important;
+}
+
+/* Menu items */
+#header .main-menu-list li a,
+.second-level-menu-list li a {
+  font-weight: 600 !important;
+}
+
+/* Buttons and badges */
+button,
+a.button,
+input[type="submit"],
+input[type="button"],
+.cf-translate-toggle-btn {
+  font-weight: 600 !important;
+}
+
+/* User handles */
+span[class*="user-"],
+a[class*="user-"],
+span[class*="rated-"],
+a[class*="rated-"],
+.rated-user {
+  font-weight: 600 !important;
+}
+
+/* Difficulty & problem tags */
+span.ProblemRating,
+span[title="Difficulty"],
+.notice {
+  font-weight: 700 !important;
+}
+
+/* Background container fixed to the viewport strictly behind all content */
+#cf-custom-bg-layer {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  user-select: none !important;
+}
+
+#cf-custom-bg-layer,
+#cf-custom-bg-layer * {
+  pointer-events: none !important;
+}
+
+/* The actual image element with blur and brightness adjustments */
+#cf-custom-bg-layer .cf-bg-img {
+  position: absolute !important;
+  top: -15px !important;
+  left: -15px !important;
+  width: calc(100% + 30px) !important;
+  height: calc(100% + 30px) !important;
+  background-image: var(--cf-bg-url) !important;
+  background-size: var(--cf-bg-size, cover) !important;
+  background-position: var(--cf-bg-position, center center) !important;
+  background-repeat: var(--cf-bg-repeat, no-repeat) !important;
+  filter: blur(var(--cf-bg-blur, 0px)) brightness(var(--cf-bg-brightness, 1)) !important;
+  transform: translateZ(0);
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+
+/* Background video element with looping, blur, and brightness adjustments */
+#cf-custom-bg-layer .cf-bg-video {
+  position: absolute !important;
+  top: -15px !important;
+  left: -15px !important;
+  width: calc(100% + 30px) !important;
+  height: calc(100% + 30px) !important;
+  object-fit: var(--cf-bg-video-fit, cover) !important;
+  object-position: center center !important;
+  filter: blur(var(--cf-bg-blur, 0px)) brightness(var(--cf-bg-brightness, 1)) !important;
+  transform: translateZ(0);
+  transition: filter 0.15s ease, opacity 0.15s ease;
+  pointer-events: none !important;
+  display: none;
+}
+
+/* Background YouTube iframe element (responsive 16:9 cover ratio) */
+#cf-custom-bg-layer .cf-bg-youtube {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 100vw !important;
+  height: 56.25vw !important;
+  min-height: 100vh !important;
+  min-width: 177.78vh !important;
+  transform: translate(-50%, -50%) !important;
+  pointer-events: none !important;
+  border: none !important;
+  display: none;
+  filter: blur(var(--cf-bg-blur, 0px)) brightness(var(--cf-bg-brightness, 1)) !important;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+
+/* Darkening / Dimming overlay */
+#cf-custom-bg-layer .cf-bg-overlay {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, var(--cf-bg-overlay, 0)) !important;
+  transition: background-color 0.15s ease;
+}
+
+/* =========================================================
+   True Translucent Glass & Blur Frames (Khung Blur Trong Suốt Bo Tròn)
+   Replaces all original solid white boxes on Codeforces
+   ========================================================= */
+
+/* Ensure transparent structural wrappers */
+html.cf-custom-bg-active #body,
+html.cf-custom-bg-active #pageContent,
+html.cf-custom-bg-active .content-with-sidebar,
+html.cf-custom-bg-active #content,
+html.cf-custom-bg-active #sidebar,
+html.cf-custom-bg-active #header,
+html.cf-custom-bg-active #header > div:first-child,
+html.cf-custom-bg-active ._logo_div,
+html.cf-custom-bg-active #footer {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Header margin baseline */
+html.cf-custom-bg-active #header {
+  margin-bottom: 12px !important;
+  clear: both !important;
+}
+
+/* Header Logo: thay logo tách nền trong suốt codeforces-logo.png */
+html.cf-custom-bg-active #header a[href="/"] img,
+html.cf-custom-bg-active #header a[href*="codeforces"] img,
+html.cf-custom-bg-active #header img[title*="Codeforces"],
+html.cf-custom-bg-active #header img[alt*="Codeforces"],
+html.cf-custom-bg-active #header img[src*="codeforces-logo"],
+html.cf-custom-bg-active #header img[src*="codeforces-sponsored"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  max-height: 62px !important;
+  width: auto !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  object-fit: contain !important;
+}
+
+html.cf-custom-bg-active #header > div:first-child,
+html.cf-custom-bg-active #header ._logo_div,
+html.cf-custom-bg-active #header a[href="/"],
+html.cf-custom-bg-active #header a[href*="codeforces"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+/* Ensure #pageContent starts with clean spacing */
+html.cf-custom-bg-active #pageContent {
+  margin-top: 16px !important;
+}
+
+/* Individual Translucent Blur Glass Containers */
+html.cf-custom-bg-active .roundbox,
+html.cf-custom-bg-active .menu-box,
+html.cf-custom-bg-active .second-level-menu,
+html.cf-custom-bg-active .sidebox,
+html.cf-custom-bg-active .topic,
+html.cf-custom-bg-active .problem-statement,
+html.cf-custom-bg-active .datatable {
+  background: rgba(255, 255, 255, var(--cf-glass-alpha, 0.16)) !important;
+  background-color: rgba(255, 255, 255, var(--cf-glass-alpha, 0.16)) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.12) !important;
+  box-sizing: border-box !important;
+}
+
+/* Dedicated clean styling for the single outer Main Menu bar: thanh thoát, gọn gàng chuẩn chiều cao */
+html.cf-custom-bg-active .roundbox.menu-box,
+html.cf-custom-bg-active .menu-box {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 12px !important;
+  margin-top: 12px !important;
+  margin-bottom: 12px !important;
+  position: relative !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  box-sizing: border-box !important;
+  clear: both !important;
+  overflow: hidden !important;
+}
+
+/* Ẩn thẻ br gây vỡ dòng và làm dày khung menu */
+html.cf-custom-bg-active .menu-box br,
+html.cf-custom-bg-active .menu-box .menu-list-container br {
+  display: none !important;
+}
+
+/* Strip any duplicate background, border, radius, or margin from nested menu wrappers */
+html.cf-custom-bg-active .menu-box .menu-list-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex: 1 !important;
+  height: 100% !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.cf-custom-bg-active .menu-box ul.main-menu-list,
+html.cf-custom-bg-active .menu-box ul.menu-list {
+  display: flex !important;
+  align-items: center !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100% !important;
+  float: none !important;
+  transform: translate(-9px, 0px) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.cf-custom-bg-active .menu-box ul.main-menu-list li,
+html.cf-custom-bg-active .menu-box ul.menu-list li,
+html.cf-custom-bg-active .menu-box ul.main-menu-list li.current,
+html.cf-custom-bg-active .menu-box ul.menu-list li.current {
+  display: inline-flex !important;
+  align-items: center !important;
+  float: none !important;
+  position: static !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  transform: none !important;
+  margin: 0 1px !important;
+  padding: 0 !important;
+  border: none !important;
+  height: 100% !important;
+}
+
+html.cf-custom-bg-active .menu-box ul.main-menu-list li a,
+html.cf-custom-bg-active .menu-box ul.menu-list li a,
+html.cf-custom-bg-active .menu-box ul.main-menu-list li.current a,
+html.cf-custom-bg-active .menu-box ul.menu-list li.current a {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: static !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  transform: none !important;
+  margin: 0 !important;
+  height: 32px !important;
+  padding: 0 10px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  text-decoration: none !important;
+  color: inherit !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 11px !important;
+  box-sizing: border-box !important;
+}
+
+html.cf-custom-bg-active .menu-box ul.main-menu-list li a span,
+html.cf-custom-bg-active .menu-box ul.menu-list li a span {
+  display: inline !important;
+  vertical-align: baseline !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: inherit !important;
+}
+
+html.cf-custom-bg-active .menu-box ul.main-menu-list li.current a,
+html.cf-custom-bg-active .menu-box ul.main-menu-list li a:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-radius: 11px !important;
+}
+
+/* Clean search bar inside menu-box */
+html.cf-custom-bg-active .menu-box form {
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  transform: translateY(0px) !important;
+}
+
+html.cf-custom-bg-active .menu-box .search {
+  display: inline-flex !important;
+  align-items: center !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  float: none !important;
+  transform: translateY(0px) !important;
+}
+
+html.cf-custom-bg-active .menu-box input.search,
+html.cf-custom-bg-active .menu-box .search input {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 6px !important;
+  color: inherit !important;
+  padding: 3px 6px !important;
+  font-size: 12px !important;
+  margin: 0 !important;
+}
+
+/* Second level menu styling: gọn gàng, đẩy lên cao và canh chuẩn lề trái */
+html.cf-custom-bg-active .second-level-menu {
+  display: flex !important;
+  width: fit-content !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+  position: relative !important;
+  left: 0 !important;
+  margin-left: 0 !important;
+  margin-top: -34px !important;
+  margin-bottom: 20px !important;
+  padding: 2px 6px !important;
+  min-height: 32px !important;
+  box-sizing: border-box !important;
+  clear: none !important;
+  float: none !important;
+}
+
+html.cf-custom-bg-active .second-level-menu .second-level-menu-list {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  float: none !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+html.cf-custom-bg-active .second-level-menu .second-level-menu-list li:not(.back):not(.backLava) {
+  display: inline-flex !important;
+  align-items: center !important;
+  float: none !important;
+  margin: 0 1px !important;
+  padding: 0 !important;
+}
+
+html.cf-custom-bg-active .second-level-menu .second-level-menu-list li a {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  text-decoration: none !important;
+  color: inherit !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 10px !important;
+}
+
+html.cf-custom-bg-active .second-level-menu .second-level-menu-list li.current a,
+html.cf-custom-bg-active .second-level-menu .second-level-menu-list li a:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-radius: 10px !important;
+}
+
+/* Loại bỏ hoàn toàn khối trượt theo con trỏ chuột (LavaLamp) trên menu nhỏ (second-level-menu, posts/comments) */
+html.cf-custom-bg-active li.back,
+html.cf-custom-bg-active li.backLava,
+html.cf-custom-bg-active .backLava,
+html.cf-custom-bg-active .second-level-menu li.back,
+html.cf-custom-bg-active .second-level-menu-list li.back,
+html.cf-custom-bg-active ul.second-level-menu-list li.back,
+html.cf-custom-bg-active ul li.back,
+html.cf-custom-bg-active ul li.backLava,
+html.cf-custom-bg-active li.back *,
+html.cf-custom-bg-active li.backLava * {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  clip: rect(0, 0, 0, 0) !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Submit solution heading and form positioning */
+html.cf-custom-bg-active div[style*="font-size: 1.25em"],
+html.cf-custom-bg-active div[style*="font-size:1.25em"],
+html.cf-custom-bg-active #content > div[style*="font-size"],
+html.cf-custom-bg-active .submit-form .title {
+  margin-top: 14px !important;
+  margin-bottom: 16px !important;
+  position: relative !important;
+  clear: none !important;
+  text-align: center !important;
+  font-weight: 700 !important;
+  font-size: 1.3em !important;
+}
+
+html.cf-dark-mode div[style*="font-size: 1.25em"],
+html.cf-dark-mode div[style*="font-size:1.25em"],
+html.cf-dark-mode #content > div[style*="font-size"],
+html.cf-dark-mode .submit-form .title {
+  color: #f8fafc !important;
+}
+
+html.cf-light-mode div[style*="font-size: 1.25em"],
+html.cf-light-mode div[style*="font-size:1.25em"],
+html.cf-light-mode #content > div[style*="font-size"],
+html.cf-light-mode .submit-form .title {
+  color: #0f172a !important;
+}
+
+html.cf-custom-bg-active form.submit-form,
+html.cf-custom-bg-active .submit-form {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0 !important;
+  margin-top: 10px !important;
+  margin-bottom: 24px !important;
+  position: relative !important;
+  clear: none !important;
+}
+
+/* Khung blur bo tròn bọc tiêu đề Blog cá nhân (ví dụ: visho33's blog, maroonrk's blog) */
+html.cf-custom-bg-active div[style*="margin-top:0em"]:has(h3 a[href*="/blog/"]),
+html.cf-custom-bg-active div[style*="margin-top:0"]:has(h3 a[href*="/blog/"]),
+html.cf-custom-bg-active div[style*="margin-top: 0"]:has(h3 a[href*="/blog/"]) {
+  margin-top: 0 !important;
+  position: relative !important;
+}
+
+html.cf-custom-bg-active h3:has(a[href*="/blog/"]),
+html.cf-custom-bg-active div:has(> h3 a[href*="/blog/"]) h3 {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 6px 16px !important;
+  background: rgba(255, 255, 255, var(--cf-glass-alpha, 0.16)) !important;
+  background-color: rgba(255, 255, 255, var(--cf-glass-alpha, 0.16)) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.12) !important;
+  margin-top: -35px !important;
+  margin-bottom: 12px !important;
+  width: fit-content !important;
+  position: relative !important;
+  transition: background 0.2s, border-color 0.2s !important;
+}
+
+html.cf-custom-bg-active h3:has(a[href*="/blog/"]):hover {
+  background: rgba(255, 255, 255, calc(var(--cf-glass-alpha, 0.16) + 0.08)) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+html.cf-custom-bg-active a[href*="/blog/"][style*="color:black"],
+html.cf-custom-bg-active a[href*="/blog/"][style*="color: black"],
+html.cf-custom-bg-active h3 a[href*="/blog/"] {
+  color: #ffffff !important;
+  text-decoration: none !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  text-shadow: none !important;
+}
+
+/* Nâng phần blog bài viết ở sau lên */
+html.cf-custom-bg-active div:has(> h3 a[href*="/blog/"]) + div,
+html.cf-custom-bg-active div[style*="margin-top:2em"],
+html.cf-custom-bg-active div[style*="margin-top: 2em"],
+html.cf-custom-bg-active div[style*="margin-top:1em"],
+html.cf-custom-bg-active div[style*="margin-top: 1em"] {
+  margin-top: 5px !important;
+}
+
+/* Dedicated Profile Page & Info card styling */
+html.cf-custom-bg-active .roundbox:not(.menu-box):not(.meta) {
+  padding: 24px 28px !important;
+  margin-bottom: 20px !important;
+  box-sizing: border-box !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+/* Compact styling for meta bars (topic footers, rating tags, etc.) */
+html.cf-custom-bg-active .roundbox.meta,
+html.cf-custom-bg-active .meta {
+  padding: 6px 16px !important;
+  min-height: 32px !important;
+  height: auto !important;
+  margin-top: 8px !important;
+  margin-bottom: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  box-sizing: border-box !important;
+}
+
+html.cf-custom-bg-active .roundbox.meta > *,
+html.cf-custom-bg-active .meta > * {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.3 !important;
+}
+
+/* Ẩn các phần tử rác/rỗng (div, span thừa, br) để cố định chuẩn 2 đầu left-meta và right-meta */
+html.cf-custom-bg-active .roundbox.meta > *:not(.left-meta):not(.right-meta),
+html.cf-custom-bg-active .meta > *:not(.left-meta):not(.right-meta) {
+  display: none !important;
+}
+
+/* Điều chỉnh vị trí cụm vote và cmt trong thanh meta của bài viết */
+html.cf-custom-bg-active .roundbox.meta .left-meta,
+html.cf-custom-bg-active .meta .left-meta {
+  transform: translateX(-7px) !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+html.cf-custom-bg-active .roundbox.meta .left-meta ul,
+html.cf-custom-bg-active .meta .left-meta ul {
+  display: flex !important;
+  align-items: center !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html.cf-custom-bg-active .roundbox.meta .left-meta li,
+html.cf-custom-bg-active .meta .left-meta li {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin: 0 2px !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+/* Reset các thuộc tính position/top/bottom inline từ Codeforces để vote và text căn đúng cùng 1 hàng */
+html.cf-custom-bg-active .roundbox.meta .left-meta img,
+html.cf-custom-bg-active .meta .left-meta img {
+  position: static !important;
+  top: 0 !important;
+  vertical-align: middle !important;
+}
+
+html.cf-custom-bg-active .roundbox.meta .left-meta .topic-rating,
+html.cf-custom-bg-active .meta .left-meta .topic-rating {
+  position: static !important;
+  bottom: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1 !important;
+}
+
+html.cf-custom-bg-active .roundbox.meta .right-meta,
+html.cf-custom-bg-active .meta .right-meta {
+  margin-left: auto !important;
+  transform: none !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+html.cf-custom-bg-active .roundbox.meta .right-meta ul,
+html.cf-custom-bg-active .meta .right-meta ul {
+  display: flex !important;
+  align-items: center !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html.cf-custom-bg-active .roundbox.meta .right-meta li,
+html.cf-custom-bg-active .meta .right-meta li {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin: 0 6px !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+/* Xóa hoàn toàn viền trong (loại bỏ khung kép .userbox bên trong .roundbox) */
+html.cf-custom-bg-active .roundbox .userbox,
+html.cf-custom-bg-active .userbox,
+html.cf-custom-bg-active .roundbox .info,
+html.cf-custom-bg-active .info,
+html.cf-custom-bg-active div.info {
+  display: block !important;
+  position: relative !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+html.cf-custom-bg-active .info::after {
+  content: "" !important;
+  display: table !important;
+  clear: both !important;
+}
+
+/* Phần ảnh đại diện float sang góc phải trên */
+html.cf-custom-bg-active .info .title-photo,
+html.cf-custom-bg-active .title-photo {
+  float: right !important;
+  margin: 0 0 16px 24px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Phần thông tin chữ (Rank, Username, rating, v.v.) xếp tự nhiên bên trái */
+html.cf-custom-bg-active .info .main-info {
+  background: transparent !important;
+  border: none !important;
+  margin: 0 0 12px 0 !important;
+  padding: 0 !important;
+}
+
+/* Xoá bỏ viền hộp chữ nhật xám #B9B9B9 xung quanh ảnh avatar */
+html.cf-custom-bg-active .info .title-photo > div,
+html.cf-custom-bg-active .info .title-photo div,
+html.cf-custom-bg-active .title-photo > div,
+html.cf-custom-bg-active .title-photo div {
+  border: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* Bo tròn góc và viền kính mờ cho ảnh avatar */
+html.cf-custom-bg-active .info .title-photo img,
+html.cf-custom-bg-active .title-photo img {
+  border-radius: 14px !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+  max-width: 260px !important;
+  height: auto !important;
+  display: block !important;
+}
+
+/* Căn giữa dòng chữ "Change photo | Unset photo" bên dưới avatar */
+html.cf-custom-bg-active .info .title-photo div:last-child,
+html.cf-custom-bg-active .title-photo div:last-child {
+  padding-top: 10px !important;
+  text-align: center !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Typography thoáng đãng bên trong .info */
+html.cf-custom-bg-active .info .user-rank {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  margin-bottom: 4px !important;
+}
+
+html.cf-custom-bg-active .info h1 {
+  margin-top: 0 !important;
+  margin-bottom: 8px !important;
+}
+
+html.cf-custom-bg-active .info ul {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 12px 0 !important;
+}
+
+html.cf-custom-bg-active .info ul li {
+  padding: 3px 0 !important;
+  line-height: 1.5 !important;
+}
+
+@media (max-width: 768px) {
+  html.cf-custom-bg-active .info .title-photo,
+  html.cf-custom-bg-active .title-photo {
+    float: none !important;
+    margin: 0 auto 16px auto !important;
+  }
+}
+
+/* Blog Topic on Home & Blog Pages: fix khoảng trống ở đầu và tránh kéo dài */
+html.cf-custom-bg-active .topic {
+  display: flow-root !important;
+  padding: 24px 28px !important;
+  margin-bottom: 18px !important;
+  box-sizing: border-box !important;
+}
+
+html.cf-custom-bg-active .topic .content,
+html.cf-custom-bg-active .topic .ttypography,
+html.cf-custom-bg-active .content-with-sidebar > .content,
+html.cf-custom-bg-active .content-with-sidebar .topic {
+  clear: none !important;
+}
+
+/* Sidebar Mini Profile Box & Avatar Styling: xóa viền trong và bo tròn góc avatar */
+html.cf-custom-bg-active .personal-sidebar,
+html.cf-custom-bg-active .sidebox .personal-sidebar,
+html.cf-custom-bg-active .sidebox > div {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.cf-custom-bg-active .personal-sidebar img,
+html.cf-custom-bg-active .sidebox .title-photo img,
+html.cf-custom-bg-active .sidebox .avatar img,
+html.cf-custom-bg-active .sidebox img.avatar {
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Universal Rounded Avatars for All Users Across the Site */
+html.cf-custom-bg-active img[src*="userpic"],
+html.cf-custom-bg-active img[src*="avatar"],
+html.cf-custom-bg-active img.avatar,
+html.cf-custom-bg-active .avatar img,
+html.cf-custom-bg-active .avatar,
+html.cf-custom-bg-active .comment .avatar img,
+html.cf-custom-bg-active .comment-table .avatar img,
+html.cf-custom-bg-active .personal-sidebar img,
+html.cf-custom-bg-active .sidebox .title-photo img,
+html.cf-custom-bg-active .sidebox .avatar img,
+html.cf-custom-bg-active .sidebox img.avatar,
+html.cf-custom-bg-active .talk-user-image,
+html.cf-custom-bg-active .user-photo,
+html.cf-custom-bg-active .user-photo img {
+  border-radius: 10px !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  object-fit: cover !important;
+}
+
+/* Ẩn loading indicator và không áp viền/bóng khi chưa nộp bài */
+html.cf-custom-bg-active img.indicator,
+html.cf-custom-bg-active img.waiting,
+html.cf-custom-bg-active img.ajax-loading,
+html.cf-custom-bg-active img[style*="display: none"],
+html.cf-custom-bg-active img[style*="display:none"],
+html.cf-custom-bg-active .sidebox img.indicator,
+html.cf-custom-bg-active .sidebox img.waiting,
+html.cf-custom-bg-active .sidebox img[style*="display: none"],
+html.cf-custom-bg-active .sidebox img[style*="display:none"] {
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+html.cf-custom-bg-active .sidebox {
+  padding: 14px 12px !important;
+  margin-bottom: 16px !important;
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  word-wrap: break-word !important;
+}
+
+html.cf-custom-bg-active .sidebox * {
+  box-sizing: border-box !important;
+}
+
+/* Ensure all text, links, paragraphs, and list items in sidebox cleanly wrap on overflow */
+html.cf-custom-bg-active .sidebox > div,
+html.cf-custom-bg-active .sidebox p,
+html.cf-custom-bg-active .sidebox span,
+html.cf-custom-bg-active .sidebox td,
+html.cf-custom-bg-active .sidebox li,
+html.cf-custom-bg-active .sidebox ul,
+html.cf-custom-bg-active .sidebox .caption,
+html.cf-custom-bg-active .roundbox.sidebox,
+.sidebox {
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  word-wrap: break-word !important;
+}
+
+html.cf-custom-bg-active .sidebox a {
+  max-width: 100% !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  word-wrap: break-word !important;
+}
+
+html.cf-custom-bg-active .sidebox img {
+  max-width: 100% !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+}
+
+html.cf-custom-bg-active .problem-statement {
+  padding: 22px 26px !important;
+}
+
+/* Force all inner nested elements to be 100% transparent so they never block the blur */
+html.cf-custom-bg-active .roundbox > div:not(.caption),
+html.cf-custom-bg-active .personal-sidebar,
+html.cf-custom-bg-active .info,
+html.cf-custom-bg-active .title-photo,
+html.cf-custom-bg-active .userbox > div,
+html.cf-custom-bg-active .userbox .info,
+html.cf-custom-bg-active .userbox .title-photo,
+html.cf-custom-bg-active .topic > div,
+html.cf-custom-bg-active .topic .content,
+html.cf-custom-bg-active .ttypography,
+html.cf-custom-bg-active .sidebox > div,
+html.cf-custom-bg-active .sidebox table,
+html.cf-custom-bg-active .sidebox td,
+html.cf-custom-bg-active .sidebox th,
+html.cf-custom-bg-active div[id^="history-text-content"],
+html.cf-custom-bg-active .content-with-sidebar > div {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* Hide legacy Codeforces image corner sprites that cause white corner squares */
+html.cf-custom-bg-active .roundbox-lt,
+html.cf-custom-bg-active .roundbox-lb,
+html.cf-custom-bg-active .roundbox-rt,
+html.cf-custom-bg-active .roundbox-rb,
+html.cf-custom-bg-active .datatable .lt,
+html.cf-custom-bg-active .datatable .lb,
+html.cf-custom-bg-active .datatable .rt,
+html.cf-custom-bg-active .datatable .rb,
+html.cf-custom-bg-active .datatable .ilt,
+html.cf-custom-bg-active .datatable .ilb,
+html.cf-custom-bg-active .datatable .irt,
+html.cf-custom-bg-active .datatable .irb {
+  display: none !important;
+}
+
+/* Inner captions and dividers */
+html.cf-custom-bg-active .caption.titled,
+html.cf-custom-bg-active .sidebox .caption {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25) !important;
+  padding-bottom: 8px !important;
+  margin-bottom: 10px !important;
+}
+
+html.cf-custom-bg-active .bottom-links {
+  background: transparent !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+  padding-top: 10px !important;
+}
+
+/* =========================================================
+   Contest & Datatable Modern Translucent Glass Styling
+   (Current or upcoming contests, Past contests, Problemsets)
+   ========================================================= */
+
+html.cf-custom-bg-active .datatable {
+  padding: 12px 14px !important;
+  margin-bottom: 22px !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* Strip hardcoded inline background colors from inner wrappers inside datatable */
+html.cf-custom-bg-active .datatable > div {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+html.cf-custom-bg-active .datatable > div:last-child {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Contest Header Title: "Current or upcoming contests" / "Past contests" */
+html.cf-custom-bg-active .datatable > div:first-of-type {
+  color: #f8fafc !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  padding: 2px 0 10px 2px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+  margin-bottom: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+/* Search input inside table header */
+html.cf-custom-bg-active .datatable .filter input {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 6px !important;
+  color: #ffffff !important;
+  padding: 3px 8px 3px 22px !important;
+  outline: none !important;
+  font-size: 12px !important;
+}
+
+/* Contest & General Tables Frame & Grid Borders */
+html.cf-custom-bg-active .datatable table,
+html.cf-custom-bg-active table.problems,
+html.cf-custom-bg-active table.standings,
+html.cf-custom-bg-active table.status-frame-datatable {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  background: rgba(0, 0, 0, 0.16) !important;
+  margin: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
+/* Table Header Row with Crisp Borders */
+html.cf-custom-bg-active .datatable th,
+html.cf-custom-bg-active table.problems th,
+html.cf-custom-bg-active table.standings th,
+html.cf-custom-bg-active table.status-frame-datatable th {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #f1f5f9 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.6px !important;
+  padding: 10px 12px !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-top: none !important;
+  border-left: none !important;
+  text-align: left !important;
+}
+
+html.cf-custom-bg-active .datatable th:last-child,
+html.cf-custom-bg-active table.problems th:last-child,
+html.cf-custom-bg-active table.standings th:last-child,
+html.cf-custom-bg-active table.status-frame-datatable th:last-child {
+  border-right: none !important;
+}
+
+/* Table Cells with Clear Grid Borders */
+html.cf-custom-bg-active .datatable td,
+html.cf-custom-bg-active table.problems td,
+html.cf-custom-bg-active table.standings td,
+html.cf-custom-bg-active table.status-frame-datatable td {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #e2e8f0 !important;
+  padding: 11px 12px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-top: none !important;
+  border-left: none !important;
+  font-size: 13px !important;
+  vertical-align: middle !important;
+  transition: background-color 0.15s ease !important;
+}
+
+/* Remove right border on the last column */
+html.cf-custom-bg-active .datatable td:last-child,
+html.cf-custom-bg-active table.problems td:last-child,
+html.cf-custom-bg-active table.standings td:last-child,
+html.cf-custom-bg-active table.status-frame-datatable td:last-child {
+  border-right: none !important;
+}
+
+/* Remove bottom border on the last row */
+html.cf-custom-bg-active .datatable tr:last-child td,
+html.cf-custom-bg-active table.problems tr:last-child td,
+html.cf-custom-bg-active table.standings tr:last-child td,
+html.cf-custom-bg-active table.status-frame-datatable tr:last-child td {
+  border-bottom: none !important;
+}
+
+/* Alternating subtle row background for improved readability */
+html.cf-custom-bg-active .datatable tr:nth-child(even) td,
+html.cf-custom-bg-active table.problems tr:nth-child(even) td,
+html.cf-custom-bg-active table.standings tr:nth-child(even) td,
+html.cf-custom-bg-active table.status-frame-datatable tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Row Hover Effect */
+html.cf-custom-bg-active .datatable tr:hover td,
+html.cf-custom-bg-active table.problems tr:hover td,
+html.cf-custom-bg-active table.standings tr:hover td,
+html.cf-custom-bg-active table.status-frame-datatable tr:hover td {
+  background-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* =========================================================
+   Problemset Problem Status (AC / WA / ER) in Column 3 & Row Hover
+   ========================================================= */
+
+/* AC (Accepted) problems: Column 3 (td.act) on BOTH odd and even rows */
+html.cf-custom-bg-active table.problems tr.accepted-problem td.act,
+html.cf-custom-bg-active table.problems tr.accepted-problem td:nth-child(3),
+html.cf-custom-bg-active table.problems tr.accepted-problem.dark td.act,
+html.cf-custom-bg-active table.problems tr.accepted-problem.dark td:nth-child(3),
+html.cf-custom-bg-active table.problems tr.accepted-problem:nth-child(odd) td.act,
+html.cf-custom-bg-active table.problems tr.accepted-problem:nth-child(odd) td:nth-child(3),
+html.cf-custom-bg-active table.problems tr.accepted-problem:nth-child(even) td.act,
+html.cf-custom-bg-active table.problems tr.accepted-problem:nth-child(even) td:nth-child(3),
+html.cf-custom-bg-active table.problems tr:has(.cf-act-accepted) td.act,
+html.cf-custom-bg-active table.problems tr:has(.cf-act-accepted) td:nth-child(3),
+html.cf-custom-bg-active table.problems td.cf-act-accepted,
+table.problems tr.accepted-problem td.act,
+table.problems tr.accepted-problem td:nth-child(3),
+table.problems tr.accepted-problem.dark td.act,
+table.problems tr.accepted-problem.dark td:nth-child(3),
+table.problems tr:has(.cf-act-accepted) td.act,
+table.problems tr:has(.cf-act-accepted) td:nth-child(3),
+td.cf-act-accepted {
+  background-color: rgba(34, 197, 94, 0.22) !important;
+  color: #22c55e !important;
+}
+
+/* WA / ER (Rejected / Attempted) problems: Column 3 (td.act) on BOTH odd and even rows */
+html.cf-custom-bg-active table.problems tr.rejected-problem td.act,
+html.cf-custom-bg-active table.problems tr.rejected-problem td:nth-child(3),
+html.cf-custom-bg-active table.problems tr.rejected-problem.dark td.act,
+html.cf-custom-bg-active table.problems tr.rejected-problem.dark td:nth-child(3),
+html.cf-custom-bg-active table.problems tr.rejected-problem:nth-child(odd) td.act,
+html.cf-custom-bg-active table.problems tr.rejected-problem:nth-child(odd) td:nth-child(3),
+html.cf-custom-bg-active table.problems tr.rejected-problem:nth-child(even) td.act,
+html.cf-custom-bg-active table.problems tr.rejected-problem:nth-child(even) td:nth-child(3),
+html.cf-custom-bg-active table.problems tr:has(.cf-act-rejected) td.act,
+html.cf-custom-bg-active table.problems tr:has(.cf-act-rejected) td:nth-child(3),
+html.cf-custom-bg-active table.problems td.cf-act-rejected,
+table.problems tr.rejected-problem td.act,
+table.problems tr.rejected-problem td:nth-child(3),
+table.problems tr.rejected-problem.dark td.act,
+table.problems tr.rejected-problem.dark td:nth-child(3),
+table.problems tr:has(.cf-act-rejected) td.act,
+table.problems tr:has(.cf-act-rejected) td:nth-child(3),
+td.cf-act-rejected {
+  background-color: rgba(239, 68, 68, 0.22) !important;
+  color: #ef4444 !important;
+}
+
+/* Row Hover on AC problems: Column 3 and row highlight together */
+html.cf-custom-bg-active table.problems tr.accepted-problem:hover td.act,
+html.cf-custom-bg-active table.problems tr.accepted-problem:hover td:nth-child(3),
+html.cf-custom-bg-active table.problems tr.accepted-problem:hover td.cf-act-accepted,
+html.cf-custom-bg-active table.problems tr:has(.cf-act-accepted):hover td.act,
+html.cf-custom-bg-active table.problems tr:has(.cf-act-accepted):hover td:nth-child(3),
+html.cf-custom-bg-active table.problems tr:has(.cf-act-accepted):hover td.cf-act-accepted,
+table.problems tr.accepted-problem:hover td.act,
+table.problems tr.accepted-problem:hover td:nth-child(3),
+table.problems tr:hover td.cf-act-accepted {
+  background-color: rgba(34, 197, 94, 0.42) !important;
+}
+html.cf-custom-bg-active table.problems tr.accepted-problem:hover td,
+html.cf-custom-bg-active table.problems tr:has(.cf-act-accepted):hover td,
+table.problems tr.accepted-problem:hover td,
+table.problems tr:has(.cf-act-accepted):hover td {
+  background-color: rgba(34, 197, 94, 0.14) !important;
+}
+
+/* Row Hover on WA / ER problems: Column 3 and row highlight together */
+html.cf-custom-bg-active table.problems tr.rejected-problem:hover td.act,
+html.cf-custom-bg-active table.problems tr.rejected-problem:hover td:nth-child(3),
+html.cf-custom-bg-active table.problems tr.rejected-problem:hover td.cf-act-rejected,
+html.cf-custom-bg-active table.problems tr:has(.cf-act-rejected):hover td.act,
+html.cf-custom-bg-active table.problems tr:has(.cf-act-rejected):hover td:nth-child(3),
+html.cf-custom-bg-active table.problems tr:has(.cf-act-rejected):hover td.cf-act-rejected,
+table.problems tr.rejected-problem:hover td.act,
+table.problems tr.rejected-problem:hover td:nth-child(3),
+table.problems tr:hover td.cf-act-rejected {
+  background-color: rgba(239, 68, 68, 0.42) !important;
+}
+html.cf-custom-bg-active table.problems tr.rejected-problem:hover td,
+html.cf-custom-bg-active table.problems tr:has(.cf-act-rejected):hover td,
+table.problems tr.rejected-problem:hover td,
+table.problems tr:has(.cf-act-rejected):hover td {
+  background-color: rgba(239, 68, 68, 0.14) !important;
+}
+
+/* Row Hover on unsubmitted problem rows: Column 3 highlights with the row */
+html.cf-custom-bg-active table.problems tr:hover td.act,
+html.cf-custom-bg-active table.problems tr:not(.accepted-problem):not(.rejected-problem):hover td,
+html.cf-custom-bg-active table.problems tr:not(.accepted-problem):not(.rejected-problem):hover td.act,
+html.cf-custom-bg-active table.problems tr:not(.accepted-problem):not(.rejected-problem):hover td:nth-child(3),
+table.problems tr:hover td.act,
+table.problems tr:not(.accepted-problem):not(.rejected-problem):hover td,
+table.problems tr:not(.accepted-problem):not(.rejected-problem):hover td.act,
+table.problems tr:not(.accepted-problem):not(.rejected-problem):hover td:nth-child(3) {
+  background-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* =========================================================
+   Sidebox & Roundbox Widget Tables (Recent virt. contests, Top rated, etc.)
+   ========================================================= */
+
+html.cf-custom-bg-active .sidebox table.rtable,
+html.cf-custom-bg-active .roundbox.sidebox table.rtable,
+html.cf-custom-bg-active .sidebox .datatable table,
+html.cf-custom-bg-active .sidebox table:has(th):not(form table):not(.table-form),
+html.cf-custom-bg-active .roundbox table.rtable,
+html.cf-custom-bg-active .roundbox table:has(th):not(.comment-table):not(.meta):not(form table):not(.table-form) {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  background: rgba(0, 0, 0, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  margin: 8px 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Header Row in Sidebox & Widget Table */
+html.cf-custom-bg-active .sidebox table.rtable th,
+html.cf-custom-bg-active .roundbox.sidebox table.rtable th,
+html.cf-custom-bg-active .sidebox .datatable table th,
+html.cf-custom-bg-active .sidebox table:has(th):not(form table):not(.table-form) th,
+html.cf-custom-bg-active .roundbox table.rtable th,
+html.cf-custom-bg-active .roundbox table:has(th):not(.comment-table):not(.meta):not(form table):not(.table-form) th {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #f1f5f9 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+  padding: 6px 4px !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.28) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-top: none !important;
+  border-left: none !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+}
+
+html.cf-custom-bg-active .sidebox table.rtable th:first-child,
+html.cf-custom-bg-active .roundbox.sidebox table.rtable th:first-child,
+html.cf-custom-bg-active .sidebox table:has(th):not(form table):not(.table-form) th:first-child,
+html.cf-custom-bg-active .roundbox table:not(.comment-table):not(.meta) th:first-child {
+  text-align: center !important;
+}
+
+html.cf-custom-bg-active .sidebox table.rtable th:last-child,
+html.cf-custom-bg-active .roundbox.sidebox table.rtable th:last-child,
+html.cf-custom-bg-active .sidebox table:has(th):not(form table):not(.table-form) th:last-child,
+html.cf-custom-bg-active .roundbox table:not(.comment-table):not(.meta) th:last-child {
+  border-right: none !important;
+}
+
+/* Contest name title in sidebox (e.g. Codeforces Round 1137 (Div. 2)) */
+html.cf-custom-bg-active .sidebox table.rtable th.top,
+html.cf-custom-bg-active .roundbox.sidebox table.rtable th.top,
+html.cf-custom-bg-active .sidebox table.rtable th:has(a[href*="contest"]),
+html.cf-custom-bg-active .roundbox table.rtable th:has(a[href*="contest"]),
+html.cf-custom-bg-active .sidebox table.rtable th a,
+html.cf-custom-bg-active .roundbox.sidebox table.rtable th a,
+html.cf-custom-bg-active .sidebox table th a[href*="contest"],
+html.cf-custom-bg-active .roundbox table th a[href*="contest"],
+html.cf-custom-bg-active table.rtable th a[href*="contest"] {
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  text-transform: none !important;
+  letter-spacing: 0.2px !important;
+}
+
+html.cf-custom-bg-active .sidebox table.rtable th.top,
+html.cf-custom-bg-active .roundbox.sidebox table.rtable th.top,
+html.cf-custom-bg-active .sidebox table.rtable th:has(a[href*="contest"]),
+html.cf-custom-bg-active .roundbox table.rtable th:has(a[href*="contest"]) {
+  padding: 8px 6px !important;
+}
+
+/* Cells in Sidebox & Widget Table */
+html.cf-custom-bg-active .sidebox table.rtable td,
+html.cf-custom-bg-active .roundbox.sidebox table.rtable td,
+html.cf-custom-bg-active .sidebox .datatable table td,
+html.cf-custom-bg-active .sidebox table:has(th):not(form table):not(.table-form) td,
+html.cf-custom-bg-active .roundbox table.rtable td,
+html.cf-custom-bg-active .roundbox table:has(th):not(.comment-table):not(.meta):not(form table):not(.table-form) td {
+  background: transparent !important;
+  color: #e2e8f0 !important;
+  padding: 6px 5px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-top: none !important;
+  border-left: none !important;
+  font-size: 11px !important;
+  vertical-align: middle !important;
+  transition: background-color 0.15s ease !important;
+  word-break: break-word !important;
+  box-sizing: border-box !important;
+}
+
+/* Specific column proportions for 3-column sidebox tables (e.g. Last unsolved) */
+html.cf-custom-bg-active .sidebox table.rtable th:nth-child(1),
+html.cf-custom-bg-active .sidebox table.rtable td:nth-child(1),
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) th:nth-child(1),
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) td:nth-child(1) {
+  width: 17% !important;
+  text-align: center !important;
+  padding: 6px 3px !important;
+}
+
+html.cf-custom-bg-active .sidebox table.rtable th:nth-child(2),
+html.cf-custom-bg-active .sidebox table.rtable td:nth-child(2),
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) th:nth-child(2),
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) td:nth-child(2) {
+  width: 43% !important;
+  text-align: left !important;
+  padding: 6px 4px !important;
+}
+
+html.cf-custom-bg-active .sidebox table.rtable th:nth-child(3),
+html.cf-custom-bg-active .sidebox table.rtable td:nth-child(3),
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) th:nth-child(3),
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) td:nth-child(3) {
+  width: 40% !important;
+  text-align: center !important;
+  font-size: 9.5px !important;
+  white-space: nowrap !important;
+  letter-spacing: 0 !important;
+  padding: 6px 2px !important;
+}
+
+/* Remove right border on the last column */
+html.cf-custom-bg-active .sidebox table.rtable td:last-child,
+html.cf-custom-bg-active .roundbox.sidebox table.rtable td:last-child,
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) td:last-child,
+html.cf-custom-bg-active .roundbox table:not(.comment-table):not(.meta) td:last-child {
+  border-right: none !important;
+  text-align: center !important;
+}
+
+/* Remove bottom border on the last row */
+html.cf-custom-bg-active .sidebox table.rtable tr:last-child td,
+html.cf-custom-bg-active .roundbox.sidebox table.rtable tr:last-child td,
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) tr:last-child td,
+html.cf-custom-bg-active .roundbox table:not(.comment-table):not(.meta) tr:last-child td {
+  border-bottom: none !important;
+}
+
+/* Alternating rows in Sidebox Table */
+html.cf-custom-bg-active .sidebox table.rtable tr:nth-child(even) td,
+html.cf-custom-bg-active .roundbox.sidebox table.rtable tr:nth-child(even) td,
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) tr:nth-child(even) td,
+html.cf-custom-bg-active .roundbox table:not(.comment-table):not(.meta) tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Row hover in Sidebox Table */
+html.cf-custom-bg-active .sidebox table.rtable tr:hover td,
+html.cf-custom-bg-active .roundbox.sidebox table.rtable tr:hover td,
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) tr:hover td,
+html.cf-custom-bg-active .roundbox table:not(.comment-table):not(.meta) tr:hover td {
+  background-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Links inside Sidebox Table (Luôn giữ màu xanh dương sáng cả khi đã click/visited, loại trừ user) */
+html.cf-custom-bg-active .sidebox table.rtable a:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])),
+html.cf-custom-bg-active .roundbox.sidebox table.rtable a:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])),
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) a:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])),
+html.cf-custom-bg-active .roundbox table:not(.comment-table):not(.meta) a:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])),
+html.cf-custom-bg-active .sidebox table.rtable a:visited:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])),
+html.cf-custom-bg-active .roundbox.sidebox table.rtable a:visited:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])),
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) a:visited:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])),
+html.cf-custom-bg-active .roundbox table:not(.comment-table):not(.meta) a:visited:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])) {
+  color: #38bdf8 !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  transition: color 0.15s ease !important;
+}
+
+html.cf-custom-bg-active .sidebox table.rtable a:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):hover,
+html.cf-custom-bg-active .roundbox.sidebox table.rtable a:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):hover,
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) a:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):hover,
+html.cf-custom-bg-active .roundbox table:not(.comment-table):not(.meta) a:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):hover,
+html.cf-custom-bg-active .sidebox table.rtable a:visited:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):hover,
+html.cf-custom-bg-active .roundbox.sidebox table.rtable a:visited:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):hover,
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) a:visited:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):hover,
+html.cf-custom-bg-active .roundbox table:not(.comment-table):not(.meta) a:visited:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):hover {
+  color: #93c5fd !important;
+  text-decoration: underline !important;
+}
+
+html.cf-custom-bg-active .sidebox table.rtable a[href*="enter"]:not([class*="user-"]):not([class*="rated-"]),
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) a[href*="enter"]:not([class*="user-"]):not([class*="rated-"]),
+html.cf-custom-bg-active .sidebox table.rtable a[href*="enter"]:visited:not([class*="user-"]):not([class*="rated-"]),
+html.cf-custom-bg-active .sidebox table:has(th):not(form table) a[href*="enter"]:visited:not([class*="user-"]):not([class*="rated-"]) {
+  display: inline-block !important;
+  margin-top: 3px !important;
+  font-size: 11px !important;
+  color: #93c5fd !important;
+}
+
+/* Contest Links (Luôn giữ màu xanh dương sáng cả khi đã click/visited, loại trừ user và verdict) */
+html.cf-custom-bg-active .datatable td a:not([class*="user-"]):not([class*="rated-"]):not([class*="cf-verdict-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(:has([class*="cf-verdict-"])),
+html.cf-custom-bg-active .datatable td a:visited:not([class*="user-"]):not([class*="rated-"]):not([class*="cf-verdict-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(:has([class*="cf-verdict-"])) {
+  color: #38bdf8 !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  transition: color 0.15s ease !important;
+}
+
+html.cf-custom-bg-active .datatable td a:not([class*="user-"]):not([class*="rated-"]):not([class*="cf-verdict-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(:has([class*="cf-verdict-"])):hover,
+html.cf-custom-bg-active .datatable td a:visited:not([class*="user-"]):not([class*="rated-"]):not([class*="cf-verdict-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(:has([class*="cf-verdict-"])):hover {
+  color: #93c5fd !important;
+  text-decoration: underline !important;
+}
+
+/* Secondary contest action links like "Enter", "Virtual participation" */
+html.cf-custom-bg-active .datatable td a[href*="enter"]:not([class*="user-"]),
+html.cf-custom-bg-active .datatable td a[href*="virtual"]:not([class*="user-"]),
+html.cf-custom-bg-active .datatable td a[href*="enter"]:visited:not([class*="user-"]),
+html.cf-custom-bg-active .datatable td a[href*="virtual"]:visited:not([class*="user-"]) {
+  font-size: 11px !important;
+  display: inline-block !important;
+  margin-top: 2px !important;
+  color: #93c5fd !important;
+  opacity: 0.85 !important;
+}
+
+html.cf-custom-bg-active .datatable td a[href*="enter"]:not([class*="user-"]):hover,
+html.cf-custom-bg-active .datatable td a[href*="virtual"]:not([class*="user-"]):hover {
+  opacity: 1 !important;
+}
+
+/* =========================================================
+   Codeforces Rated Users Colors Preservation
+   Bảo vệ tuyệt đối màu danh hiệu của User (Legendary, Red, Orange, etc.)
+   ========================================================= */
+
+/* Legendary Grandmaster (tourist, jiangly, Benq,...) */
+html.cf-custom-bg-active a.user-legendary,
+html.cf-custom-bg-active .user-legendary,
+html.cf-dark-mode a.user-legendary,
+html.cf-dark-mode .user-legendary,
+html.cf-light-mode a.user-legendary,
+html.cf-light-mode .user-legendary {
+  color: #ff3333 !important;
+  font-weight: bold !important;
+}
+
+/* Chữ cái đầu tiên của Legendary Grandmaster */
+html.cf-custom-bg-active .legendary-user-first-letter,
+html.cf-dark-mode .legendary-user-first-letter {
+  color: #ffffff !important;
+  font-weight: bold !important;
+}
+
+html.cf-light-mode .legendary-user-first-letter {
+  color: #000000 !important;
+  font-weight: bold !important;
+}
+
+/* International Grandmaster & Grandmaster (Đỏ) */
+html.cf-custom-bg-active a.user-red,
+html.cf-custom-bg-active .user-red,
+html.cf-dark-mode a.user-red,
+html.cf-dark-mode .user-red,
+html.cf-light-mode a.user-red,
+html.cf-light-mode .user-red {
+  color: #ff3333 !important;
+  font-weight: bold !important;
+}
+
+/* International Master & Master (Cam) */
+html.cf-custom-bg-active a.user-orange,
+html.cf-custom-bg-active .user-orange,
+html.cf-dark-mode a.user-orange,
+html.cf-dark-mode .user-orange,
+html.cf-light-mode a.user-orange,
+html.cf-light-mode .user-orange {
+  color: #ff8c00 !important;
+  font-weight: bold !important;
+}
+
+/* Candidate Master (Tím) */
+html.cf-custom-bg-active a.user-violet,
+html.cf-custom-bg-active .user-violet,
+html.cf-dark-mode a.user-violet,
+html.cf-dark-mode .user-violet,
+html.cf-light-mode a.user-violet,
+html.cf-light-mode .user-violet {
+  color: #c084fc !important;
+  font-weight: bold !important;
+}
+
+/* Expert (Xanh dương) */
+html.cf-custom-bg-active a.user-blue,
+html.cf-custom-bg-active .user-blue,
+html.cf-dark-mode a.user-blue,
+html.cf-dark-mode .user-blue,
+html.cf-light-mode a.user-blue,
+html.cf-light-mode .user-blue {
+  color: #3b82f6 !important;
+  font-weight: bold !important;
+}
+
+/* Specialist (Cyan) */
+html.cf-custom-bg-active a.user-cyan,
+html.cf-custom-bg-active .user-cyan,
+html.cf-dark-mode a.user-cyan,
+html.cf-dark-mode .user-cyan,
+html.cf-light-mode a.user-cyan,
+html.cf-light-mode .user-cyan {
+  color: #06b6d4 !important;
+  font-weight: bold !important;
+}
+
+/* Pupil (Lục) */
+html.cf-custom-bg-active a.user-green,
+html.cf-custom-bg-active .user-green,
+html.cf-dark-mode a.user-green,
+html.cf-dark-mode .user-green,
+html.cf-light-mode a.user-green,
+html.cf-light-mode .user-green {
+  color: #22c55e !important;
+  font-weight: bold !important;
+}
+
+/* Newbie (Xám) */
+html.cf-custom-bg-active a.user-gray,
+html.cf-custom-bg-active .user-gray,
+html.cf-dark-mode a.user-gray,
+html.cf-dark-mode .user-gray,
+html.cf-light-mode a.user-gray,
+html.cf-light-mode .user-gray {
+  color: #94a3b8 !important;
+}
+
+/* Toàn bộ hyperlink thông thường (loại trừ user handle, nút bấm) luôn giữ màu xanh dương sáng, không bao giờ hóa tím khi visited */
+html.cf-custom-bg-active a:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(.btn):not(.button):not(.pill-btn):not(.main-menu-list a):not(.second-level-menu-list a),
+html.cf-custom-bg-active a:visited:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(.btn):not(.button):not(.pill-btn):not(.main-menu-list a):not(.second-level-menu-list a) {
+  color: #38bdf8 !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease !important;
+}
+
+html.cf-custom-bg-active a:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(.btn):not(.button):not(.pill-btn):not(.main-menu-list a):not(.second-level-menu-list a):hover,
+html.cf-custom-bg-active a:visited:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(.btn):not(.button):not(.pill-btn):not(.main-menu-list a):not(.second-level-menu-list a):hover {
+  color: #93c5fd !important;
+  text-decoration: underline !important;
+}
+
+/* Status text like "Registration completed", "Before start ...", "Final standings" */
+html.cf-custom-bg-active .datatable .notice,
+html.cf-custom-bg-active .datatable .countdown,
+html.cf-custom-bg-active .datatable td span:not([class*="verdict"]):not([class*="cf-verdict"]):not(:has([class*="verdict"])):not(:has([class*="cf-verdict"])) {
+  color: #f1f5f9 !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+}
+
+html.cf-custom-bg-active .datatable .registrationCompleted,
+html.cf-custom-bg-active .datatable span[style*="green"],
+html.cf-custom-bg-active .datatable font[color="green"] {
+  color: #4ade80 !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+/* Clean contest wrappers */
+html.cf-custom-bg-active .contestList,
+html.cf-custom-bg-active .contests-table {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Glassmorphism Pagination */
+html.cf-custom-bg-active .pagination {
+  margin: 18px 0 !important;
+  display: flex !important;
+  justify-content: flex-start !important;
+}
+
+html.cf-custom-bg-active .pagination ul {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+html.cf-custom-bg-active .pagination li {
+  display: inline-flex !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html.cf-custom-bg-active .pagination .page-index {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  padding: 0 8px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, var(--cf-glass-alpha, 0.16)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  color: #f1f5f9 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+}
+
+html.cf-custom-bg-active .pagination .page-index a {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+html.cf-custom-bg-active .pagination .page-index:hover {
+  background: rgba(255, 255, 255, 0.28) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
+
+html.cf-custom-bg-active .pagination .page-index.active {
+  background: rgba(234, 88, 12, 0.8) !important;
+  border-color: rgba(251, 146, 60, 0.9) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35) !important;
+}
+
+html.cf-custom-bg-active .pagination .inactive {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  color: rgba(255, 255, 255, 0.35) !important;
+  font-size: 14px !important;
+}
+
+/* Contest filter form inside sidebox */
+html.cf-custom-bg-active #gymContestsFilter,
+html.cf-custom-bg-active #gym-filter-form,
+html.cf-custom-bg-active #past-contests-filter-form {
+  background: transparent !important;
+}
+
+/* Explicitly reset form layout tables so they don't inherit widget table borders/background */
+html.cf-custom-bg-active form table,
+html.cf-custom-bg-active .table-form,
+html.cf-custom-bg-active #gymContestsFilter table,
+html.cf-custom-bg-active #gym-filter-form table,
+html.cf-custom-bg-active #past-contests-filter-form table,
+html.cf-custom-bg-active .searchContestByNameOrIdForm table,
+html.cf-custom-bg-active .searchContestByProblemForm table {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  width: 100% !important;
+  border-collapse: collapse !important;
+}
+
+html.cf-custom-bg-active form table td,
+html.cf-custom-bg-active form table th,
+html.cf-custom-bg-active .table-form td,
+html.cf-custom-bg-active .table-form th,
+html.cf-custom-bg-active #gymContestsFilter td,
+html.cf-custom-bg-active #gymContestsFilter th,
+html.cf-custom-bg-active #gym-filter-form td,
+html.cf-custom-bg-active #gym-filter-form th,
+html.cf-custom-bg-active #past-contests-filter-form td,
+html.cf-custom-bg-active #past-contests-filter-form th {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 3px 2px !important;
+}
+
+/* Range table styling (Season from...to, Duration from...to, Difficulty from...to) */
+html.cf-custom-bg-active #gymContestsFilter table table,
+html.cf-custom-bg-active #gym-filter-form table table,
+html.cf-custom-bg-active .sidebox form table table {
+  display: table !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+  box-sizing: border-box !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 8px !important;
+  padding: 3px 4px !important;
+  margin: 3px 0 5px 0 !important;
+}
+
+html.cf-custom-bg-active #gymContestsFilter table table td,
+html.cf-custom-bg-active #gym-filter-form table table td,
+html.cf-custom-bg-active .sidebox form table table td {
+  padding: 2px 2px !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
+}
+
+/* from and to labels */
+html.cf-custom-bg-active #gymContestsFilter table table td:not(:has(select)):not(:has(input)):not(:has(.star-rating)),
+html.cf-custom-bg-active #gym-filter-form table table td:not(:has(select)):not(:has(input)):not(:has(.star-rating)),
+html.cf-custom-bg-active .sidebox form table table td:not(:has(select)):not(:has(input)):not(:has(.star-rating)) {
+  color: #cbd5e1 !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: lowercase !important;
+  width: 1% !important;
+  white-space: nowrap !important;
+  padding: 0 4px !important;
+  text-align: center !important;
+}
+
+/* Compact selects inside range containers */
+html.cf-custom-bg-active #gymContestsFilter table table select,
+html.cf-custom-bg-active #gym-filter-form table table select,
+html.cf-custom-bg-active .sidebox form table table select {
+  padding: 3px 18px 3px 5px !important;
+  font-size: 11px !important;
+  background-position: right 4px center !important;
+  background-size: 8px 8px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  height: 25px !important;
+  border-radius: 6px !important;
+}
+
+html.cf-custom-bg-active #gymContestsFilter label,
+html.cf-custom-bg-active #gym-filter-form label,
+html.cf-custom-bg-active #past-contests-filter-form label {
+  color: #f1f5f9 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  margin-top: 6px !important;
+  margin-bottom: 4px !important;
+  display: block !important;
+}
+
+html.cf-custom-bg-active .setting-name {
+  color: #f1f5f9 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  vertical-align: middle !important;
+}
+
+html.cf-custom-bg-active #gymContestsFilter input[type="text"],
+html.cf-custom-bg-active #gym-filter-form input[type="text"],
+html.cf-custom-bg-active #past-contests-filter-form input[type="text"] {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  padding: 6px 10px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  outline: none !important;
+}
+
+html.cf-custom-bg-active #gymContestsFilter input[type="submit"],
+html.cf-custom-bg-active #gym-filter-form input[type="submit"],
+html.cf-custom-bg-active #past-contests-filter-form input[type="submit"] {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.38) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  padding: 6px 18px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  margin-top: 10px !important;
+}
+
+html.cf-custom-bg-active #gymContestsFilter input[type="submit"]:hover,
+html.cf-custom-bg-active #gym-filter-form input[type="submit"]:hover,
+html.cf-custom-bg-active #past-contests-filter-form input[type="submit"]:hover {
+  background: rgba(255, 255, 255, 0.35) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* SumoSelect Dropdown Glassmorphism */
+html.cf-custom-bg-active .SumoSelect > .CaptionCont {
+  background: rgba(255, 255, 255, var(--cf-glass-alpha, 0.2)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+}
+
+html.cf-custom-bg-active .SumoSelect > .CaptionCont > span {
+  color: #ffffff !important;
+}
+
+html.cf-custom-bg-active .SumoSelect > .optWrapper {
+  background: rgba(30, 41, 59, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 10px !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+  color: #ffffff !important;
+}
+
+html.cf-custom-bg-active .SumoSelect > .optWrapper li.opt {
+  color: #e2e8f0 !important;
+  padding: 8px 12px !important;
+}
+
+html.cf-custom-bg-active .SumoSelect > .optWrapper li.opt:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+html.cf-custom-bg-active .SumoSelect > .optWrapper li.opt.selected {
+  background: rgba(234, 88, 12, 0.7) !important;
+  color: #ffffff !important;
+}
+
+/* Sample test input / output inside problem statement (Khung mẫu test và xóa vạch vàng) */
+html.cf-custom-bg-active .problem-statement .sample-test .input,
+html.cf-custom-bg-active .problem-statement .sample-test .output {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  padding: 10px 14px !important;
+  margin-bottom: 14px !important;
+  box-sizing: border-box !important;
+}
+
+html.cf-custom-bg-active .problem-statement .sample-test .title {
+  color: #f1f5f9 !important;
+  font-weight: 700 !important;
+  text-transform: lowercase !important;
+  font-size: 13px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+  padding-bottom: 4px !important;
+  margin-bottom: 8px !important;
+}
+
+html.cf-custom-bg-active .problem-statement .sample-test pre,
+html.cf-custom-bg-active .problem-statement .sample-test .input pre,
+html.cf-custom-bg-active .problem-statement .sample-test .output pre {
+  background: rgba(18, 22, 30, 0.65) !important;
+  background-color: rgba(18, 22, 30, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  color: #f1f5f9 !important;
+  margin: 0 !important;
+}
+
+/* Xóa vạch màu vàng/xám xen kẽ trên từng dòng test case */
+html.cf-custom-bg-active .test-example-line,
+html.cf-custom-bg-active .test-example-line-even,
+html.cf-custom-bg-active .test-example-line-odd,
+html.cf-custom-bg-active .sample-test .test-example-line,
+html.cf-custom-bg-active .sample-test .test-example-line-even,
+html.cf-custom-bg-active .sample-test .test-example-line-odd {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+/* Giới hạn độ rộng Select trong Sidebox (khắc phục tràn viền ở khung Submit?) */
+html.cf-custom-bg-active .sidebox table,
+html.cf-custom-bg-active .sidebox form table {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+  box-sizing: border-box !important;
+}
+
+html.cf-custom-bg-active .sidebox select,
+html.cf-custom-bg-active .sidebox form select,
+html.cf-custom-bg-active .sidebox table select {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: block !important;
+}
+
+html.cf-custom-bg-active .sidebox td:has(select) {
+  overflow: hidden !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* =========================================================
+   Modern Glass Dropdowns (Select & Option)
+   ========================================================= */
+
+html.cf-custom-bg-active select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-color: rgba(255, 255, 255, var(--cf-glass-alpha, 0.2)) !important;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 13px 13px !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 5px 32px 5px 12px !important;
+  line-height: 1.4 !important;
+  outline: none !important;
+  cursor: pointer !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  vertical-align: middle !important;
+}
+
+html.cf-custom-bg-active select:hover {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25) !important;
+}
+
+html.cf-custom-bg-active select:focus {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Dropdown Options Popup Menu */
+html.cf-custom-bg-active select option {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  font-size: 13px !important;
+  padding: 8px 12px !important;
+}
+
+html.cf-custom-bg-active select option:hover,
+html.cf-custom-bg-active select option:checked {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+html.cf-custom-bg-active select optgroup {
+  background-color: #0f172a !important;
+  color: #94a3b8 !important;
+  font-weight: 700 !important;
+  padding: 6px 10px !important;
+}
+
+/* =========================================================
+   Codeforces Header Streak Badge & Detail Card
+   ========================================================= */
+
+.cf-streak-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  margin-left: 0 !important;
+  margin-right: 8px !important;
+  padding: 3px 10px !important;
+  border-radius: 14px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  vertical-align: middle !important;
+  text-decoration: none !important;
+  line-height: 1.2 !important;
+  transition: all 0.2s ease !important;
+  user-select: none !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+.cf-streak-badge,
+.cf-streak-badge.streak-done,
+.cf-streak-badge.streak-gray,
+.cf-streak-badge.streak-pending,
+.cf-streak-badge.streak-zero,
+#cf-header-streak,
+#cf-menu-streak-item a {
+  color: #000000 !important;
+}
+
+.cf-streak-badge.streak-done {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%) !important;
+  color: #000000 !important;
+  border: 1px solid #fb923c !important;
+}
+
+/* Gray for both streak-zero and streak-pending (when today is not submitted yet) */
+.cf-streak-badge.streak-gray,
+.cf-streak-badge.streak-pending,
+.cf-streak-badge.streak-zero {
+  background: rgba(148, 163, 184, 0.18) !important;
+  color: #000000 !important;
+  border: 1px solid rgba(148, 163, 184, 0.45) !important;
+}
+
+.cf-streak-badge.streak-gray:hover,
+.cf-streak-badge.streak-pending:hover,
+.cf-streak-badge.streak-zero:hover,
+.cf-streak-badge:hover,
+.cf-streak-badge.streak-done:hover,
+#cf-header-streak:hover,
+#cf-menu-streak-item a:hover {
+  background: rgba(148, 163, 184, 0.28) !important;
+  color: #000000 !important;
+}
+
+.cf-streak-badge:hover {
+  transform: translateY(-1px) scale(1.02) !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.cf-streak-badge .streak-icon {
+  font-size: 13px !important;
+  line-height: 1 !important;
+}
+
+.cf-streak-badge .streak-dot {
+  display: inline-block !important;
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 50% !important;
+  margin-left: 3px !important;
+}
+
+.cf-streak-badge.streak-done .streak-dot {
+  background-color: #16a34a !important;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
+}
+
+.cf-streak-badge.streak-pending .streak-dot,
+.cf-streak-badge.streak-gray .streak-dot,
+.cf-streak-badge.streak-zero .streak-dot {
+  background-color: #94a3b8 !important;
+}
+
+/* Menu item in header navigation */
+#cf-menu-streak-item a {
+  color: #000000 !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+/* Streak badge and text in both Dark Mode & Light Mode - ALWAYS pure black */
+html.cf-dark-mode #cf-header-streak,
+html.cf-dark-mode .cf-streak-badge,
+html.cf-dark-mode .cf-streak-badge *,
+html.cf-dark-mode .cf-streak-badge.streak-done,
+html.cf-dark-mode .cf-streak-badge.streak-gray,
+html.cf-dark-mode .cf-streak-badge.streak-pending,
+html.cf-dark-mode .cf-streak-badge.streak-zero,
+html.cf-dark-mode #cf-menu-streak-item a,
+html.cf-light-mode #cf-header-streak,
+html.cf-light-mode .cf-streak-badge,
+html.cf-light-mode .cf-streak-badge *,
+html.cf-light-mode .cf-streak-badge.streak-done,
+html.cf-light-mode .cf-streak-badge.streak-gray,
+html.cf-light-mode .cf-streak-badge.streak-pending,
+html.cf-light-mode .cf-streak-badge.streak-zero,
+html.cf-light-mode #cf-menu-streak-item a {
+  color: #000000 !important;
+}
+
+/* Detail Card Modal */
+#cf-streak-detail-card {
+  position: absolute !important;
+  z-index: 9999999 !important;
+  background: #ffffff !important;
+  color: #1e293b !important;
+  border-radius: 10px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid #e2e8f0 !important;
+  width: 260px !important;
+  padding: 12px 14px !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  text-align: left !important;
+  animation: cfFadeIn 0.15s ease-out !important;
+}
+
+@keyframes cfFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#cf-streak-detail-card .streak-card-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding-bottom: 6px !important;
+  margin-bottom: 8px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+#cf-streak-detail-card .streak-card-body {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  margin-bottom: 10px !important;
+}
+
+#cf-streak-detail-card .streak-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+#cf-streak-detail-card .streak-label {
+  color: #64748b !important;
+}
+
+#cf-streak-detail-card .streak-val {
+  font-weight: 600 !important;
+  color: #0f172a !important;
+}
+
+#cf-streak-detail-card .streak-status-notice {
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  margin-top: 2px !important;
+  text-align: center !important;
+}
+
+#cf-streak-detail-card .streak-status-notice.done {
+  background: #f0fdf4 !important;
+  color: #166534 !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+#cf-streak-detail-card .streak-status-notice.pending {
+  background: #fffbeb !important;
+  color: #92400e !important;
+  border: 1px solid #fde68a !important;
+}
+
+#cf-streak-detail-card .streak-card-footer {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  border-top: 1px solid #f1f5f9 !important;
+  padding-top: 8px !important;
+  font-size: 11px !important;
+}
+
+#cf-streak-detail-card .streak-btn-refresh {
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+  border-radius: 4px !important;
+  padding: 3px 8px !important;
+  cursor: pointer !important;
+  font-size: 11px !important;
+  transition: background 0.15s ease !important;
+}
+
+#cf-streak-detail-card .streak-btn-refresh:hover {
+  background: #e2e8f0 !important;
+}
+
+#cf-streak-detail-card .streak-profile-link {
+  color: #2563eb !important;
+  text-decoration: underline !important;
+  cursor: pointer !important;
+}
+
+
+
+/* =========================================================
+   Modern Glass Checkboxes & Alignment (Ảnh 1)
+   ========================================================= */
+
+html.cf-custom-bg-active input[type="checkbox"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  border-radius: 5px !important;
+  background-color: rgba(255, 255, 255, 0.16) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.42) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  cursor: pointer !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  position: relative !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  outline: none !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+html.cf-custom-bg-active input[type="checkbox"]:hover {
+  background-color: rgba(255, 255, 255, 0.28) !important;
+  border-color: rgba(255, 255, 255, 0.75) !important;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.25) !important;
+}
+
+html.cf-custom-bg-active input[type="checkbox"]:checked {
+  background-color: #ea580c !important;
+  border-color: #fb923c !important;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.45) !important;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='%23ffffff' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 11px 11px !important;
+}
+
+/* Horizontal & vertical alignment for table rows with checkboxes */
+html.cf-custom-bg-active tr:has(input[type="checkbox"]) td,
+html.cf-custom-bg-active #gymContestsFilter tr td,
+html.cf-custom-bg-active #gym-filter-form tr td,
+html.cf-custom-bg-active #past-contests-filter-form tr td {
+  vertical-align: middle !important;
+  padding: 5px 2px !important;
+}
+
+html.cf-custom-bg-active tr:has(input[type="checkbox"]) td.setting-name,
+html.cf-custom-bg-active tr:has(input[type="checkbox"]) .setting-name {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+/* Checkbox rows in Gyms/Contests filter forms (Hide if participated, Hide excluded gyms) */
+html.cf-custom-bg-active #gymContestsFilter .setting-name:has(+ .setting-value input[type="checkbox"]),
+html.cf-custom-bg-active #gym-filter-form .setting-name:has(+ .setting-value input[type="checkbox"]),
+html.cf-custom-bg-active #past-contests-filter-form .setting-name:has(+ .setting-value input[type="checkbox"]),
+html.cf-custom-bg-active #gymContestsFilter .setting-name:has(label[for*="Participat"]),
+html.cf-custom-bg-active #gym-filter-form .setting-name:has(label[for*="Participat"]),
+html.cf-custom-bg-active #gymContestsFilter .setting-name:has(label[for*="Excluded"]),
+html.cf-custom-bg-active #gym-filter-form .setting-name:has(label[for*="Excluded"]) {
+  float: left !important;
+  clear: left !important;
+  width: auto !important;
+  max-width: 80% !important;
+  margin: 6px 0 !important;
+  line-height: 22px !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+html.cf-custom-bg-active #gymContestsFilter .setting-value:has(input[type="checkbox"]),
+html.cf-custom-bg-active #gym-filter-form .setting-value:has(input[type="checkbox"]),
+html.cf-custom-bg-active #past-contests-filter-form .setting-value:has(input[type="checkbox"]) {
+  float: right !important;
+  clear: right !important;
+  width: auto !important;
+  margin: 6px 0 !important;
+  line-height: 22px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  height: 22px !important;
+}
+
+/* Dịch nút tick xuống 3px để thẳng hàng ngang chuẩn xác với chữ */
+html.cf-custom-bg-active #gymContestsFilter .setting-value:has(input[type="checkbox"]) input[type="checkbox"],
+html.cf-custom-bg-active #gym-filter-form .setting-value:has(input[type="checkbox"]) input[type="checkbox"],
+html.cf-custom-bg-active #past-contests-filter-form .setting-value:has(input[type="checkbox"]) input[type="checkbox"] {
+  transform: translateY(3px) !important;
+}
+
+/* Ensure the Filter submit button container clears both floats */
+html.cf-custom-bg-active #gymContestsFilter div[align="center"],
+html.cf-custom-bg-active #gym-filter-form div[align="center"],
+html.cf-custom-bg-active #past-contests-filter-form div[align="center"],
+html.cf-custom-bg-active #gymContestsFilter div:has(input[type="submit"]),
+html.cf-custom-bg-active #gym-filter-form div:has(input[type="submit"]),
+html.cf-custom-bg-active #past-contests-filter-form div:has(input[type="submit"]) {
+  clear: both !important;
+  width: 100% !important;
+  text-align: center !important;
+  display: block !important;
+  padding-top: 8px !important;
+}
+
+/* Alignment for checkbox labels and wrappers */
+html.cf-custom-bg-active .sidebox label:has(input[type="checkbox"]),
+html.cf-custom-bg-active .sidebox div:has(> input[type="checkbox"]):not(.setting-value),
+html.cf-custom-bg-active .roundbox label:has(input[type="checkbox"]) {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  color: #e2e8f0 !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  margin-top: 6px !important;
+}
+
+/* =========================================================
+   Find Training Input & Find Button (Ảnh 2)
+   ========================================================= */
+
+html.cf-custom-bg-active .searchContestByNameOrIdForm,
+html.cf-custom-bg-active .searchContestByProblemForm {
+  color: #f1f5f9 !important;
+  font-size: 13px !important;
+}
+
+html.cf-custom-bg-active .sidebox input[type="text"],
+html.cf-custom-bg-active .sidebox input#searchByNameOrIdQueryBox,
+html.cf-custom-bg-active .sidebox input#searchByProblemQueryBox,
+html.cf-custom-bg-active .searchContestByNameOrIdForm input[type="text"],
+html.cf-custom-bg-active .searchContestByProblemForm input[type="text"] {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  padding: 7px 12px !important;
+  font-size: 13px !important;
+  outline: none !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  transition: all 0.2s ease !important;
+  margin-top: 4px !important;
+  margin-bottom: 6px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) inset !important;
+}
+
+html.cf-custom-bg-active .sidebox input[type="text"]:focus,
+html.cf-custom-bg-active .sidebox input#searchByNameOrIdQueryBox:focus,
+html.cf-custom-bg-active .sidebox input#searchByProblemQueryBox:focus {
+  border-color: rgba(96, 165, 250, 0.8) !important;
+  background: rgba(255, 255, 255, 0.24) !important;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25) !important;
+}
+
+/* Sidebox form labels and input layout (Find user, Gym filter, Status filter) */
+html.cf-custom-bg-active .sidebox form {
+  text-align: left !important;
+}
+
+html.cf-custom-bg-active .sidebox form > div:not(.cf-form-actions):not(.button-wrapper):not(:has(input[type="submit"])):not(:has(button)),
+html.cf-custom-bg-active .sidebox form > p:not(.cf-form-actions):not(.button-wrapper):not(:has(input[type="submit"])):not(:has(button)) {
+  text-align: left !important;
+}
+
+html.cf-custom-bg-active .sidebox form label,
+html.cf-custom-bg-active .sidebox label {
+  display: block !important;
+  text-align: left !important;
+  float: none !important;
+  clear: both !important;
+  margin-top: 6px !important;
+  margin-bottom: 4px !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  color: #f1f5f9 !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .sidebox form label,
+html.cf-light-mode.cf-custom-bg-active .sidebox label {
+  color: #0f172a !important;
+}
+
+html.cf-custom-bg-active .sidebox input.searchByNameOrIdButton,
+html.cf-custom-bg-active .sidebox input.searchByProblemButton,
+html.cf-custom-bg-active .sidebox input[value="Find"],
+html.cf-custom-bg-active .sidebox input[value="Tìm kiếm"] {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.38) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  padding: 6px 24px !important;
+  height: auto !important;
+  line-height: normal !important;
+  cursor: pointer !important;
+  display: inline-block !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  margin: 6px auto !important;
+}
+
+html.cf-custom-bg-active .sidebox input.searchByNameOrIdButton:hover,
+html.cf-custom-bg-active .sidebox input.searchByProblemButton:hover,
+html.cf-custom-bg-active .sidebox input[value="Find"]:hover,
+html.cf-custom-bg-active .sidebox input[value="Tìm kiếm"]:hover {
+  background: rgba(255, 255, 255, 0.36) !important;
+  border-color: rgba(255, 255, 255, 0.65) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* =========================================================
+   Create Mashup Contest & Sidebox Buttons (Ảnh 3)
+   ========================================================= */
+
+html.cf-custom-bg-active .sidebox input[value*="Create Mashup"],
+html.cf-custom-bg-active .sidebox input[value="Create Mashup Contest"],
+html.cf-custom-bg-active .sidebox a[href*="mashup"]:not([href*="polygon"]),
+html.cf-custom-bg-active input[value="Create Mashup Contest"],
+html.cf-custom-bg-active a.button[href*="mashup"] {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.38) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  padding: 8px 22px !important;
+  height: auto !important;
+  line-height: normal !important;
+  cursor: pointer !important;
+  display: inline-block !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  margin-top: 10px !important;
+}
+
+html.cf-custom-bg-active .sidebox input[value*="Create Mashup"]:hover,
+html.cf-custom-bg-active .sidebox a[href*="mashup"]:not([href*="polygon"]):hover,
+html.cf-custom-bg-active input[value="Create Mashup Contest"]:hover,
+html.cf-custom-bg-active a.button[href*="mashup"]:hover {
+  background: rgba(255, 255, 255, 0.36) !important;
+  border-color: rgba(255, 255, 255, 0.65) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+  color: #ffffff !important;
+}
+
+/* Sidebox form buttons container: prevent buttons from overlapping and ensure clean layout */
+html.cf-custom-bg-active .sidebox form div:has(input[type="submit"]),
+html.cf-custom-bg-active .sidebox form div:has(input[type="reset"]),
+html.cf-custom-bg-active .sidebox form div:has(input[type="button"]),
+html.cf-custom-bg-active .sidebox form div:has(button),
+html.cf-custom-bg-active .sidebox form p:has(input[type="submit"]),
+html.cf-custom-bg-active .sidebox form td:has(input[type="submit"]),
+html.cf-custom-bg-active .sidebox form .cf-form-actions,
+html.cf-custom-bg-active .sidebox .cf-form-actions,
+.cf-form-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-top: 14px !important;
+  margin-bottom: 6px !important;
+  padding: 0 !important;
+  line-height: normal !important;
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+html.cf-custom-bg-active .sidebox input[type="submit"],
+html.cf-custom-bg-active .sidebox input[type="button"],
+html.cf-custom-bg-active .sidebox input[type="reset"],
+html.cf-custom-bg-active .sidebox button,
+html.cf-custom-bg-active .sidebox a.button,
+html.cf-custom-bg-active .sidebox form a[href*="reset"],
+html.cf-custom-bg-active .sidebox form a[href*="setup"],
+html.cf-custom-bg-active .sidebox .cf-sidebox-btn,
+.cf-sidebox-btn {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.38) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  padding: 6px 16px !important;
+  margin: 4px 6px !important;
+  cursor: pointer !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  display: inline-flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-decoration: none !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  position: static !important;
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  float: none !important;
+  clear: none !important;
+  height: auto !important;
+  min-height: 32px !important;
+  line-height: normal !important;
+  flex: 0 1 auto !important;
+}
+
+html.cf-custom-bg-active .sidebox input[type="submit"]:hover,
+html.cf-custom-bg-active .sidebox input[type="button"]:hover,
+html.cf-custom-bg-active .sidebox input[type="reset"]:hover,
+html.cf-custom-bg-active .sidebox button:hover,
+html.cf-custom-bg-active .sidebox a.button:hover,
+html.cf-custom-bg-active .sidebox form a[href*="reset"]:hover,
+html.cf-custom-bg-active .sidebox form a[href*="setup"]:hover,
+html.cf-custom-bg-active .sidebox .cf-sidebox-btn:hover {
+  background: rgba(255, 255, 255, 0.36) !important;
+  border-color: rgba(255, 255, 255, 0.65) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+}
+
+
+/* =========================================================
+   Source Code Editor & Submit Form
+   ========================================================= */
+
+/* Dark Mode: Editor Container, Gutter & Line Numbers (MÀU ĐEN CÓ ĐỘ MỜ NHẸ GLASSMORPHISM) */
+html.cf-dark-mode.cf-custom-bg-active #editor,
+html.cf-dark-mode.cf-custom-bg-active .ace_editor,
+html.cf-dark-mode.cf-custom-bg-active #sourceCodeTextarea,
+html.cf-dark-mode.cf-custom-bg-active textarea[name="source"],
+html.cf-custom-bg-active #editor,
+html.cf-custom-bg-active .ace_editor,
+html.cf-custom-bg-active #sourceCodeTextarea,
+html.cf-custom-bg-active textarea[name="source"] {
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  background: rgba(0, 0, 0, 0.75) !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  color: #f8fafc !important;
+}
+
+html.cf-dark-mode.cf-custom-bg-active .ace_gutter,
+html.cf-custom-bg-active .ace_gutter {
+  border-top-left-radius: 8px !important;
+  border-bottom-left-radius: 8px !important;
+  background: rgba(0, 0, 0, 0.45) !important;
+  background-color: rgba(0, 0, 0, 0.45) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #94a3b8 !important;
+}
+
+html.cf-dark-mode.cf-custom-bg-active .ace_gutter-cell,
+html.cf-custom-bg-active .ace_gutter-cell {
+  color: #64748b !important;
+}
+
+html.cf-dark-mode .ace_editor .ace_gutter-active-line,
+html.cf-custom-bg-active .ace_editor .ace_gutter-active-line {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+html.cf-dark-mode.cf-custom-bg-active .ace_scroller,
+html.cf-custom-bg-active .ace_scroller {
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Light Mode: Editor Container, Gutter & Line Numbers (MÀU TRẮNG THUẦN) */
+html.cf-light-mode.cf-custom-bg-active #editor,
+html.cf-light-mode.cf-custom-bg-active .ace_editor,
+html.cf-light-mode.cf-custom-bg-active #sourceCodeTextarea,
+html.cf-light-mode.cf-custom-bg-active textarea[name="source"] {
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(0, 0, 0, 0.22) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  color: #0f172a !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .ace_gutter {
+  border-top-left-radius: 8px !important;
+  border-bottom-left-radius: 8px !important;
+  background: #f8fafc !important;
+  background-color: #f8fafc !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.12) !important;
+  color: #64748b !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .ace_gutter-cell {
+  color: #94a3b8 !important;
+}
+
+html.cf-light-mode .ace_editor .ace_gutter-active-line {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+  color: #0f172a !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .ace_scroller {
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+}
+
+/* Dark Mode Syntax Highlighting inside Ace Editor */
+html.cf-dark-mode .ace_editor,
+html.cf-dark-mode .ace_editor .ace_text-layer,
+html.cf-dark-mode .ace_editor .ace_line,
+html.cf-dark-mode .ace_editor .ace_content,
+html.cf-dark-mode #editor,
+html.cf-dark-mode textarea[name="source"],
+html.cf-dark-mode #sourceCodeTextarea {
+  color: #f8fafc !important;
+}
+
+html.cf-dark-mode .ace_editor .ace_identifier,
+html.cf-dark-mode .ace_editor .ace_variable {
+  color: #e2e8f0 !important;
+}
+html.cf-dark-mode .ace_editor .ace_keyword,
+html.cf-dark-mode .ace_editor .ace_storage {
+  color: #f43f5e !important;
+}
+html.cf-dark-mode .ace_editor .ace_constant,
+html.cf-dark-mode .ace_editor .ace_numeric {
+  color: #fb923c !important;
+}
+html.cf-dark-mode .ace_editor .ace_string {
+  color: #4ade80 !important;
+}
+html.cf-dark-mode .ace_editor .ace_comment {
+  color: #94a3b8 !important;
+  font-style: italic !important;
+}
+html.cf-dark-mode .ace_editor .ace_operator,
+html.cf-dark-mode .ace_editor .ace_punctuation {
+  color: #cbd5e1 !important;
+}
+html.cf-dark-mode .ace_editor .ace_type {
+  color: #38bdf8 !important;
+}
+html.cf-dark-mode .ace_editor .ace_cursor {
+  border-left: 2px solid #ffffff !important;
+}
+html.cf-dark-mode .ace_editor .ace_marker-layer .ace_selection {
+  background: rgba(56, 189, 248, 0.3) !important;
+}
+html.cf-dark-mode .ace_editor .ace_marker-layer .ace_active-line {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Light Mode Syntax Highlighting inside Ace Editor */
+html.cf-light-mode .ace_editor,
+html.cf-light-mode .ace_editor .ace_text-layer,
+html.cf-light-mode .ace_editor .ace_line,
+html.cf-light-mode .ace_editor .ace_content,
+html.cf-light-mode #editor,
+html.cf-light-mode textarea[name="source"],
+html.cf-light-mode #sourceCodeTextarea {
+  color: #0f172a !important;
+}
+
+html.cf-light-mode .ace_editor .ace_identifier,
+html.cf-light-mode .ace_editor .ace_variable {
+  color: #0f172a !important;
+}
+html.cf-light-mode .ace_editor .ace_keyword,
+html.cf-light-mode .ace_editor .ace_storage {
+  color: #be123c !important;
+}
+html.cf-light-mode .ace_editor .ace_constant,
+html.cf-light-mode .ace_editor .ace_numeric {
+  color: #c2410c !important;
+}
+html.cf-light-mode .ace_editor .ace_string {
+  color: #15803d !important;
+}
+html.cf-light-mode .ace_editor .ace_comment {
+  color: #64748b !important;
+  font-style: italic !important;
+}
+html.cf-light-mode .ace_editor .ace_operator,
+html.cf-light-mode .ace_editor .ace_punctuation {
+  color: #334155 !important;
+}
+html.cf-light-mode .ace_editor .ace_type {
+  color: #0284c7 !important;
+}
+html.cf-light-mode .ace_editor .ace_cursor {
+  border-left: 2px solid #0f172a !important;
+}
+html.cf-light-mode .ace_editor .ace_marker-layer .ace_selection {
+  background: rgba(56, 189, 248, 0.25) !important;
+}
+html.cf-light-mode .ace_editor .ace_marker-layer .ace_active-line {
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Submit Form Field Labels, Notice, and Controls */
+html.cf-dark-mode .submit-form .field-name,
+html.cf-dark-mode .table-form .field-name,
+html.cf-dark-mode .submit-form label,
+html.cf-dark-mode .table-form label,
+html.cf-dark-mode .submit-form td,
+html.cf-dark-mode .submit-form span:not([class*="ace_"]) {
+  color: #f1f5f9 !important;
+}
+
+html.cf-light-mode .submit-form .field-name,
+html.cf-light-mode .table-form .field-name,
+html.cf-light-mode .submit-form label,
+html.cf-light-mode .table-form label,
+html.cf-light-mode .submit-form td,
+html.cf-light-mode .submit-form span:not([class*="ace_"]) {
+  color: #0f172a !important;
+}
+
+html.cf-dark-mode .submit-form .notice,
+html.cf-dark-mode .table-form .notice {
+  color: #cbd5e1 !important;
+}
+
+html.cf-light-mode .submit-form .notice,
+html.cf-light-mode .table-form .notice {
+  color: #475569 !important;
+}
+
+html.cf-dark-mode.cf-custom-bg-active .submit-form input[name="submittedProblemCode"],
+html.cf-dark-mode.cf-custom-bg-active .submit-form input[name="problemCode"],
+html.cf-dark-mode.cf-custom-bg-active .submit-form input#tabSize,
+html.cf-dark-mode.cf-custom-bg-active .submit-form input[name="tabSize"],
+html.cf-dark-mode.cf-custom-bg-active .submit-form select {
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+html.cf-dark-mode.cf-custom-bg-active .submit-form select option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .submit-form input[name="submittedProblemCode"],
+html.cf-light-mode.cf-custom-bg-active .submit-form input[name="problemCode"],
+html.cf-light-mode.cf-custom-bg-active .submit-form input#tabSize,
+html.cf-light-mode.cf-custom-bg-active .submit-form input[name="tabSize"],
+html.cf-light-mode.cf-custom-bg-active .submit-form select {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(0, 0, 0, 0.22) !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .submit-form select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+html.cf-dark-mode.cf-custom-bg-active .submit-form input[type="file"] {
+  color: #f1f5f9 !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .submit-form input[type="file"] {
+  color: #0f172a !important;
+}
+
+/* =========================================================
+   Modern Glass Input Fields & Form Controls (All Inputs)
+   Làm đẹp, bo tròn và phủ hiệu ứng kính cho toàn bộ các khung nhập
+   ========================================================= */
+
+/* All text inputs, search, passwords, emails, numbers, textareas */
+html.cf-custom-bg-active input[type="text"],
+html.cf-custom-bg-active input[type="password"],
+html.cf-custom-bg-active input[type="email"],
+html.cf-custom-bg-active input[type="search"],
+html.cf-custom-bg-active input[type="number"],
+html.cf-custom-bg-active input[type="tel"],
+html.cf-custom-bg-active input[type="url"],
+html.cf-custom-bg-active input:not([type]),
+html.cf-custom-bg-active textarea:not(.ace_text-input) {
+  background-color: rgba(255, 255, 255, var(--cf-glass-alpha, 0.18)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  padding: 6px 12px !important;
+  outline: none !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+  transition: all 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+/* Hover state */
+html.cf-custom-bg-active input[type="text"]:hover,
+html.cf-custom-bg-active input[type="password"]:hover,
+html.cf-custom-bg-active input[type="email"]:hover,
+html.cf-custom-bg-active input[type="search"]:hover,
+html.cf-custom-bg-active input[type="number"]:hover,
+html.cf-custom-bg-active input[type="tel"]:hover,
+html.cf-custom-bg-active input[type="url"]:hover,
+html.cf-custom-bg-active input:not([type]):hover,
+html.cf-custom-bg-active textarea:not(.ace_text-input):hover {
+  background-color: rgba(255, 255, 255, 0.26) !important;
+  border-color: rgba(255, 255, 255, 0.55) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Focus state with glowing ring */
+html.cf-custom-bg-active input[type="text"]:focus,
+html.cf-custom-bg-active input[type="password"]:focus,
+html.cf-custom-bg-active input[type="email"]:focus,
+html.cf-custom-bg-active input[type="search"]:focus,
+html.cf-custom-bg-active input[type="number"]:focus,
+html.cf-custom-bg-active input[type="tel"]:focus,
+html.cf-custom-bg-active input[type="url"]:focus,
+html.cf-custom-bg-active input:not([type]):focus,
+html.cf-custom-bg-active textarea:not(.ace_text-input):focus {
+  background-color: rgba(255, 255, 255, 0.28) !important;
+  border-color: rgba(96, 165, 250, 0.9) !important;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3), 0 4px 14px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Placeholder styling */
+html.cf-custom-bg-active input::placeholder,
+html.cf-custom-bg-active textarea::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Specific textareas (Custom test, comments, blogs) */
+html.cf-custom-bg-active textarea:not(.ace_text-input) {
+  border-radius: 10px !important;
+  line-height: 1.5 !important;
+  min-height: 48px !important;
+}
+
+/* Submit page inputs & buttons */
+html.cf-custom-bg-active .submit-form input[name="submittedProblemCode"],
+html.cf-custom-bg-active input[name="submittedProblemCode"],
+html.cf-custom-bg-active input[name="problemCode"] {
+  border-radius: 8px !important;
+  padding: 6px 12px !important;
+}
+
+/* All Buttons, submit & reset across all pages */
+html.cf-custom-bg-active input[type="submit"],
+html.cf-custom-bg-active input[type="button"],
+html.cf-custom-bg-active input[type="reset"],
+html.cf-custom-bg-active button:not(#cf-theme-toggle-btn):not(#cf-lang-vn-btn),
+html.cf-custom-bg-active a.button {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.38) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  font-family: inherit !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  padding: 6px 20px !important;
+  cursor: pointer !important;
+  outline: none !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18) !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  display: inline-block !important;
+  text-decoration: none !important;
+}
+
+html.cf-custom-bg-active input[type="submit"]:hover,
+html.cf-custom-bg-active input[type="button"]:hover,
+html.cf-custom-bg-active input[type="reset"]:hover,
+html.cf-custom-bg-active button:not(#cf-theme-toggle-btn):not(#cf-lang-vn-btn):hover,
+html.cf-custom-bg-active a.button:hover {
+  background: rgba(255, 255, 255, 0.36) !important;
+  border-color: rgba(255, 255, 255, 0.65) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+  color: #ffffff !important;
+}
+
+html.cf-custom-bg-active input[type="submit"]:active,
+html.cf-custom-bg-active input[type="button"]:active,
+html.cf-custom-bg-active button:not(#cf-theme-toggle-btn):not(#cf-lang-vn-btn):active,
+html.cf-custom-bg-active a.button:active {
+  transform: translateY(1px) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Radio buttons (Nút chọn tròn) */
+html.cf-custom-bg-active input[type="radio"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  width: 17px !important;
+  height: 17px !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+  border-radius: 50% !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  outline: none !important;
+  cursor: pointer !important;
+  vertical-align: middle !important;
+  transition: all 0.2s ease !important;
+  margin: 0 5px 0 0 !important;
+  display: inline-block !important;
+}
+
+html.cf-custom-bg-active input[type="radio"]:checked {
+  background-color: #ea580c !important;
+  border-color: #fb923c !important;
+  box-shadow: inset 0 0 0 3.5px #ffffff, 0 2px 8px rgba(234, 88, 12, 0.45) !important;
+}
+
+html.cf-custom-bg-active input[type="radio"]:hover {
+  border-color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* File inputs (Chọn tệp) */
+html.cf-custom-bg-active input[type="file"] {
+  border-radius: 8px !important;
+  color: inherit !important;
+  font-size: 12px !important;
+}
+
+html.cf-custom-bg-active input[type="file"]::file-selector-button {
+  background-color: rgba(255, 255, 255, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 6px !important;
+  color: inherit !important;
+  padding: 5px 14px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  margin-right: 10px !important;
+  transition: all 0.2s ease !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+html.cf-custom-bg-active input[type="file"]::file-selector-button:hover {
+  background-color: rgba(255, 255, 255, 0.36) !important;
+  border-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Light mode specific adjustments for high readability */
+html.cf-custom-bg-active.cf-light-mode input[type="text"],
+html.cf-custom-bg-active.cf-light-mode input[type="password"],
+html.cf-custom-bg-active.cf-light-mode input[type="email"],
+html.cf-custom-bg-active.cf-light-mode input[type="search"],
+html.cf-custom-bg-active.cf-light-mode input[type="number"],
+html.cf-custom-bg-active.cf-light-mode input[type="tel"],
+html.cf-custom-bg-active.cf-light-mode input[type="url"],
+html.cf-custom-bg-active.cf-light-mode input:not([type]),
+html.cf-custom-bg-active.cf-light-mode textarea:not(.ace_text-input) {
+  color: #0f172a !important;
+  background-color: rgba(255, 255, 255, 0.6) !important;
+  border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+html.cf-custom-bg-active.cf-light-mode input::placeholder,
+html.cf-custom-bg-active.cf-light-mode textarea::placeholder {
+  color: rgba(15, 23, 42, 0.55) !important;
+}
+
+html.cf-custom-bg-active.cf-light-mode input[type="radio"]:checked {
+  box-shadow: inset 0 0 0 3.5px #f8fafc, 0 2px 8px rgba(234, 88, 12, 0.45) !important;
+}
+
+html.cf-custom-bg-active input#tabSize {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 6px !important;
+  color: #ffffff !important;
+  padding: 3px 6px !important;
+  outline: none !important;
+}
+
+
+/* =========================================================
+   Dark Reader Color System & Theme Mode (Sáng / Tối)
+   ========================================================= */
+
+/* Vietnamese Flag Button in Header Lang Chooser (Khớp kích thước và căn chỉnh với cờ Anh & Nga) */
+.lang-chooser div:first-child a,
+.lang-chooser a[href*="locale="] {
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+.lang-chooser div:first-child a img,
+.lang-chooser a[href*="locale="] img {
+  vertical-align: middle !important;
+}
+
+.lang-chooser #cf-lang-vn-btn,
+#cf-lang-vn-btn {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  position: relative !important;
+  top: -0.5px !important;
+  margin-left: 4px !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  line-height: 1 !important;
+}
+
+.lang-chooser #cf-lang-vn-btn img,
+#cf-lang-vn-btn img {
+  width: 24.5px !important;
+  height: 16.5px !important;
+  max-width: 24.5px !important;
+  max-height: 16.5px !important;
+  object-fit: cover !important;
+  border-radius: 1px !important;
+  vertical-align: middle !important;
+  border: none !important;
+  display: inline-block !important;
+  transition: all 0.2s ease !important;
+  box-shadow: none !important;
+}
+
+.lang-chooser #cf-lang-vn-btn:hover img,
+#cf-lang-vn-btn:hover img {
+  transform: scale(1.1) !important;
+}
+
+.lang-chooser #cf-lang-vn-btn.active img,
+#cf-lang-vn-btn.active img {
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 2px rgba(234, 88, 12, 0.8)) !important;
+}
+
+.lang-chooser #cf-lang-vn-btn:not(.active) img,
+#cf-lang-vn-btn:not(.active) img {
+  opacity: 0.65 !important;
+}
+
+/* Header Theme Toggle Pill Button */
+.cf-theme-toggle-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 26px !important;
+  height: 26px !important;
+  margin-right: 8px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.38) !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  transition: all 0.2s ease !important;
+  user-select: none !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15) !important;
+}
+
+.cf-theme-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.32) !important;
+  border-color: rgba(255, 255, 255, 0.75) !important;
+  transform: scale(1.08) !important;
+}
+
+/* ---------------------------------------------------------
+   Dark Mode (Cơ chế chuyển đổi màu chữ Dark Reader)
+   --------------------------------------------------------- */
+
+html.cf-dark-mode {
+  --darkreader-neutral-background: #181a1b;
+  --darkreader-neutral-text: #e8e6e3;
+  --darkreader-selection-background: #004da8;
+  --darkreader-selection-text: #e8e6e3;
+  color: #e8e6e3 !important;
+}
+
+html.cf-dark-mode ::selection {
+  background-color: #004da8 !important;
+  color: #ffffff !important;
+}
+
+/* Convert all body text, paragraphs, descriptions, table cells to Dark Reader neutral text */
+html.cf-dark-mode body,
+html.cf-dark-mode p,
+html.cf-dark-mode li,
+html.cf-dark-mode label,
+html.cf-dark-mode .ttypography,
+html.cf-dark-mode .problem-statement,
+html.cf-dark-mode .content,
+html.cf-dark-mode td:not([class*="user-"]):not([class*="rated-"]):not(:has(a[class*="user-"])),
+html.cf-dark-mode th,
+html.cf-dark-mode span:not([class*="user-"]):not([class*="rated-"]):not([class*="ace_"]):not(.streak-fire-icon):not(#cf-header-streak):not(.cf-streak-badge) {
+  color: #e8e6e3 !important;
+}
+
+/* User unrated / newbie đen trong Dark Mode được chuyển sang màu xám sáng Dark Reader */
+html.cf-dark-mode .user-black,
+html.cf-dark-mode a.user-black {
+  color: #94a3b8 !important;
+}
+
+/* Headings and Titles */
+html.cf-dark-mode h1,
+html.cf-dark-mode h2,
+html.cf-dark-mode h3,
+html.cf-dark-mode h4,
+html.cf-dark-mode h5,
+html.cf-dark-mode h6,
+html.cf-dark-mode .problem-statement .title,
+html.cf-dark-mode .problem-statement .section-title,
+html.cf-dark-mode .caption {
+  color: #ffffff !important;
+  text-shadow: none !important;
+}
+
+/* Dark Reader Links Palette - Luôn giữ màu xanh dương sáng cho cả link mới và link đã click (:visited), không bao giờ hóa tím */
+html.cf-dark-mode a:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(.btn):not(.button):not(.pill-btn):not(.main-menu-list a):not(.second-level-menu-list a),
+html.cf-dark-mode a:visited:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(.btn):not(.button):not(.pill-btn):not(.main-menu-list a):not(.second-level-menu-list a) {
+  color: #38bdf8 !important;
+  transition: color 0.15s ease !important;
+}
+
+html.cf-dark-mode a:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(.btn):not(.button):not(.pill-btn):not(.main-menu-list a):not(.second-level-menu-list a):hover,
+html.cf-dark-mode a:visited:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(.btn):not(.button):not(.pill-btn):not(.main-menu-list a):not(.second-level-menu-list a):hover {
+  color: #93c5fd !important;
+  text-decoration: underline !important;
+}
+
+/* Secondary & Muted Information */
+html.cf-dark-mode .notice,
+html.cf-dark-mode .small,
+html.cf-dark-mode .info,
+html.cf-dark-mode .property-title,
+html.cf-dark-mode .time,
+html.cf-dark-mode .setting-name {
+  color: #b2aba2 !important;
+}
+
+/* Map inline hardcoded dark styles (color:black, color:#000, etc.) to Dark Reader color */
+html.cf-dark-mode [style*="color:black"],
+html.cf-dark-mode [style*="color: black"],
+html.cf-dark-mode [style*="color:#000"],
+html.cf-dark-mode [style*="color: #000"],
+html.cf-dark-mode [style*="color:#222"],
+html.cf-dark-mode [style*="color:#333"] {
+  color: #e8e6e3 !important;
+}
+
+html.cf-dark-mode [style*="color:gray"],
+html.cf-dark-mode [style*="color: gray"],
+html.cf-dark-mode [style*="color:#555"],
+html.cf-dark-mode [style*="color:#666"],
+html.cf-dark-mode [style*="color:#777"] {
+  color: #b2aba2 !important;
+}
+
+/* Codeblocks in Dark Mode */
+html.cf-dark-mode code,
+html.cf-dark-mode pre,
+html.cf-dark-mode .sample-test pre,
+html.cf-dark-mode .sample-test .input pre,
+html.cf-dark-mode .sample-test .output pre {
+  color: #f1f5f9 !important;
+  background-color: rgba(18, 22, 30, 0.8) !important;
+}
+
+/* ---------------------------------------------------------
+   Light Mode (Chế độ màu chữ sáng)
+   --------------------------------------------------------- */
+
+html.cf-light-mode {
+  color: #0f172a !important;
+}
+
+html.cf-light-mode body,
+html.cf-light-mode p,
+html.cf-light-mode li,
+html.cf-light-mode label,
+html.cf-light-mode .ttypography,
+html.cf-light-mode .problem-statement,
+html.cf-light-mode td:not([class*="user-"]):not([class*="rated-"]):not(:has(a[class*="user-"])),
+html.cf-light-mode th,
+html.cf-light-mode span:not([class*="user-"]):not([class*="rated-"]):not([class*="ace_"]):not(.streak-fire-icon):not(#cf-header-streak):not(.cf-streak-badge) {
+  color: #1e293b !important;
+}
+
+html.cf-light-mode h1,
+html.cf-light-mode h2,
+html.cf-light-mode h3,
+html.cf-light-mode h4,
+html.cf-light-mode h5,
+html.cf-light-mode h6,
+html.cf-light-mode .problem-statement .title,
+html.cf-light-mode .problem-statement .section-title,
+html.cf-light-mode .caption {
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+
+html.cf-light-mode a:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(.btn):not(.button):not(.pill-btn):not(.main-menu-list a):not(.second-level-menu-list a),
+html.cf-light-mode a:visited:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(.btn):not(.button):not(.pill-btn):not(.main-menu-list a):not(.second-level-menu-list a) {
+  color: #0284c7 !important;
+  transition: color 0.15s ease !important;
+}
+
+html.cf-light-mode a:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(.btn):not(.button):not(.pill-btn):not(.main-menu-list a):not(.second-level-menu-list a):hover,
+html.cf-light-mode a:visited:not([class*="user-"]):not([class*="rated-"]):not(:has([class*="user-"])):not(:has([class*="rated-"])):not(.btn):not(.button):not(.pill-btn):not(.main-menu-list a):not(.second-level-menu-list a):hover {
+  color: #0369a1 !important;
+  text-decoration: underline !important;
+}
+
+html.cf-light-mode .setting-name,
+html.cf-light-mode .notice,
+html.cf-light-mode .small,
+html.cf-light-mode .info,
+html.cf-light-mode .property-title {
+  color: #475569 !important;
+}
+
+/* Glass containers with brighter background in Light Mode */
+html.cf-light-mode.cf-custom-bg-active .roundbox,
+html.cf-light-mode.cf-custom-bg-active .menu-box,
+html.cf-light-mode.cf-custom-bg-active .second-level-menu,
+html.cf-light-mode.cf-custom-bg-active .sidebox,
+html.cf-light-mode.cf-custom-bg-active .topic,
+html.cf-light-mode.cf-custom-bg-active .problem-statement,
+html.cf-light-mode.cf-custom-bg-active .datatable {
+  background: rgba(255, 255, 255, calc(var(--cf-glass-alpha, 0.16) + 0.45)) !important;
+  border-color: rgba(255, 255, 255, 0.65) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* =========================================================
+   Comment Card Glassmorphism Framing (Khung Thẻ Bình Luận Bo Tròn)
+   ========================================================= */
+html.cf-custom-bg-active table.comment-table,
+html.cf-custom-bg-active .comment-table,
+html.cf-custom-bg-active .comment:not(:has(table.comment-table)) {
+  background: rgba(255, 255, 255, var(--cf-glass-alpha, 0.16)) !important;
+  background-color: rgba(255, 255, 255, var(--cf-glass-alpha, 0.16)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  padding: 12px 14px !important;
+  margin: 10px 0 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1) !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Light mode for comment cards */
+html.cf-light-mode.cf-custom-bg-active table.comment-table,
+html.cf-light-mode.cf-custom-bg-active .comment-table,
+html.cf-light-mode.cf-custom-bg-active .comment:not(:has(table.comment-table)) {
+  background: rgba(255, 255, 255, calc(var(--cf-glass-alpha, 0.16) + 0.45)) !important;
+  background-color: rgba(255, 255, 255, calc(var(--cf-glass-alpha, 0.16) + 0.45)) !important;
+  border-color: rgba(255, 255, 255, 0.65) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Ensure inner table cells have proper padding and no conflicting borders or backgrounds */
+html.cf-custom-bg-active table.comment-table tr,
+html.cf-custom-bg-active table.comment-table tbody,
+html.cf-custom-bg-active .comment-table tr,
+html.cf-custom-bg-active .comment-table tbody {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+html.cf-custom-bg-active table.comment-table td,
+html.cf-custom-bg-active .comment-table td {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 10px 14px !important;
+  vertical-align: top !important;
+}
+
+html.cf-custom-bg-active .comment:has(table.comment-table) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+html.cf-custom-bg-active .comments {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+
+/* =========================================================
+   Comment Translation Quick Action Link
+   ========================================================= */
+.cf-comment-trans-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  font-size: 11px !important;
+  color: inherit !important;
+  opacity: 0.8 !important;
+  text-decoration: underline !important;
+  cursor: pointer !important;
+  margin-left: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.cf-comment-trans-link:hover {
+  opacity: 1 !important;
+  color: #60a5fa !important;
+}
+
+/* =========================================================
+   Hide Problem Statement Changed Notice & Diff Links
+   ========================================================= */
+.diff-notifier,
+.problem-statement-changed,
+.alert-problem-statement-changed {
+  display: none !important;
+}
+
+/* =========================================================
+   Translation Progress Indicator (Góc phải dưới màn hình)
+   ========================================================= */
+#cf-trans-progress-indicator {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 9999999 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 14px !important;
+  background: rgba(15, 23, 42, 0.88) !important;
+  backdrop-filter: blur(14px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  color: #ffffff !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px !important;
+  pointer-events: none !important;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  opacity: 0 !important;
+  transform: translateY(16px) scale(0.92) !important;
+  user-select: none !important;
+}
+
+#cf-trans-progress-indicator.active {
+  opacity: 1 !important;
+  transform: translateY(0) scale(1) !important;
+}
+
+#cf-trans-progress-indicator .cf-trans-spinner {
+  width: 14px !important;
+  height: 14px !important;
+  border: 2px solid rgba(255, 255, 255, 0.25) !important;
+  border-top-color: #38bdf8 !important;
+  border-radius: 50% !important;
+  animation: cf-trans-spin 0.8s linear infinite !important;
+}
+
+#cf-trans-progress-indicator .cf-trans-check {
+  color: #4ade80 !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  font-weight: bold !important;
+}
+
+#cf-trans-progress-indicator .cf-trans-text {
+  color: #f8fafc !important;
+  line-height: 1 !important;
+}
+
+@keyframes cf-trans-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Light mode styling for progress indicator */
+html.cf-light-mode #cf-trans-progress-indicator {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
+  color: #0f172a !important;
+}
+
+html.cf-light-mode #cf-trans-progress-indicator .cf-trans-spinner {
+  border-color: rgba(0, 0, 0, 0.15) !important;
+  border-top-color: #0284c7 !important;
+}
+
+html.cf-light-mode #cf-trans-progress-indicator .cf-trans-text {
+  color: #0f172a !important;
+}
+
+@media (max-width: 768px) {
+  #cf-trans-progress-indicator {
+    bottom: 16px !important;
+    right: 16px !important;
+    font-size: 12px !important;
+    padding: 6px 11px !important;
+  }
+}
+
+/* =========================================================
+   Final High-Specificity Verdict Colors & No Black Text Shadows
+   ========================================================= */
+
+/* Remove black shadow on all table and content texts */
+html.cf-custom-bg-active table,
+html.cf-custom-bg-active table th,
+html.cf-custom-bg-active table td,
+html.cf-custom-bg-active table *,
+html.cf-custom-bg-active .datatable,
+html.cf-custom-bg-active .datatable *,
+html.cf-custom-bg-active .rtable,
+html.cf-custom-bg-active .rtable *,
+html.cf-custom-bg-active .status-frame-datatable,
+html.cf-custom-bg-active .status-frame-datatable *,
+html.cf-custom-bg-active .submissionVerdictWrapper,
+html.cf-custom-bg-active .submissionVerdictWrapper * {
+  text-shadow: none !important;
+}
+
+/* Green: Perfect result: 100 points, Accepted */
+html.cf-custom-bg-active .cf-verdict-green,
+html.cf-custom-bg-active .cf-verdict-green *,
+html.cf-custom-bg-active td.cf-verdict-green,
+html.cf-custom-bg-active td.cf-verdict-green *,
+html.cf-custom-bg-active table td .cf-verdict-green,
+html.cf-custom-bg-active table td .cf-verdict-green *,
+html.cf-custom-bg-active table td a.cf-verdict-green,
+html.cf-custom-bg-active table td span.cf-verdict-green,
+html.cf-custom-bg-active .datatable td a.cf-verdict-green,
+html.cf-custom-bg-active .datatable td span.cf-verdict-green,
+html.cf-custom-bg-active .rtable td a.cf-verdict-green,
+html.cf-custom-bg-active .rtable td span.cf-verdict-green,
+html.cf-custom-bg-active .status-frame-datatable td a.cf-verdict-green,
+html.cf-custom-bg-active .status-frame-datatable td span.cf-verdict-green,
+.cf-verdict-green,
+.cf-verdict-green *,
+a.cf-verdict-green,
+span.cf-verdict-green,
+td.cf-verdict-green {
+  color: #22c55e !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+/* Yellow: Partial result (85 points, 51 points, 7.5 points, 10 points) */
+html.cf-custom-bg-active .cf-verdict-yellow,
+html.cf-custom-bg-active .cf-verdict-yellow *,
+html.cf-custom-bg-active td.cf-verdict-yellow,
+html.cf-custom-bg-active td.cf-verdict-yellow *,
+html.cf-custom-bg-active table td .cf-verdict-yellow,
+html.cf-custom-bg-active table td .cf-verdict-yellow *,
+html.cf-custom-bg-active table td a.cf-verdict-yellow,
+html.cf-custom-bg-active table td span.cf-verdict-yellow,
+html.cf-custom-bg-active .datatable td a.cf-verdict-yellow,
+html.cf-custom-bg-active .datatable td span.cf-verdict-yellow,
+html.cf-custom-bg-active .rtable td a.cf-verdict-yellow,
+html.cf-custom-bg-active .rtable td span.cf-verdict-yellow,
+html.cf-custom-bg-active .status-frame-datatable td a.cf-verdict-yellow,
+html.cf-custom-bg-active .status-frame-datatable td span.cf-verdict-yellow,
+.cf-verdict-yellow,
+.cf-verdict-yellow *,
+a.cf-verdict-yellow,
+span.cf-verdict-yellow,
+td.cf-verdict-yellow {
+  color: #facc15 !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+/* Red: Compilation error, Partial result: 0 points */
+html.cf-custom-bg-active .cf-verdict-red,
+html.cf-custom-bg-active .cf-verdict-red *,
+html.cf-custom-bg-active td.cf-verdict-red,
+html.cf-custom-bg-active td.cf-verdict-red *,
+html.cf-custom-bg-active table td .cf-verdict-red,
+html.cf-custom-bg-active table td .cf-verdict-red *,
+html.cf-custom-bg-active table td a.cf-verdict-red,
+html.cf-custom-bg-active table td span.cf-verdict-red,
+html.cf-custom-bg-active .datatable td a.cf-verdict-red,
+html.cf-custom-bg-active .datatable td span.cf-verdict-red,
+html.cf-custom-bg-active .rtable td a.cf-verdict-red,
+html.cf-custom-bg-active .rtable td span.cf-verdict-red,
+html.cf-custom-bg-active .status-frame-datatable td a.cf-verdict-red,
+html.cf-custom-bg-active .status-frame-datatable td span.cf-verdict-red,
+.cf-verdict-red,
+.cf-verdict-red *,
+a.cf-verdict-red,
+span.cf-verdict-red,
+td.cf-verdict-red {
+  color: #ef4444 !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+@font-face{font-family:KaTeX_AMS;font-style:normal;font-weight:400;src:url(fonts/KaTeX_AMS-Regular.woff2) format("woff2"),url(fonts/KaTeX_AMS-Regular.woff) format("woff"),url(fonts/KaTeX_AMS-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Caligraphic;font-style:normal;font-weight:700;src:url(fonts/KaTeX_Caligraphic-Bold.woff2) format("woff2"),url(fonts/KaTeX_Caligraphic-Bold.woff) format("woff"),url(fonts/KaTeX_Caligraphic-Bold.ttf) format("truetype")}@font-face{font-family:KaTeX_Caligraphic;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Caligraphic-Regular.woff2) format("woff2"),url(fonts/KaTeX_Caligraphic-Regular.woff) format("woff"),url(fonts/KaTeX_Caligraphic-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Fraktur;font-style:normal;font-weight:700;src:url(fonts/KaTeX_Fraktur-Bold.woff2) format("woff2"),url(fonts/KaTeX_Fraktur-Bold.woff) format("woff"),url(fonts/KaTeX_Fraktur-Bold.ttf) format("truetype")}@font-face{font-family:KaTeX_Fraktur;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Fraktur-Regular.woff2) format("woff2"),url(fonts/KaTeX_Fraktur-Regular.woff) format("woff"),url(fonts/KaTeX_Fraktur-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Main;font-style:normal;font-weight:700;src:url(fonts/KaTeX_Main-Bold.woff2) format("woff2"),url(fonts/KaTeX_Main-Bold.woff) format("woff"),url(fonts/KaTeX_Main-Bold.ttf) format("truetype")}@font-face{font-family:KaTeX_Main;font-style:italic;font-weight:700;src:url(fonts/KaTeX_Main-BoldItalic.woff2) format("woff2"),url(fonts/KaTeX_Main-BoldItalic.woff) format("woff"),url(fonts/KaTeX_Main-BoldItalic.ttf) format("truetype")}@font-face{font-family:KaTeX_Main;font-style:italic;font-weight:400;src:url(fonts/KaTeX_Main-Italic.woff2) format("woff2"),url(fonts/KaTeX_Main-Italic.woff) format("woff"),url(fonts/KaTeX_Main-Italic.ttf) format("truetype")}@font-face{font-family:KaTeX_Main;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Main-Regular.woff2) format("woff2"),url(fonts/KaTeX_Main-Regular.woff) format("woff"),url(fonts/KaTeX_Main-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Math;font-style:italic;font-weight:700;src:url(fonts/KaTeX_Math-BoldItalic.woff2) format("woff2"),url(fonts/KaTeX_Math-BoldItalic.woff) format("woff"),url(fonts/KaTeX_Math-BoldItalic.ttf) format("truetype")}@font-face{font-family:KaTeX_Math;font-style:italic;font-weight:400;src:url(fonts/KaTeX_Math-Italic.woff2) format("woff2"),url(fonts/KaTeX_Math-Italic.woff) format("woff"),url(fonts/KaTeX_Math-Italic.ttf) format("truetype")}@font-face{font-family:"KaTeX_SansSerif";font-style:normal;font-weight:700;src:url(fonts/KaTeX_SansSerif-Bold.woff2) format("woff2"),url(fonts/KaTeX_SansSerif-Bold.woff) format("woff"),url(fonts/KaTeX_SansSerif-Bold.ttf) format("truetype")}@font-face{font-family:"KaTeX_SansSerif";font-style:italic;font-weight:400;src:url(fonts/KaTeX_SansSerif-Italic.woff2) format("woff2"),url(fonts/KaTeX_SansSerif-Italic.woff) format("woff"),url(fonts/KaTeX_SansSerif-Italic.ttf) format("truetype")}@font-face{font-family:"KaTeX_SansSerif";font-style:normal;font-weight:400;src:url(fonts/KaTeX_SansSerif-Regular.woff2) format("woff2"),url(fonts/KaTeX_SansSerif-Regular.woff) format("woff"),url(fonts/KaTeX_SansSerif-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Script;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Script-Regular.woff2) format("woff2"),url(fonts/KaTeX_Script-Regular.woff) format("woff"),url(fonts/KaTeX_Script-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Size1;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Size1-Regular.woff2) format("woff2"),url(fonts/KaTeX_Size1-Regular.woff) format("woff"),url(fonts/KaTeX_Size1-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Size2;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Size2-Regular.woff2) format("woff2"),url(fonts/KaTeX_Size2-Regular.woff) format("woff"),url(fonts/KaTeX_Size2-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Size3;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Size3-Regular.woff2) format("woff2"),url(fonts/KaTeX_Size3-Regular.woff) format("woff"),url(fonts/KaTeX_Size3-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Size4;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Size4-Regular.woff2) format("woff2"),url(fonts/KaTeX_Size4-Regular.woff) format("woff"),url(fonts/KaTeX_Size4-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Typewriter;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Typewriter-Regular.woff2) format("woff2"),url(fonts/KaTeX_Typewriter-Regular.woff) format("woff"),url(fonts/KaTeX_Typewriter-Regular.ttf) format("truetype")}.katex{font:normal 1.21em KaTeX_Main,Times New Roman,serif;line-height:1.2;text-indent:0;text-rendering:auto}.katex *{-ms-high-contrast-adjust:none!important;border-color:currentColor}.katex .katex-version:after{content:"0.16.22"}.katex .katex-mathml{clip:rect(1px,1px,1px,1px);border:0;height:1px;overflow:hidden;padding:0;position:absolute;width:1px}.katex .katex-html>.newline{display:block}.katex .base{position:relative;white-space:nowrap;width:-webkit-min-content;width:-moz-min-content;width:min-content}.katex .base,.katex .strut{display:inline-block}.katex .textbf{font-weight:700}.katex .textit{font-style:italic}.katex .textrm{font-family:KaTeX_Main}.katex .textsf{font-family:KaTeX_SansSerif}.katex .texttt{font-family:KaTeX_Typewriter}.katex .mathnormal{font-family:KaTeX_Math;font-style:italic}.katex .mathit{font-family:KaTeX_Main;font-style:italic}.katex .mathrm{font-style:normal}.katex .mathbf{font-family:KaTeX_Main;font-weight:700}.katex .boldsymbol{font-family:KaTeX_Math;font-style:italic;font-weight:700}.katex .amsrm,.katex .mathbb,.katex .textbb{font-family:KaTeX_AMS}.katex .mathcal{font-family:KaTeX_Caligraphic}.katex .mathfrak,.katex .textfrak{font-family:KaTeX_Fraktur}.katex .mathboldfrak,.katex .textboldfrak{font-family:KaTeX_Fraktur;font-weight:700}.katex .mathtt{font-family:KaTeX_Typewriter}.katex .mathscr,.katex .textscr{font-family:KaTeX_Script}.katex .mathsf,.katex .textsf{font-family:KaTeX_SansSerif}.katex .mathboldsf,.katex .textboldsf{font-family:KaTeX_SansSerif;font-weight:700}.katex .mathitsf,.katex .mathsfit,.katex .textitsf{font-family:KaTeX_SansSerif;font-style:italic}.katex .mainrm{font-family:KaTeX_Main;font-style:normal}.katex .vlist-t{border-collapse:collapse;display:inline-table;table-layout:fixed}.katex .vlist-r{display:table-row}.katex .vlist{display:table-cell;position:relative;vertical-align:bottom}.katex .vlist>span{display:block;height:0;position:relative}.katex .vlist>span>span{display:inline-block}.katex .vlist>span>.pstrut{overflow:hidden;width:0}.katex .vlist-t2{margin-right:-2px}.katex .vlist-s{display:table-cell;font-size:1px;min-width:2px;vertical-align:bottom;width:2px}.katex .vbox{align-items:baseline;display:inline-flex;flex-direction:column}.katex .hbox{width:100%}.katex .hbox,.katex .thinbox{display:inline-flex;flex-direction:row}.katex .thinbox{max-width:0;width:0}.katex .msupsub{text-align:left}.katex .mfrac>span>span{text-align:center}.katex .mfrac .frac-line{border-bottom-style:solid;display:inline-block;width:100%}.katex .hdashline,.katex .hline,.katex .mfrac .frac-line,.katex .overline .overline-line,.katex .rule,.katex .underline .underline-line{min-height:1px}.katex .mspace{display:inline-block}.katex .clap,.katex .llap,.katex .rlap{position:relative;width:0}.katex .clap>.inner,.katex .llap>.inner,.katex .rlap>.inner{position:absolute}.katex .clap>.fix,.katex .llap>.fix,.katex .rlap>.fix{display:inline-block}.katex .llap>.inner{right:0}.katex .clap>.inner,.katex .rlap>.inner{left:0}.katex .clap>.inner>span{margin-left:-50%;margin-right:50%}.katex .rule{border:0 solid;display:inline-block;position:relative}.katex .hline,.katex .overline .overline-line,.katex .underline .underline-line{border-bottom-style:solid;display:inline-block;width:100%}.katex .hdashline{border-bottom-style:dashed;display:inline-block;width:100%}.katex .sqrt>.root{margin-left:.2777777778em;margin-right:-.5555555556em}.katex .fontsize-ensurer.reset-size1.size1,.katex .sizing.reset-size1.size1{font-size:1em}.katex .fontsize-ensurer.reset-size1.size2,.katex .sizing.reset-size1.size2{font-size:1.2em}.katex .fontsize-ensurer.reset-size1.size3,.katex .sizing.reset-size1.size3{font-size:1.4em}.katex .fontsize-ensurer.reset-size1.size4,.katex .sizing.reset-size1.size4{font-size:1.6em}.katex .fontsize-ensurer.reset-size1.size5,.katex .sizing.reset-size1.size5{font-size:1.8em}.katex .fontsize-ensurer.reset-size1.size6,.katex .sizing.reset-size1.size6{font-size:2em}.katex .fontsize-ensurer.reset-size1.size7,.katex .sizing.reset-size1.size7{font-size:2.4em}.katex .fontsize-ensurer.reset-size1.size8,.katex .sizing.reset-size1.size8{font-size:2.88em}.katex .fontsize-ensurer.reset-size1.size9,.katex .sizing.reset-size1.size9{font-size:3.456em}.katex .fontsize-ensurer.reset-size1.size10,.katex .sizing.reset-size1.size10{font-size:4.148em}.katex .fontsize-ensurer.reset-size1.size11,.katex .sizing.reset-size1.size11{font-size:4.976em}.katex .fontsize-ensurer.reset-size2.size1,.katex .sizing.reset-size2.size1{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size2.size2,.katex .sizing.reset-size2.size2{font-size:1em}.katex .fontsize-ensurer.reset-size2.size3,.katex .sizing.reset-size2.size3{font-size:1.1666666667em}.katex .fontsize-ensurer.reset-size2.size4,.katex .sizing.reset-size2.size4{font-size:1.3333333333em}.katex .fontsize-ensurer.reset-size2.size5,.katex .sizing.reset-size2.size5{font-size:1.5em}.katex .fontsize-ensurer.reset-size2.size6,.katex .sizing.reset-size2.size6{font-size:1.6666666667em}.katex .fontsize-ensurer.reset-size2.size7,.katex .sizing.reset-size2.size7{font-size:2em}.katex .fontsize-ensurer.reset-size2.size8,.katex .sizing.reset-size2.size8{font-size:2.4em}.katex .fontsize-ensurer.reset-size2.size9,.katex .sizing.reset-size2.size9{font-size:2.88em}.katex .fontsize-ensurer.reset-size2.size10,.katex .sizing.reset-size2.size10{font-size:3.4566666667em}.katex .fontsize-ensurer.reset-size2.size11,.katex .sizing.reset-size2.size11{font-size:4.1466666667em}.katex .fontsize-ensurer.reset-size3.size1,.katex .sizing.reset-size3.size1{font-size:.7142857143em}.katex .fontsize-ensurer.reset-size3.size2,.katex .sizing.reset-size3.size2{font-size:.8571428571em}.katex .fontsize-ensurer.reset-size3.size3,.katex .sizing.reset-size3.size3{font-size:1em}.katex .fontsize-ensurer.reset-size3.size4,.katex .sizing.reset-size3.size4{font-size:1.1428571429em}.katex .fontsize-ensurer.reset-size3.size5,.katex .sizing.reset-size3.size5{font-size:1.2857142857em}.katex .fontsize-ensurer.reset-size3.size6,.katex .sizing.reset-size3.size6{font-size:1.4285714286em}.katex .fontsize-ensurer.reset-size3.size7,.katex .sizing.reset-size3.size7{font-size:1.7142857143em}.katex .fontsize-ensurer.reset-size3.size8,.katex .sizing.reset-size3.size8{font-size:2.0571428571em}.katex .fontsize-ensurer.reset-size3.size9,.katex .sizing.reset-size3.size9{font-size:2.4685714286em}.katex .fontsize-ensurer.reset-size3.size10,.katex .sizing.reset-size3.size10{font-size:2.9628571429em}.katex .fontsize-ensurer.reset-size3.size11,.katex .sizing.reset-size3.size11{font-size:3.5542857143em}.katex .fontsize-ensurer.reset-size4.size1,.katex .sizing.reset-size4.size1{font-size:.625em}.katex .fontsize-ensurer.reset-size4.size2,.katex .sizing.reset-size4.size2{font-size:.75em}.katex .fontsize-ensurer.reset-size4.size3,.katex .sizing.reset-size4.size3{font-size:.875em}.katex .fontsize-ensurer.reset-size4.size4,.katex .sizing.reset-size4.size4{font-size:1em}.katex .fontsize-ensurer.reset-size4.size5,.katex .sizing.reset-size4.size5{font-size:1.125em}.katex .fontsize-ensurer.reset-size4.size6,.katex .sizing.reset-size4.size6{font-size:1.25em}.katex .fontsize-ensurer.reset-size4.size7,.katex .sizing.reset-size4.size7{font-size:1.5em}.katex .fontsize-ensurer.reset-size4.size8,.katex .sizing.reset-size4.size8{font-size:1.8em}.katex .fontsize-ensurer.reset-size4.size9,.katex .sizing.reset-size4.size9{font-size:2.16em}.katex .fontsize-ensurer.reset-size4.size10,.katex .sizing.reset-size4.size10{font-size:2.5925em}.katex .fontsize-ensurer.reset-size4.size11,.katex .sizing.reset-size4.size11{font-size:3.11em}.katex .fontsize-ensurer.reset-size5.size1,.katex .sizing.reset-size5.size1{font-size:.5555555556em}.katex .fontsize-ensurer.reset-size5.size2,.katex .sizing.reset-size5.size2{font-size:.6666666667em}.katex .fontsize-ensurer.reset-size5.size3,.katex .sizing.reset-size5.size3{font-size:.7777777778em}.katex .fontsize-ensurer.reset-size5.size4,.katex .sizing.reset-size5.size4{font-size:.8888888889em}.katex .fontsize-ensurer.reset-size5.size5,.katex .sizing.reset-size5.size5{font-size:1em}.katex .fontsize-ensurer.reset-size5.size6,.katex .sizing.reset-size5.size6{font-size:1.1111111111em}.katex .fontsize-ensurer.reset-size5.size7,.katex .sizing.reset-size5.size7{font-size:1.3333333333em}.katex .fontsize-ensurer.reset-size5.size8,.katex .sizing.reset-size5.size8{font-size:1.6em}.katex .fontsize-ensurer.reset-size5.size9,.katex .sizing.reset-size5.size9{font-size:1.92em}.katex .fontsize-ensurer.reset-size5.size10,.katex .sizing.reset-size5.size10{font-size:2.3044444444em}.katex .fontsize-ensurer.reset-size5.size11,.katex .sizing.reset-size5.size11{font-size:2.7644444444em}.katex .fontsize-ensurer.reset-size6.size1,.katex .sizing.reset-size6.size1{font-size:.5em}.katex .fontsize-ensurer.reset-size6.size2,.katex .sizing.reset-size6.size2{font-size:.6em}.katex .fontsize-ensurer.reset-size6.size3,.katex .sizing.reset-size6.size3{font-size:.7em}.katex .fontsize-ensurer.reset-size6.size4,.katex .sizing.reset-size6.size4{font-size:.8em}.katex .fontsize-ensurer.reset-size6.size5,.katex .sizing.reset-size6.size5{font-size:.9em}.katex .fontsize-ensurer.reset-size6.size6,.katex .sizing.reset-size6.size6{font-size:1em}.katex .fontsize-ensurer.reset-size6.size7,.katex .sizing.reset-size6.size7{font-size:1.2em}.katex .fontsize-ensurer.reset-size6.size8,.katex .sizing.reset-size6.size8{font-size:1.44em}.katex .fontsize-ensurer.reset-size6.size9,.katex .sizing.reset-size6.size9{font-size:1.728em}.katex .fontsize-ensurer.reset-size6.size10,.katex .sizing.reset-size6.size10{font-size:2.074em}.katex .fontsize-ensurer.reset-size6.size11,.katex .sizing.reset-size6.size11{font-size:2.488em}.katex .fontsize-ensurer.reset-size7.size1,.katex .sizing.reset-size7.size1{font-size:.4166666667em}.katex .fontsize-ensurer.reset-size7.size2,.katex .sizing.reset-size7.size2{font-size:.5em}.katex .fontsize-ensurer.reset-size7.size3,.katex .sizing.reset-size7.size3{font-size:.5833333333em}.katex .fontsize-ensurer.reset-size7.size4,.katex .sizing.reset-size7.size4{font-size:.6666666667em}.katex .fontsize-ensurer.reset-size7.size5,.katex .sizing.reset-size7.size5{font-size:.75em}.katex .fontsize-ensurer.reset-size7.size6,.katex .sizing.reset-size7.size6{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size7.size7,.katex .sizing.reset-size7.size7{font-size:1em}.katex .fontsize-ensurer.reset-size7.size8,.katex .sizing.reset-size7.size8{font-size:1.2em}.katex .fontsize-ensurer.reset-size7.size9,.katex .sizing.reset-size7.size9{font-size:1.44em}.katex .fontsize-ensurer.reset-size7.size10,.katex .sizing.reset-size7.size10{font-size:1.7283333333em}.katex .fontsize-ensurer.reset-size7.size11,.katex .sizing.reset-size7.size11{font-size:2.0733333333em}.katex .fontsize-ensurer.reset-size8.size1,.katex .sizing.reset-size8.size1{font-size:.3472222222em}.katex .fontsize-ensurer.reset-size8.size2,.katex .sizing.reset-size8.size2{font-size:.4166666667em}.katex .fontsize-ensurer.reset-size8.size3,.katex .sizing.reset-size8.size3{font-size:.4861111111em}.katex .fontsize-ensurer.reset-size8.size4,.katex .sizing.reset-size8.size4{font-size:.5555555556em}.katex .fontsize-ensurer.reset-size8.size5,.katex .sizing.reset-size8.size5{font-size:.625em}.katex .fontsize-ensurer.reset-size8.size6,.katex .sizing.reset-size8.size6{font-size:.6944444444em}.katex .fontsize-ensurer.reset-size8.size7,.katex .sizing.reset-size8.size7{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size8.size8,.katex .sizing.reset-size8.size8{font-size:1em}.katex .fontsize-ensurer.reset-size8.size9,.katex .sizing.reset-size8.size9{font-size:1.2em}.katex .fontsize-ensurer.reset-size8.size10,.katex .sizing.reset-size8.size10{font-size:1.4402777778em}.katex .fontsize-ensurer.reset-size8.size11,.katex .sizing.reset-size8.size11{font-size:1.7277777778em}.katex .fontsize-ensurer.reset-size9.size1,.katex .sizing.reset-size9.size1{font-size:.2893518519em}.katex .fontsize-ensurer.reset-size9.size2,.katex .sizing.reset-size9.size2{font-size:.3472222222em}.katex .fontsize-ensurer.reset-size9.size3,.katex .sizing.reset-size9.size3{font-size:.4050925926em}.katex .fontsize-ensurer.reset-size9.size4,.katex .sizing.reset-size9.size4{font-size:.462962963em}.katex .fontsize-ensurer.reset-size9.size5,.katex .sizing.reset-size9.size5{font-size:.5208333333em}.katex .fontsize-ensurer.reset-size9.size6,.katex .sizing.reset-size9.size6{font-size:.5787037037em}.katex .fontsize-ensurer.reset-size9.size7,.katex .sizing.reset-size9.size7{font-size:.6944444444em}.katex .fontsize-ensurer.reset-size9.size8,.katex .sizing.reset-size9.size8{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size9.size9,.katex .sizing.reset-size9.size9{font-size:1em}.katex .fontsize-ensurer.reset-size9.size10,.katex .sizing.reset-size9.size10{font-size:1.2002314815em}.katex .fontsize-ensurer.reset-size9.size11,.katex .sizing.reset-size9.size11{font-size:1.4398148148em}.katex .fontsize-ensurer.reset-size10.size1,.katex .sizing.reset-size10.size1{font-size:.2410800386em}.katex .fontsize-ensurer.reset-size10.size2,.katex .sizing.reset-size10.size2{font-size:.2892960463em}.katex .fontsize-ensurer.reset-size10.size3,.katex .sizing.reset-size10.size3{font-size:.337512054em}.katex .fontsize-ensurer.reset-size10.size4,.katex .sizing.reset-size10.size4{font-size:.3857280617em}.katex .fontsize-ensurer.reset-size10.size5,.katex .sizing.reset-size10.size5{font-size:.4339440694em}.katex .fontsize-ensurer.reset-size10.size6,.katex .sizing.reset-size10.size6{font-size:.4821600771em}.katex .fontsize-ensurer.reset-size10.size7,.katex .sizing.reset-size10.size7{font-size:.5785920926em}.katex .fontsize-ensurer.reset-size10.size8,.katex .sizing.reset-size10.size8{font-size:.6943105111em}.katex .fontsize-ensurer.reset-size10.size9,.katex .sizing.reset-size10.size9{font-size:.8331726133em}.katex .fontsize-ensurer.reset-size10.size10,.katex .sizing.reset-size10.size10{font-size:1em}.katex .fontsize-ensurer.reset-size10.size11,.katex .sizing.reset-size10.size11{font-size:1.1996142719em}.katex .fontsize-ensurer.reset-size11.size1,.katex .sizing.reset-size11.size1{font-size:.2009646302em}.katex .fontsize-ensurer.reset-size11.size2,.katex .sizing.reset-size11.size2{font-size:.2411575563em}.katex .fontsize-ensurer.reset-size11.size3,.katex .sizing.reset-size11.size3{font-size:.2813504823em}.katex .fontsize-ensurer.reset-size11.size4,.katex .sizing.reset-size11.size4{font-size:.3215434084em}.katex .fontsize-ensurer.reset-size11.size5,.katex .sizing.reset-size11.size5{font-size:.3617363344em}.katex .fontsize-ensurer.reset-size11.size6,.katex .sizing.reset-size11.size6{font-size:.4019292605em}.katex .fontsize-ensurer.reset-size11.size7,.katex .sizing.reset-size11.size7{font-size:.4823151125em}.katex .fontsize-ensurer.reset-size11.size8,.katex .sizing.reset-size11.size8{font-size:.578778135em}.katex .fontsize-ensurer.reset-size11.size9,.katex .sizing.reset-size11.size9{font-size:.6945337621em}.katex .fontsize-ensurer.reset-size11.size10,.katex .sizing.reset-size11.size10{font-size:.8336012862em}.katex .fontsize-ensurer.reset-size11.size11,.katex .sizing.reset-size11.size11{font-size:1em}.katex .delimsizing.size1{font-family:KaTeX_Size1}.katex .delimsizing.size2{font-family:KaTeX_Size2}.katex .delimsizing.size3{font-family:KaTeX_Size3}.katex .delimsizing.size4{font-family:KaTeX_Size4}.katex .delimsizing.mult .delim-size1>span{font-family:KaTeX_Size1}.katex .delimsizing.mult .delim-size4>span{font-family:KaTeX_Size4}.katex .nulldelimiter{display:inline-block;width:.12em}.katex .delimcenter,.katex .op-symbol{position:relative}.katex .op-symbol.small-op{font-family:KaTeX_Size1}.katex .op-symbol.large-op{font-family:KaTeX_Size2}.katex .accent>.vlist-t,.katex .op-limits>.vlist-t{text-align:center}.katex .accent .accent-body{position:relative}.katex .accent .accent-body:not(.accent-full){width:0}.katex .overlay{display:block}.katex .mtable .vertical-separator{display:inline-block;min-width:1px}.katex .mtable .arraycolsep{display:inline-block}.katex .mtable .col-align-c>.vlist-t{text-align:center}.katex .mtable .col-align-l>.vlist-t{text-align:left}.katex .mtable .col-align-r>.vlist-t{text-align:right}.katex .svg-align{text-align:left}.katex svg{fill:currentColor;stroke:currentColor;fill-rule:nonzero;fill-opacity:1;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;display:block;height:inherit;position:absolute;width:100%}.katex svg path{stroke:none}.katex img{border-style:none;max-height:none;max-width:none;min-height:0;min-width:0}.katex .stretchy{display:block;overflow:hidden;position:relative;width:100%}.katex .stretchy:after,.katex .stretchy:before{content:""}.katex .hide-tail{overflow:hidden;position:relative;width:100%}.katex .halfarrow-left{left:0;overflow:hidden;position:absolute;width:50.2%}.katex .halfarrow-right{overflow:hidden;position:absolute;right:0;width:50.2%}.katex .brace-left{left:0;overflow:hidden;position:absolute;width:25.1%}.katex .brace-center{left:25%;overflow:hidden;position:absolute;width:50%}.katex .brace-right{overflow:hidden;position:absolute;right:0;width:25.1%}.katex .x-arrow-pad{padding:0 .5em}.katex .cd-arrow-pad{padding:0 .55556em 0 .27778em}.katex .mover,.katex .munder,.katex .x-arrow{text-align:center}.katex .boxpad{padding:0 .3em}.katex .fbox,.katex .fcolorbox{border:.04em solid;box-sizing:border-box}.katex .cancel-pad{padding:0 .2em}.katex .cancel-lap{margin-left:-.2em;margin-right:-.2em}.katex .sout{border-bottom-style:solid;border-bottom-width:.08em}.katex .angl{border-right:.049em solid;border-top:.049em solid;box-sizing:border-box;margin-right:.03889em}.katex .anglpad{padding:0 .03889em}.katex .eqn-num:before{content:"(" counter(katexEqnNo) ")";counter-increment:katexEqnNo}.katex .mml-eqn-num:before{content:"(" counter(mmlEqnNo) ")";counter-increment:mmlEqnNo}.katex .mtr-glue{width:50%}.katex .cd-vert-arrow{display:inline-block;position:relative}.katex .cd-label-left{display:inline-block;position:absolute;right:calc(50% + .3em);text-align:left}.katex .cd-label-right{display:inline-block;left:calc(50% + .3em);position:absolute;text-align:right}.katex-display{display:block;margin:1em 0;text-align:center}.katex-display>.katex{display:block;text-align:center;white-space:nowrap}.katex-display>.katex>.katex-html{display:block;position:relative}.katex-display>.katex>.katex-html>.tag{position:absolute;right:0}.katex-display.leqno>.katex>.katex-html>.tag{left:0;right:auto}.katex-display.fleqn>.katex{padding-left:2em;text-align:left}body{counter-reset:katexEqnNo mmlEqnNo}

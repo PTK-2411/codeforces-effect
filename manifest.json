@@ -1,0 +1,124 @@
+{
+  "manifest_version": 3,
+  "name": "Codeforces Effect",
+  "version": "0.99.0",
+  "version_name": "v1.0.0 Alpha",
+  "homepage_url": "https://github.com/PTK-2411/codeforces-effect",
+  "description": "Codeforces Effect - Tùy chỉnh hình nền, giao diện hiệu ứng blur glassmorphism, streak tracker và dịch thuật Codeforces.",
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "declarativeNetRequest"
+  ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "host_permissions": [
+    "*://*.codeforces.com/*",
+    "*://codeforces.com/*",
+    "*://*.codeforces.net/*",
+    "*://codeforces.net/*",
+    "*://*.codeforces.ru/*",
+    "*://codeforces.ru/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Codeforces Effect"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.codeforces.com/*",
+        "*://codeforces.com/*",
+        "*://*.codeforces.net/*",
+        "*://codeforces.net/*",
+        "*://*.codeforces.ru/*",
+        "*://codeforces.ru/*"
+      ],
+      "exclude_globs": [
+        "*://*.codeforces.com/*/hacks/*/test*",
+        "*://codeforces.com/*/hacks/*/test*",
+        "*://*.codeforces.net/*/hacks/*/test*",
+        "*://codeforces.net/*/hacks/*/test*",
+        "*://*.codeforces.ru/*/hacks/*/test*",
+        "*://codeforces.ru/*/hacks/*/test*"
+      ],
+      "css": [
+        "content/content.css"
+      ],
+      "js": [
+        "content/katex.min.js",
+        "content/translations.js",
+        "content/content.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "*://*.codeforces.com/*",
+        "*://codeforces.com/*",
+        "*://*.codeforces.net/*",
+        "*://codeforces.net/*",
+        "*://*.codeforces.ru/*",
+        "*://codeforces.ru/*"
+      ],
+      "exclude_globs": [
+        "*://*.codeforces.com/*/hacks/*/test*",
+        "*://codeforces.com/*/hacks/*/test*",
+        "*://*.codeforces.net/*/hacks/*/test*",
+        "*://codeforces.net/*/hacks/*/test*",
+        "*://*.codeforces.ru/*/hacks/*/test*",
+        "*://codeforces.ru/*/hacks/*/test*"
+      ],
+      "js": [
+        "content/cf-mathjax-bridge.js"
+      ],
+      "world": "MAIN",
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "content/fonts/*",
+        "content/cf-mathjax-bridge.js",
+        "codeforces-logo.png",
+        "codeforces-logo-dark.png",
+        "assets/default-bg.mp4",
+        "assets/default-thumb.jpg",
+        "assets/vietnam.png",
+        "vietnam.png"
+      ],
+      "matches": [
+        "*://*.codeforces.com/*",
+        "*://codeforces.com/*",
+        "*://*.codeforces.net/*",
+        "*://codeforces.net/*",
+        "*://*.codeforces.ru/*",
+        "*://codeforces.ru/*"
+      ]
+    }
+  ]
+}
