@@ -7,7 +7,7 @@
 <br />
 
 <p align="center">
-  <img src="https://img.shields.io/badge/CODEFORCES_EFFECT-V1.0.0_ALPHA-7B2CBF?style=for-the-badge&logo=codeforces&logoColor=white" alt="Codeforces Effect" />
+  <img src="https://img.shields.io/badge/CODEFORCES_EFFECT-V1.1.0_ALPHA-7B2CBF?style=for-the-badge&logo=codeforces&logoColor=white" alt="Codeforces Effect" />
   <img src="https://img.shields.io/badge/NODE.JS-%3E%3D20.12-238636?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
   <img src="https://img.shields.io/badge/MANIFEST-V3-1f6feb?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/LICENSE-MIT-007ACC?style=for-the-badge" alt="License" />
