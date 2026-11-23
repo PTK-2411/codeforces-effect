@@ -17,11 +17,20 @@
           <span class="version-tag">v1.0.0 Alpha</span>
         </div>
       </div>
-      <div class="header-toggle">
-        <label class="switch" title="Bật / Tắt hình nền">
-          <input type="checkbox" id="toggle-enabled" checked>
-          <span class="slider round"></span>
-        </label>
+      <div class="header-actions">
+        <button type="button" id="btn-open-tab" class="btn-header-tab" title="Mở cài đặt trong tab riêng (không bị đóng khi chọn tệp)">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+        </button>
+        <div class="header-toggle">
+          <label class="switch" title="Bật / Tắt hình nền">
+            <input type="checkbox" id="toggle-enabled" checked>
+            <span class="slider round"></span>
+          </label>
+        </div>
       </div>
     </header>
 
@@ -120,20 +129,45 @@
           </button>
         </div>
 
-        <!-- Tab 1: Upload Dropzone -->
+        <!-- Tab 1: Upload Panel -->
         <div id="panel-upload" class="tab-panel active">
-          <div id="dropzone" class="dropzone">
-            <input type="file" id="file-input" accept="image/*,video/*" class="file-input" style="display: none;">
-            <div id="empty-state" class="empty-state">
+          <!-- View 1: When in popup bubble mode, direct button to open dedicated tab -->
+          <div id="upload-popup-view" class="upload-popup-card">
+            <div class="upload-popup-icon-wrap">
               <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
-              <p class="upload-title">Tải ảnh hoặc video lên</p>
-              <p class="upload-sub">Kéo thả tệp hoặc nhấp để duyệt</p>
-              <span class="upload-formats">JPG, PNG, GIF, WebP, MP4, WebM</span>
             </div>
+            <p class="upload-popup-title">Tải ảnh hoặc video từ máy tính</p>
+            <p class="upload-popup-sub">Mở trang cài đặt trong tab riêng để duyệt tệp thoải mái mà không bị tự đóng cửa sổ</p>
+            <button type="button" id="btn-open-upload-tab" class="btn btn-primary btn-upload-tab">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+              <span>Mở tab để tải tệp lên</span>
+            </button>
+          </div>
+
+          <!-- View 2: When in dedicated tab mode, full dropzone & file picker -->
+          <div id="upload-tab-view" class="upload-tab-view hidden">
+            <div id="dropzone" class="dropzone">
+              <input type="file" id="file-input" accept="image/*,video/*,.jpg,.jpeg,.png,.gif,.webp,.bmp,.svg,.avif,.mp4,.webm,.mov,.mkv,.ogg" class="file-input" style="display: none;">
+              <div id="empty-state" class="empty-state">
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p class="upload-title">Tải ảnh hoặc video lên</p>
+                <p class="upload-sub">Kéo thả tệp hoặc nhấp để duyệt từ máy tính</p>
+                <span class="upload-formats">JPG, PNG, GIF, WebP, MP4, WebM</span>
+              </div>
+            </div>
+            <p class="tab-mode-hint">✨ Đang ở chế độ tab riêng — Thoải mái chọn tệp mà không lo bị đóng!</p>
           </div>
         </div>
 

@@ -46,6 +46,10 @@ class MockNode {
     this.click = () => {
       (this._listeners['click'] || []).forEach(fn => fn({ target: this, preventDefault: () => {}, stopPropagation: () => {} }));
     };
+    this.dispatchEvent = (ev) => {
+      const type = (ev && ev.type) || ev;
+      (this._listeners[type] || []).forEach(fn => fn(ev || { target: this, preventDefault: () => {}, stopPropagation: () => {} }));
+    };
   }
 
 
@@ -1774,6 +1778,56 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert(test33CssContent.includes('padding: 10px 12px !important;') && test33CssContent.includes('padding-top: 2px !important;'), 'content.css must include compact sidebox rules');
 
   console.log('✓ Test 33 passed: Profile "online now" green indicator & compact sidebox verified');
+
+  // Test 34: Rating Graph Contest Tooltip Popup Elevation & High Z-Index Over Sidebar
+  console.log('Test 34: Rating graph contest tooltip popup elevation & z-index');
+  body.innerHTML = `
+    <div id="body">
+      <div id="pageContent" class="content-with-sidebar">
+        <div class="roundbox">
+          <div id="placeholder" style="width: 800px; height: 350px;"></div>
+        </div>
+      </div>
+      <div id="sidebar">
+        <div class="roundbox sidebox">
+          <div class="caption titled">→ Đóng góp hàng đầu</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Trigger DOM initialization
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'vi' } }, 'local'));
+  await new Promise(r => setTimeout(r, 100));
+
+  // Dynamically insert rating graph tooltip (as Flot does on hover)
+  const dynamicTooltip = new MockNode(1, 'div');
+  dynamicTooltip.id = 'tooltip';
+  dynamicTooltip.innerHTML = `
+    <div>1228 (+115), pupil</div>
+    <div>Rank: 1933</div>
+    <a href="/contest/2167">Codeforces Round 1062 (Div. 4)</a>
+  `;
+  body.appendChild(dynamicTooltip);
+
+  // Trigger placeholder mousemove to fire tooltip elevation
+  const placeholderEl = body.querySelector('#placeholder');
+  if (placeholderEl) {
+    placeholderEl.dispatchEvent(new Event('mousemove'));
+  }
+  await new Promise(r => setTimeout(r, 100));
+
+  assert.strictEqual(dynamicTooltip.style['z-index'], '99999999', 'Rating graph tooltip must have top-level z-index 99999999');
+  assert(dynamicTooltip.classList.contains('cf-rating-tooltip-top'), 'Rating graph tooltip must have class cf-rating-tooltip-top');
+
+  // Verify CSS content rules for stacking order and tooltip styling
+  const test34CssContent = fs.readFileSync(path.join(__dirname, '../content/content.css'), 'utf8');
+  assert(test34CssContent.includes('#pageContent') && test34CssContent.includes('z-index: 20 !important;'), 'content.css must define #pageContent z-index: 20');
+  assert(test34CssContent.includes('#sidebar') && test34CssContent.includes('z-index: 10 !important;'), 'content.css must define #sidebar z-index: 10');
+  assert(test34CssContent.includes('#tooltip') && test34CssContent.includes('z-index: 99999999 !important;'), 'content.css must define #tooltip z-index: 99999999');
+  assert(test34CssContent.includes('html.cf-dark-mode #tooltip') && test34CssContent.includes('backdrop-filter: blur(14px)'), 'content.css must define frosted glass styling for #tooltip');
+
+  console.log('✓ Test 34 passed: Rating graph contest tooltip popup elevation & z-index verified');
 
   console.log('\nALL content.js TESTS PASSED SUCCESSFULLY!');
 }

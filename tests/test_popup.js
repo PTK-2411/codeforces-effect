@@ -57,7 +57,18 @@ function createMockEl(id, tagName = 'div', type = '') {
     appendChild: function(c) {},
     pause: function() {},
     play: async function() {},
-    load: function() {}
+    load: function() {},
+    _src: '',
+    get src() { return this._src; },
+    set src(val) {
+      this._src = val;
+      if (this.tagName === 'VIDEO') {
+        setTimeout(() => {
+          if (this.onloadeddata) this.onloadeddata();
+          if (this.onseeked) this.onseeked();
+        }, 5);
+      }
+    }
   };
   elements[id] = el;
   return el;
@@ -78,7 +89,8 @@ const ids = [
   'gemini-custom-model', 'btn-test-gemini', 'gemini-test-status',
   'size-options',
   'popup-streak-badge', 'stat-current-streak', 'stat-streak-subs', 'stat-max-streak', 'stat-total-days', 'popup-streak-status',
-  'update-banner', 'update-title', 'update-desc', 'update-tag', 'btn-update-now'
+  'update-banner', 'update-title', 'update-desc', 'update-tag', 'btn-update-now',
+  'btn-open-tab', 'btn-open-upload-tab', 'upload-popup-view', 'upload-tab-view'
 ];
 
 ids.forEach(id => createMockEl(id));
@@ -124,8 +136,12 @@ versionTagEl.textContent = 'v1.0.0 Alpha';
 const storage = {};
 let storageChangeCallback = null;
 const messagesSent = [];
+const tabsCreated = [];
 
 const mockChrome = {
+  tabs: {
+    create: (opts) => { tabsCreated.push(opts); }
+  },
   runtime: {
     getURL: (p) => `chrome-extension://mock/${p}`,
     getManifest: () => ({
@@ -197,8 +213,25 @@ const sandbox = {
   console: console,
   setTimeout: setTimeout,
   clearTimeout: clearTimeout,
+  alert: (msg) => {},
+  URL: {
+    createObjectURL: () => 'blob:mock-video-src',
+    revokeObjectURL: () => {}
+  },
   FileReader: class {
-    readAsDataURL() {}
+    readAsDataURL(file) {
+      setTimeout(() => {
+        if (this.onload) {
+          this.onload({
+            target: {
+              result: (file && file.name && file.name.endsWith('.mp4'))
+                ? 'data:video/mp4;base64,AAAAVIDEODATA'
+                : 'data:image/jpeg;base64,AAAAIMGDATA'
+            }
+          });
+        }
+      }, 5);
+    }
   },
   Image: class {
     constructor() { this.onload = null; }
@@ -394,6 +427,58 @@ async function runPopupTests() {
   assert(urlStatusEl.textContent.includes('Đã phát video làm nền! Đang tải ngầm'), 'Status must indicate immediate video playback with background caching');
   assert(messagesSent.some(m => m.action === 'cacheMedia' && m.url === 'https://example.com/beautiful-space.mp4' && m.type === 'video'), 'cacheMedia message must be dispatched to background service worker');
   console.log('✓ Test 8 passed: Video URL applied immediately to screen with background download dispatched');
+
+  // Test 9: Local video/image upload from computer with extension fallback (e.g. Linux empty mime type)
+  console.log('Test 9: Local video upload from machine with empty file.type and extension fallback');
+  const dropzoneEl = elements['dropzone'];
+  const fileInputEl = elements['file-input'];
+
+  let fileInputClicked = false;
+  fileInputEl.click = () => { fileInputClicked = true; };
+
+  dropzoneEl.click();
+  assert.strictEqual(fileInputClicked, true, 'Clicking dropzone must trigger fileInput.click()');
+
+  // Simulate picking a local .mp4 video on Linux where file.type is ""
+  const mockVideoFile = {
+    name: 'space_journey.mp4',
+    type: '',
+    size: 5 * 1024 * 1024 // 5MB
+  };
+
+  fileInputEl.value = 'C:\\fakepath\\space_journey.mp4';
+  if (fileInputEl._listeners['change']) {
+    fileInputEl._listeners['change'].forEach(fn => fn({
+      target: {
+        files: [mockVideoFile]
+      }
+    }));
+  }
+
+  assert.strictEqual(fileInputEl.value, '', 'fileInput.value must be reset to allow re-selecting the same file');
+
+  // Allow FileReader and async thumbnail/save to complete
+  await new Promise(r => setTimeout(r, 60));
+
+  assert.strictEqual(storage.bgType, 'video', 'Local .mp4 file must be recognized as video even with empty file.type');
+  assert(storage.bgImage && storage.bgImage.startsWith('data:video/mp4;base64,'), 'bgImage must be set to video data URL');
+  assert(storage.bgHistory && storage.bgHistory.length > 0, 'bgHistory must record the uploaded file');
+
+  const cacheKey = 'cf_cache_' + storage.bgImageId;
+  assert(storage[cacheKey], 'Uploaded video payload must be cached under cf_cache_ ID in local storage');
+  console.log('✓ Test 9 passed: Local file upload with extension fallback and storage caching verified');
+
+  // Test 10: Dedicated tab buttons open popup in full tab to prevent Chromium blur closing
+  console.log('Test 10: Dedicated tab opening prevents Chromium focus loss popup destruction');
+  const btnOpenTabEl = elements['btn-open-tab'];
+  const btnOpenUploadTabEl = elements['btn-open-upload-tab'];
+
+  btnOpenTabEl.click();
+  assert(tabsCreated.some(t => t.url && t.url.includes('popup.html?tab=upload')), 'btn-open-tab must create dedicated tab with popup.html?tab=upload');
+
+  btnOpenUploadTabEl.click();
+  assert.strictEqual(tabsCreated.length, 2, 'btn-open-upload-tab must create dedicated tab');
+  console.log('✓ Test 10 passed: Dedicated tab buttons correctly open full tab to prevent popup auto-close');
 
   console.log('\nALL popup.js TESTS PASSED SUCCESSFULLY!');
 }

@@ -293,6 +293,17 @@
     // Ensure layer elements exist inside document.body
     ensureBgLayer();
 
+    // If bgImage is a direct local cache reference (e.g. cf_cache_12345), resolve it immediately
+    if (bgImage && typeof bgImage === 'string' && bgImage.startsWith('cf_cache_')) {
+      chrome.storage.local.get([bgImage], (res) => {
+        const cachedMedia = res && res[bgImage];
+        if (cachedMedia && lastSettings) {
+          applySettings({ ...lastSettings, bgImage: cachedMedia });
+        }
+      });
+      return;
+    }
+
     const ytId = extractYouTubeId(bgImage);
     const isYouTube = bgType === 'youtube' || Boolean(ytId);
     const isVideo = isYouTube ? false : isVideoSource(bgType, bgImage);
@@ -2160,6 +2171,7 @@
     fixSideboxFormButtons();
     styleProblemsetRows();
     highlightOnlineStatus();
+    setupRatingTooltipHandler();
 
     // If language was switched or session was invalidated while awaiting, do not proceed with state updates
     if (session !== currentTranslationSession || (isVi && currentCfLang !== 'vi') || (!isVi && currentCfLang === 'vi')) {
@@ -3031,6 +3043,64 @@
     }
   }
 
+  function setupRatingTooltipHandler() {
+    try {
+      const elevateTooltip = (tip) => {
+        if (!tip) return;
+        tip.classList.add('cf-rating-tooltip-top');
+        if (tip.style && tip.style.setProperty) {
+          tip.style.setProperty('z-index', '99999999', 'important');
+          tip.style.setProperty('pointer-events', 'auto', 'important');
+        }
+      };
+
+      // Watch for dynamically inserted #tooltip or flot tooltip
+      const targetBody = document.body;
+      if (typeof MutationObserver !== 'undefined' && targetBody && !targetBody._cfTooltipObserved) {
+        targetBody._cfTooltipObserved = true;
+        const tooltipObserver = new MutationObserver((mutations) => {
+          for (let i = 0; i < mutations.length; i++) {
+            const added = mutations[i].addedNodes;
+            if (!added) continue;
+            for (let j = 0; j < added.length; j++) {
+              const node = added[j];
+              if (node.nodeType === 1) {
+                if (
+                  node.id === 'tooltip' ||
+                  (node.id && node.id.includes('tooltip')) ||
+                  (node.classList && (node.classList.contains('flot-tooltip') || node.classList.contains('flotTip')))
+                ) {
+                  elevateTooltip(node);
+                }
+                const nested = node.querySelectorAll ? node.querySelectorAll('#tooltip, .flot-tooltip, .flotTip, div[id*="tooltip"]') : [];
+                nested.forEach(elevateTooltip);
+              }
+            }
+          }
+        });
+        tooltipObserver.observe(targetBody, { childList: true, subtree: true });
+      }
+
+      // Also bind hover events on #placeholder rating graph container
+      const placeholder = document.getElementById('placeholder');
+      if (placeholder && !placeholder._cfTooltipBound) {
+        placeholder._cfTooltipBound = true;
+        const handleGraphHover = () => {
+          const tips = document.querySelectorAll('#tooltip, .flot-tooltip, .flotTip, div[id*="tooltip"]');
+          tips.forEach(elevateTooltip);
+        };
+        placeholder.addEventListener('mousemove', handleGraphHover, { passive: true });
+        placeholder.addEventListener('mouseenter', handleGraphHover, { passive: true });
+      }
+
+      // Initial check for any existing tooltip
+      const existingTips = document.querySelectorAll('#tooltip, .flot-tooltip, .flotTip, div[id*="tooltip"]');
+      existingTips.forEach(elevateTooltip);
+    } catch (e) {
+      // silent fallback
+    }
+  }
+
   let isInitialized = false;
 
   function checkAndInit() {
@@ -3048,11 +3118,13 @@
     autoFillProblemOnSubmitPage();
     replaceCodeforcesLogo();
     initStreakTracker();
+    setupRatingTooltipHandler();
     alignTableColumns();
     styleSubmissionVerdicts();
     fixSideboxFormButtons();
     styleProblemsetRows();
     highlightOnlineStatus();
+    setupRatingTooltipHandler();
     colorizeMathElements();
 
     if (!isInitialized) {
@@ -3135,6 +3207,150 @@
     }
   }
 
+  function showCfToast(message, duration = 3000) {
+    if (typeof document === 'undefined' || !document.body) return;
+    let toast = document.getElementById('cf-bg-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'cf-bg-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add('visible');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => {
+      toast.classList.remove('visible');
+    }, duration);
+  }
+
+  function setupPageDragAndDrop() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    if (window._cfDragAndDropInit) return;
+    window._cfDragAndDropInit = true;
+
+    let dragCounter = 0;
+    let overlayEl = null;
+
+    function getOrCreateOverlay() {
+      if (!overlayEl) {
+        overlayEl = document.getElementById('cf-bg-drop-overlay');
+        if (!overlayEl && document.body) {
+          overlayEl = document.createElement('div');
+          overlayEl.id = 'cf-bg-drop-overlay';
+          overlayEl.innerHTML = `
+            <div class="cf-bg-drop-content">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <p class="cf-drop-title">Thả ảnh hoặc video vào đây để đặt làm hình nền</p>
+              <p class="cf-drop-sub">Hỗ trợ MP4, WebM, JPG, PNG, GIF, WebP</p>
+            </div>
+          `;
+          document.body.appendChild(overlayEl);
+        }
+      }
+      return overlayEl;
+    }
+
+    window.addEventListener('dragenter', (e) => {
+      if (e.dataTransfer && e.dataTransfer.types) {
+        const types = Array.from(e.dataTransfer.types || []);
+        if (types.includes('Files')) {
+          dragCounter++;
+          const el = getOrCreateOverlay();
+          if (el) el.classList.add('visible');
+        }
+      }
+    });
+
+    window.addEventListener('dragover', (e) => {
+      if (e.dataTransfer && e.dataTransfer.types) {
+        const types = Array.from(e.dataTransfer.types || []);
+        if (types.includes('Files')) {
+          e.preventDefault();
+        }
+      }
+    });
+
+    window.addEventListener('dragleave', (e) => {
+      dragCounter--;
+      if (dragCounter <= 0) {
+        dragCounter = 0;
+        if (overlayEl) overlayEl.classList.remove('visible');
+      }
+    });
+
+    window.addEventListener('drop', (e) => {
+      dragCounter = 0;
+      if (overlayEl) overlayEl.classList.remove('visible');
+
+      if (!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
+      const file = e.dataTransfer.files[0];
+      const name = (file.name || '').toLowerCase();
+      const isVideo = (file.type && file.type.startsWith('video/')) || /\.(mp4|webm|mov|mkv|m4v|ogg)$/i.test(name);
+      const isImage = (file.type && file.type.startsWith('image/')) || /\.(jpg|jpeg|png|gif|webp|bmp|svg|avif)$/i.test(name);
+
+      if (!isVideo && !isImage) return;
+      e.preventDefault();
+
+      if (isVideo && file.size > 40 * 1024 * 1024) {
+        showCfToast('⚠️ Kích thước video quá lớn (>40MB). Vui lòng chọn tệp nhỏ hơn.', 4000);
+        return;
+      }
+
+      showCfToast(isVideo ? '⏳ Đang nạp video nền...' : '⏳ Đang áp dụng ảnh nền...', 4000);
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target.result;
+        const id = Date.now().toString();
+        const type = isVideo ? 'video' : 'image';
+
+        if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) {
+          applySettings({ bgType: type, bgImage: dataUrl, enabled: true });
+          showCfToast('✔️ Đã áp dụng hình nền!', 3000);
+          return;
+        }
+
+        chrome.storage.local.get(null, (allSettings) => {
+          let history = (allSettings && allSettings.bgHistory) || [];
+          history = history.filter(h => h.url !== dataUrl);
+          history.unshift({
+            id,
+            type,
+            url: 'cf_cache_' + id,
+            name: file.name,
+            thumbnail: '',
+            hasCache: true,
+            timestamp: Date.now()
+          });
+          if (history.length > 5) {
+            const removed = history.slice(5);
+            chrome.storage.local.remove(removed.map(r => 'cf_cache_' + r.id));
+            history = history.slice(0, 5);
+          }
+
+          chrome.storage.local.set({
+            ['cf_cache_' + id]: dataUrl,
+            bgType: type,
+            bgImage: dataUrl,
+            bgImageId: id,
+            enabled: true,
+            bgHistory: history
+          }, () => {
+            showCfToast(isVideo ? '🎬 Đã áp dụng video nền mới!' : '🖼️ Đã áp dụng ảnh nền mới!', 3000);
+          });
+        });
+      };
+      reader.onerror = () => {
+        showCfToast('❌ Không thể đọc tệp từ máy.', 3000);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   // Handle DOM ready and page restoration (BFCache / navigation)
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
@@ -3149,6 +3365,7 @@
         fixSideboxFormButtons();
         styleProblemsetRows();
         highlightOnlineStatus();
+        setupPageDragAndDrop();
       } else {
         teardownForCloudflare();
       }
@@ -3164,6 +3381,8 @@
       styleSubmissionVerdicts();
       fixSideboxFormButtons();
       styleProblemsetRows();
+      highlightOnlineStatus();
+      setupPageDragAndDrop();
     }
   }
 

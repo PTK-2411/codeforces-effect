@@ -11,6 +11,10 @@
   const tabBtnUrl = document.getElementById('tab-btn-url');
   const panelUpload = document.getElementById('panel-upload');
   const panelUrl = document.getElementById('panel-url');
+  const btnOpenTab = document.getElementById('btn-open-tab');
+  const btnOpenUploadTab = document.getElementById('btn-open-upload-tab');
+  const uploadPopupView = document.getElementById('upload-popup-view');
+  const uploadTabView = document.getElementById('upload-tab-view');
 
   // Upload Panel
   const dropzone = document.getElementById('dropzone');
@@ -111,6 +115,14 @@
 
   let currentSettings = { ...DEFAULT_SETTINGS };
 
+  function showAlert(msg) {
+    if (typeof alert !== 'undefined') {
+      try { alert(msg); } catch (e) {}
+    } else {
+      console.warn('[CF Alert]', msg);
+    }
+  }
+
   function extractYouTubeId(url) {
     if (!url || typeof url !== 'string') return null;
     const regExp = /(?:youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
@@ -136,34 +148,47 @@
   // Helper to optimize large images using canvas
   function processImageFile(file) {
     return new Promise((resolve, reject) => {
+      const isGifOrSvg = (file.type === 'image/gif' || file.type === 'image/svg+xml') ||
+                         /\.(gif|svg)$/i.test(file.name || '');
       const reader = new FileReader();
       reader.onload = (e) => {
+        if (isGifOrSvg) {
+          return resolve(e.target.result);
+        }
         const img = new Image();
         img.onload = () => {
           const MAX_DIM = 2560; // Max 2K resolution
           let width = img.width;
           let height = img.height;
+          const needsResize = width > MAX_DIM || height > MAX_DIM;
+          const isLarge = file.size > 1.5 * 1024 * 1024;
 
-          if (width > MAX_DIM || height > MAX_DIM) {
-            if (width > height) {
-              height = Math.round((height * MAX_DIM) / width);
-              width = MAX_DIM;
-            } else {
-              width = Math.round((width * MAX_DIM) / height);
-              height = MAX_DIM;
+          if (needsResize || isLarge) {
+            if (needsResize) {
+              if (width > height) {
+                height = Math.round((height * MAX_DIM) / width);
+                width = MAX_DIM;
+              } else {
+                width = Math.round((width * MAX_DIM) / height);
+                height = MAX_DIM;
+              }
             }
 
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.92));
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', 0.90));
+            } catch (canvasErr) {
+              resolve(e.target.result);
+            }
           } else {
             resolve(e.target.result);
           }
         };
-        img.onerror = () => reject(new Error('Không thể đọc tệp hình ảnh.'));
+        img.onerror = () => resolve(e.target.result);
         img.src = e.target.result;
       };
       reader.onerror = () => reject(new Error('Lỗi khi đọc file.'));
@@ -202,12 +227,12 @@
       video.playsInline = true;
       video.crossOrigin = 'anonymous';
       const isBlob = typeof fileOrUrl !== 'string';
-      const srcUrl = isBlob ? URL.createObjectURL(fileOrUrl) : fileOrUrl;
+      const srcUrl = isBlob && typeof URL !== 'undefined' && URL.createObjectURL ? URL.createObjectURL(fileOrUrl) : (typeof fileOrUrl === 'string' ? fileOrUrl : '');
       video.src = srcUrl;
 
       let finished = false;
       const cleanup = () => {
-        if (isBlob) {
+        if (isBlob && typeof URL !== 'undefined' && URL.revokeObjectURL && srcUrl) {
           try { URL.revokeObjectURL(srcUrl); } catch (e) {}
         }
       };
@@ -256,6 +281,38 @@
     });
   }
 
+  function renderPreviewMedia(settings, mediaUrl) {
+    previewState.classList.remove('hidden');
+    const ytId = extractYouTubeId(mediaUrl);
+    const isYouTube = settings.bgType === 'youtube' || Boolean(ytId);
+    const isVideo = isYouTube ? false : isVideoSource(settings.bgType, mediaUrl);
+
+    if (isYouTube && ytId) {
+      previewTypeBadge.textContent = '🎬 YouTube Video (Lặp lại)';
+      previewVideo.classList.add('hidden');
+      previewVideo.pause();
+      previewImg.classList.remove('hidden');
+      previewImg.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+    } else if (isVideo) {
+      previewTypeBadge.textContent = '🎬 Video nền (Lặp lại)';
+      previewImg.classList.add('hidden');
+      previewVideo.classList.remove('hidden');
+      if (previewVideo.src !== mediaUrl) {
+        previewVideo.src = mediaUrl;
+        previewVideo.load();
+      }
+      previewVideo.muted = true;
+      previewVideo.loop = true;
+      previewVideo.play().catch(() => {});
+    } else {
+      previewTypeBadge.textContent = '🖼️ Ảnh nền';
+      previewVideo.classList.add('hidden');
+      previewVideo.pause();
+      previewImg.classList.remove('hidden');
+      previewImg.src = mediaUrl;
+    }
+  }
+
   // Update UI components to match state
   function updateUI(settings) {
     toggleEnabled.checked = settings.enabled !== false;
@@ -269,36 +326,15 @@
     }
 
     // Active Background Preview
-    if (settings.bgImage) {
-      previewState.classList.remove('hidden');
-      const ytId = extractYouTubeId(settings.bgImage);
-      const isYouTube = settings.bgType === 'youtube' || Boolean(ytId);
-      const isVideo = isYouTube ? false : isVideoSource(settings.bgType, settings.bgImage);
-
-      if (isYouTube && ytId) {
-        previewTypeBadge.textContent = '🎬 YouTube Video (Lặp lại)';
-        previewVideo.classList.add('hidden');
-        previewVideo.pause();
-        previewImg.classList.remove('hidden');
-        previewImg.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
-      } else if (isVideo) {
-        previewTypeBadge.textContent = '🎬 Video nền (Lặp lại)';
-        previewImg.classList.add('hidden');
-        previewVideo.classList.remove('hidden');
-        if (previewVideo.src !== settings.bgImage) {
-          previewVideo.src = settings.bgImage;
-          previewVideo.load();
+    if (settings.bgImage && typeof settings.bgImage === 'string' && settings.bgImage.startsWith('cf_cache_')) {
+      chrome.storage.local.get([settings.bgImage], (res) => {
+        const cached = res && res[settings.bgImage];
+        if (cached) {
+          renderPreviewMedia(settings, cached);
         }
-        previewVideo.muted = true;
-        previewVideo.loop = true;
-        previewVideo.play().catch(() => {});
-      } else {
-        previewTypeBadge.textContent = '🖼️ Ảnh nền';
-        previewVideo.classList.add('hidden');
-        previewVideo.pause();
-        previewImg.classList.remove('hidden');
-        previewImg.src = settings.bgImage;
-      }
+      });
+    } else if (settings.bgImage) {
+      renderPreviewMedia(settings, settings.bgImage);
     } else {
       previewState.classList.add('hidden');
       previewVideo.pause();
@@ -414,7 +450,10 @@
 
     items.forEach(item => {
       const card = document.createElement('div');
-      card.className = 'history-item' + (item.url === activeUrl ? ' active' : '');
+      const isActive = (currentSettings.bgImageId && item.id === currentSettings.bgImageId) ||
+                       (item.url === activeUrl) ||
+                       (activeUrl && activeUrl === 'cf_cache_' + item.id);
+      card.className = 'history-item' + (isActive ? ' active' : '');
       card.title = `${item.name || (item.type === 'video' ? 'Video nền' : 'Ảnh nền')} - Nhấp để áp dụng ngay`;
 
       // Thumbnail
@@ -582,28 +621,59 @@
     }
   }
 
+  // Sanitize history array before sending to storage so giant Data URLs aren't duplicated
+  function sanitizeHistoryForStorage(history) {
+    if (!Array.isArray(history)) return [];
+    return history.map(item => {
+      if (!item) return item;
+      if (item.url && item.url.startsWith('data:') && item.url.length > 50000) {
+        return {
+          ...item,
+          url: 'cf_cache_' + item.id,
+          hasCache: true
+        };
+      }
+      return item;
+    });
+  }
+
   // Save changes to chrome.storage
-  function saveSettings(partial) {
+  function saveSettings(partial, callback) {
     Object.assign(currentSettings, partial);
-    chrome.storage.local.set(currentSettings);
+
+    const payload = { ...currentSettings };
+    if (payload.bgHistory) {
+      payload.bgHistory = sanitizeHistoryForStorage(payload.bgHistory);
+    }
+
+    try {
+      chrome.storage.local.set(payload, () => {
+        if (chrome.runtime && chrome.runtime.lastError) {
+          console.warn('Storage save warning:', chrome.runtime.lastError.message);
+        }
+        if (typeof callback === 'function') callback();
+      });
+    } catch (e) {
+      console.error('Storage set error:', e);
+    }
   }
 
   // Apply new background and record into history (Max 5 items)
   function applyAndSaveBackground(item) {
     let history = currentSettings.bgHistory || [];
-    // Remove if same URL already exists
-    history = history.filter(h => h.url !== item.url);
+    // Remove if same URL or name already exists
+    history = history.filter(h => h.url !== item.url && h.name !== item.name);
 
-    const isData = item.url.startsWith('data:');
+    const isData = item.url && item.url.startsWith('data:');
     const isYouTube = item.type === 'youtube';
     const id = Date.now().toString();
 
     const newItem = {
       id,
       type: item.type,
-      url: item.url,
+      url: isData ? ('cf_cache_' + id) : item.url,
       name: item.name || (item.type === 'video' ? 'Video nền' : 'Ảnh nền'),
-      thumbnail: item.thumbnail || (item.type === 'image' ? item.url : ''),
+      thumbnail: item.thumbnail || (item.type === 'image' && !isData ? item.url : ''),
       hasCache: isData,
       timestamp: Date.now()
     };
@@ -613,7 +683,16 @@
 
     // If already a Data URL (uploaded file), save to local cache directly
     if (isData) {
-      chrome.storage.local.set({ ['cf_cache_' + id]: item.url });
+      try {
+        chrome.storage.local.set({ ['cf_cache_' + id]: item.url }, () => {
+          if (chrome.runtime && chrome.runtime.lastError) {
+            console.error('Cache save error:', chrome.runtime.lastError.message);
+            showAlert('Không thể lưu tệp vào bộ nhớ: ' + chrome.runtime.lastError.message);
+          }
+        });
+      } catch (e) {
+        console.error('Cache write failed:', e);
+      }
     }
 
     // Strict limit: at most 5 items. Delete caches of items beyond 5
@@ -627,6 +706,7 @@
     saveSettings({
       bgType: item.type,
       bgImage: item.url,
+      bgImageId: id,
       enabled: true,
       bgHistory: history
     });
@@ -647,21 +727,36 @@
   }
 
   function selectHistoryItem(item) {
-    if (item.hasCache) {
-      chrome.storage.local.get(['cf_cache_' + item.id], (res) => {
-        const cached = res['cf_cache_' + item.id];
-        saveSettings({
-          bgType: item.type,
-          bgImage: cached || item.url,
-          bgImageOriginal: item.url,
-          enabled: true
-        });
-        updateUI(currentSettings);
+    if (item.hasCache || (item.url && item.url.startsWith('cf_cache_'))) {
+      const cacheKey = (item.url && item.url.startsWith('cf_cache_')) ? item.url : ('cf_cache_' + item.id);
+      chrome.storage.local.get([cacheKey], (res) => {
+        const cached = res && res[cacheKey];
+        if (cached) {
+          saveSettings({
+            bgType: item.type,
+            bgImage: cached,
+            bgImageOriginal: item.url,
+            bgImageId: item.id,
+            enabled: true
+          });
+          currentSettings.bgImage = cached;
+          currentSettings.bgImageId = item.id;
+          updateUI(currentSettings);
+        } else if (item.url && !item.url.startsWith('cf_cache_')) {
+          saveSettings({
+            bgType: item.type,
+            bgImage: item.url,
+            bgImageId: item.id,
+            enabled: true
+          });
+          updateUI(currentSettings);
+        }
       });
     } else {
       saveSettings({
         bgType: item.type,
         bgImage: item.url,
+        bgImageId: item.id,
         enabled: true
       });
       updateUI(currentSettings);
@@ -753,35 +848,115 @@
     panelUpload.classList.add('hidden');
   });
 
+  // Dedicated Tab for File Upload (avoids Chromium closing popup on file picker focus loss)
+  function openDedicatedTab() {
+    if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html?tab=upload') });
+    }
+  }
+
+  if (btnOpenTab) btnOpenTab.addEventListener('click', openDedicatedTab);
+  if (btnOpenUploadTab) {
+    btnOpenUploadTab.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openDedicatedTab();
+    });
+  }
+  if (uploadPopupView) {
+    uploadPopupView.addEventListener('click', () => {
+      openDedicatedTab();
+    });
+  }
+
+  const isDedicatedTab = (typeof window !== 'undefined' && window.location && window.location.search && (window.location.search.includes('tab=1') || window.location.search.includes('tab=upload'))) ||
+                         (typeof window !== 'undefined' && window.innerWidth > 450);
+  if (isDedicatedTab && typeof document !== 'undefined' && document.body) {
+    if (document.body.classList) document.body.classList.add('is-tab');
+    if (uploadPopupView && uploadPopupView.classList) uploadPopupView.classList.add('hidden');
+    if (uploadTabView && uploadTabView.classList) uploadTabView.classList.remove('hidden');
+    if (btnOpenTab) btnOpenTab.style.display = 'none';
+  } else {
+    if (uploadPopupView && uploadPopupView.classList) uploadPopupView.classList.remove('hidden');
+    if (uploadTabView && uploadTabView.classList) uploadTabView.classList.add('hidden');
+  }
+
+  function setDropzoneLoading(loading, message) {
+    if (!dropzone) return;
+    const titleEl = dropzone.querySelector ? dropzone.querySelector('.upload-title') : null;
+    const subEl = dropzone.querySelector ? dropzone.querySelector('.upload-sub') : null;
+    if (loading) {
+      dropzone.classList.add('loading');
+      if (titleEl) {
+        if (!titleEl._origText) titleEl._origText = titleEl.textContent;
+        titleEl.textContent = message || '⏳ Đang xử lý tệp...';
+      }
+      if (subEl) {
+        if (!subEl._origText) subEl._origText = subEl.textContent;
+        subEl.textContent = 'Vui lòng chờ trong giây lát';
+      }
+    } else {
+      dropzone.classList.remove('loading');
+      if (titleEl && titleEl._origText) {
+        titleEl.textContent = titleEl._origText;
+        delete titleEl._origText;
+      }
+      if (subEl && subEl._origText) {
+        subEl.textContent = subEl._origText;
+        delete subEl._origText;
+      }
+    }
+  }
+
   // File selection handling (Image & Video)
   async function handleFile(file) {
     if (!file) return;
 
-    const isVideo = file.type.startsWith('video/');
-    const isImage = file.type.startsWith('image/');
+    const fileName = (file.name || '').toLowerCase();
+    const isVideo = (file.type && file.type.startsWith('video/')) ||
+                    /\.(mp4|webm|mov|mkv|m4v|ogg)$/i.test(fileName);
+    const isImage = (file.type && file.type.startsWith('image/')) ||
+                    /\.(jpg|jpeg|png|gif|webp|bmp|svg|avif)$/i.test(fileName);
 
     if (!isVideo && !isImage) {
-      alert('Vui lòng chọn tệp hình ảnh (JPG, PNG, GIF, WebP) hoặc video (MP4, WebM).');
+      showAlert('Vui lòng chọn tệp hình ảnh (JPG, PNG, GIF, WebP) hoặc video (MP4, WebM).');
       return;
     }
 
-    if (isVideo && file.size > 80 * 1024 * 1024) {
-      alert('Kích thước video quá lớn (>80MB). Vui lòng chọn video dung lượng nhỏ hơn hoặc sử dụng đường dẫn liên kết URL trực tiếp.');
+    if (isVideo && file.size > 40 * 1024 * 1024) {
+      showAlert('Kích thước video tải lên từ máy nên dưới 40MB để đảm bảo hiệu năng và không vượt quá giới hạn bộ nhớ của trình duyệt.\n\nNếu video lớn hơn, bạn hãy chuyển sang tab "Nhập liên kết" (dán link YouTube hoặc URL trực tiếp) nhé!');
       return;
     }
+
+    if (isImage && file.size > 25 * 1024 * 1024) {
+      showAlert('Kích thước ảnh quá lớn (>25MB). Vui lòng chọn ảnh dung lượng nhỏ hơn.');
+      return;
+    }
+
+    setDropzoneLoading(true, isVideo ? '⏳ Đang nạp video...' : '⏳ Đang tối ưu hóa ảnh...');
 
     try {
       if (isVideo) {
         const reader = new FileReader();
         reader.onload = async (e) => {
-          const videoDataUrl = e.target.result;
-          const thumb = await generateVideoThumbnail(file);
-          applyAndSaveBackground({
-            type: 'video',
-            url: videoDataUrl,
-            name: file.name,
-            thumbnail: thumb
-          });
+          try {
+            const videoDataUrl = e.target.result;
+            const thumb = await generateVideoThumbnail(file);
+            applyAndSaveBackground({
+              type: 'video',
+              url: videoDataUrl,
+              name: file.name,
+              thumbnail: thumb
+            });
+          } catch (readErr) {
+            console.error(readErr);
+            showAlert('Đã xảy ra lỗi khi xử lý video.');
+          } finally {
+            setDropzoneLoading(false);
+          }
+        };
+        reader.onerror = () => {
+          setDropzoneLoading(false);
+          showAlert('Không thể đọc tệp video từ máy.');
         };
         reader.readAsDataURL(file);
       } else {
@@ -793,14 +968,17 @@
           name: file.name,
           thumbnail: thumb
         });
+        setDropzoneLoading(false);
       }
     } catch (err) {
       console.error(err);
-      alert('Đã xảy ra lỗi khi tải tệp lên.');
+      setDropzoneLoading(false);
+      showAlert('Đã xảy ra lỗi khi tải tệp lên: ' + (err.message || err));
     }
   }
 
-  emptyState.addEventListener('click', () => {
+  dropzone.addEventListener('click', () => {
+    if (dropzone.classList.contains('loading')) return;
     fileInput.click();
   });
 
@@ -808,6 +986,7 @@
     if (e.target.files && e.target.files[0]) {
       handleFile(e.target.files[0]);
     }
+    try { fileInput.value = ''; } catch (err) {}
   });
 
   // Drag and Drop
@@ -942,7 +1121,7 @@
   // Button actions
   btnRemove.addEventListener('click', (e) => {
     e.stopPropagation();
-    saveSettings({ bgImage: null });
+    saveSettings({ bgImage: null, bgImageId: null });
     updateUI(currentSettings);
     fileInput.value = '';
   });
