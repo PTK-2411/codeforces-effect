@@ -17,9 +17,9 @@
 
 ### 🎬 Video Demo Trải Nghiệm
 
-https://github.com/PTK-2411/codeforces-effect/assets/demo.mp4
 
-<video src="assets/demo.mp4" controls width="100%" style="max-width: 820px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);"></video>
+https://github.com/user-attachments/assets/ae90bd75-06f7-49f7-b89e-071c69ee9092
+
 
 <sub>*(Nếu không xem được video trực tiếp, bạn có thể [nhấp vào đây để xem hoặc tải về video demo](assets/demo.mp4))*</sub>
 
