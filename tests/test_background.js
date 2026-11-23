@@ -9,8 +9,14 @@ console.log('=== Running Tests for background.js ===');
 // Mock chrome API
 const storageData = {};
 const messageListeners = [];
+const tabMessagesSent = [];
 
 const mockChrome = {
+  tabs: {
+    sendMessage: async (tabId, msg) => {
+      tabMessagesSent.push({ tabId, msg });
+    }
+  },
   storage: {
     local: {
       get: async (keys) => {
@@ -106,11 +112,11 @@ vm.createContext(sandbox);
 vm.runInContext(code, sandbox);
 const backgroundModule = sandbox.module.exports;
 
-async function sendMessage(msg) {
+async function sendMessage(msg, sender = {}) {
   for (const listener of messageListeners) {
     let resolved = false;
     const res = await new Promise((resolve) => {
-      const keepOpen = listener(msg, {}, (response) => {
+      const keepOpen = listener(msg, sender, (response) => {
         resolved = true;
         resolve(response);
       });
@@ -461,6 +467,45 @@ async function runTests() {
   });
   assert.deepStrictEqual(resXkiroBatch.texts, ['Đầu vào bài toán', 'Đầu ra bài toán']);
   console.log('✓ Test 4e passed: xKiro batch translation verified');
+
+  // Test 4g: Progressive streamItemReady delivery as AI generates items
+  console.log('Test 4g: Progressive streamItemReady delivery as AI generates items');
+  tabMessagesSent.length = 0;
+  fetchCalls = [];
+  fetchHandler = async (url, opts) => {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: '<<<CF_TRANSLATE_ITEM_0>>>\nĐoạn văn 1 đã dịch\n\n<<<CF_TRANSLATE_ITEM_1>>>\nĐoạn văn 2 đã dịch'
+            }
+          }
+        ]
+      })
+    };
+  };
+
+  const resStreamBatch = await sendMessage({
+    action: 'translateBatch',
+    batchId: 'stream_test_123',
+    items: ['Paragraph 1 to translate', 'Paragraph 2 to translate'],
+    engine: 'xkiro',
+    xkiroApiKey: 'test-xkiro-key'
+  }, { tab: { id: 777 } });
+
+  assert.deepStrictEqual(resStreamBatch.texts, ['Đoạn văn 1 đã dịch', 'Đoạn văn 2 đã dịch']);
+  assert.strictEqual(tabMessagesSent.length, 2, 'Should have dispatched 2 real-time progressive stream messages to tab');
+  assert.strictEqual(tabMessagesSent[0].tabId, 777);
+  assert.strictEqual(tabMessagesSent[0].msg.action, 'streamItemReady');
+  assert.strictEqual(tabMessagesSent[0].msg.batchId, 'stream_test_123');
+  assert.strictEqual(tabMessagesSent[0].msg.index, 0);
+  assert.strictEqual(tabMessagesSent[0].msg.text, 'Đoạn văn 1 đã dịch');
+  assert.strictEqual(tabMessagesSent[1].msg.index, 1);
+  assert.strictEqual(tabMessagesSent[1].msg.text, 'Đoạn văn 2 đã dịch');
+  console.log('✓ Test 4g passed: Progressive streamItemReady delivery verified');
 
   // Test 5: Test Gemini API Key connection
   console.log('Test 5: testGeminiKey endpoint');

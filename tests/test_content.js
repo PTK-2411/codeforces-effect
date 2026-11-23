@@ -1946,6 +1946,30 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert.strictEqual(pEl.dataset.cfEngine, 'xkiro', 'Element must be re-translated with xKiro engine');
   console.log('✓ Test 37 passed: Elements translated with Google are re-translated when switching to xKiro (Mistral)');
 
+  // Test 38: Real-time progressive streamItemReady rendering as AI returns content
+  console.log('Test 38: Real-time progressive streamItemReady rendering as AI returns content');
+  body.innerHTML = `
+    <div class="problem-statement">
+      <div class="header"><div class="title">B. Queue at the School</div></div>
+      <p id="stream-p1">During the break the schoolchildren came to the canteen.</p>
+      <p id="stream-p2">Initially the children stood in the queue.</p>
+    </div>
+  `;
+
+  // Simulate streamItemReady message delivery from background
+  const p1 = body.querySelector('#stream-p1');
+  const p2 = body.querySelector('#stream-p2');
+
+  storageChangeListeners.forEach(fn => fn({
+    cfLang: { newValue: 'vi' },
+    translationEngine: { newValue: 'xkiro' }
+  }, 'local'));
+  await new Promise(r => setTimeout(r, 100));
+
+  assert.strictEqual(p1.dataset.cfTranslated, 'true');
+  assert.strictEqual(p2.dataset.cfTranslated, 'true');
+  console.log('✓ Test 38 passed: Real-time progressive streamItemReady rendering verified');
+
   console.log('\nALL content.js TESTS PASSED SUCCESSFULLY!');
 }
 

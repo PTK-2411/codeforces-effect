@@ -1620,14 +1620,45 @@
     updateTranslationProgress(completedTranslationTasks, activeTranslationTasks);
 
     async function processItems(itemsToProcess, isRetry = false) {
-      const BATCH_CHUNK_SIZE = 25;
+      const isAi = (engine || currentTranslationEngine) === 'gemini' || (engine || currentTranslationEngine) === 'xkiro';
+      const BATCH_CHUNK_SIZE = isAi ? 10 : 25;
       for (let c = 0; c < itemsToProcess.length; c += BATCH_CHUNK_SIZE) {
         if (currentCfLang !== 'vi' || batchSession !== currentTranslationSession) return;
         const chunk = itemsToProcess.slice(c, c + BATCH_CHUNK_SIZE);
+        const batchId = 'cf_batch_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+        const appliedIndices = new Set();
+
+        // Progressive real-time stream listener: as AI finishes translating each element, render it immediately!
+        const streamListener = (msg) => {
+          if (msg && msg.action === 'streamItemReady' && msg.batchId === batchId) {
+            if (currentCfLang !== 'vi' || batchSession !== currentTranslationSession) return;
+            const item = chunk[msg.index];
+            if (item && item.el && item.el.dataset.cfTranslated !== 'true') {
+              const transText = msg.text;
+              if (transText && transText.trim()) {
+                appliedIndices.add(msg.index);
+                setCachedTranslation(item.text, transText);
+                applyTranslationToItem(item, transText);
+                delete item.el.dataset.cfTransPending;
+                typesetMath(item.el);
+                if (!isRetry && currentCfLang === 'vi' && batchSession === currentTranslationSession) {
+                  completedTranslationTasks++;
+                  updateTranslationProgress(completedTranslationTasks, activeTranslationTasks);
+                }
+              }
+            }
+          }
+        };
+
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+          chrome.runtime.onMessage.addListener(streamListener);
+        }
+
         try {
           const response = await new Promise((resolve) => {
             chrome.runtime.sendMessage({
               action: 'translateBatch',
+              batchId: batchId,
               items: chunk.map(item => item.text),
               engine: engine || currentTranslationEngine,
               geminiApiKey: geminiApiKey || currentGeminiApiKey,
@@ -1661,21 +1692,33 @@
             response.texts.forEach((transText, i) => {
               const item = chunk[i];
               if (!item) return;
-              if (transText && transText.trim()) {
+              if (!appliedIndices.has(i) && transText && transText.trim()) {
+                appliedIndices.add(i);
                 setCachedTranslation(item.text, transText);
                 applyTranslationToItem(item, transText);
+                typesetMath(item.el);
+                if (!isRetry && currentCfLang === 'vi' && batchSession === currentTranslationSession) {
+                  completedTranslationTasks++;
+                  updateTranslationProgress(completedTranslationTasks, activeTranslationTasks);
+                }
               }
             });
           }
         } catch (err) {
           console.warn('[CF Translator] Lỗi dịch batch phần tử:', err);
         } finally {
+          if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+            chrome.runtime.onMessage.removeListener(streamListener);
+          }
           chunk.forEach(item => {
             delete item.el.dataset.cfTransPending;
           });
           if (!isRetry && currentCfLang === 'vi' && batchSession === currentTranslationSession) {
-            completedTranslationTasks += chunk.length;
-            updateTranslationProgress(completedTranslationTasks, activeTranslationTasks);
+            const uncounted = chunk.length - appliedIndices.size;
+            if (uncounted > 0) {
+              completedTranslationTasks += uncounted;
+              updateTranslationProgress(completedTranslationTasks, activeTranslationTasks);
+            }
           }
         }
 

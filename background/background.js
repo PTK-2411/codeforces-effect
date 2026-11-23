@@ -360,8 +360,68 @@ async function translateBatchWithGoogle(texts, retries = 2) {
   return fallbacks;
 }
 
-// Execute prompt on Gemini API with model fallback sequence
-async function executeGeminiPrompt(prompt, apiKey, preferredModel, customModel) {
+// Universal Server-Sent Events (SSE) Stream Reader for Gemini & OpenAI/xKiro
+async function readSSEStream(response, onTextDelta) {
+  if (!response.body || typeof response.body.getReader !== 'function') {
+    const data = await response.json();
+    const text = (data.candidates?.[0]?.content?.parts?.[0]?.text) ||
+                 (data.choices?.[0]?.message?.content) ||
+                 (data.choices?.[0]?.delta?.content) || '';
+    if (onTextDelta && text) onTextDelta(text);
+    return text;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder('utf-8');
+  let buffer = '';
+  let fullText = '';
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop(); // keep last incomplete line
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || !trimmed.startsWith('data:')) continue;
+      const dataStr = trimmed.slice(5).trim();
+      if (dataStr === '[DONE]') continue;
+      try {
+        const json = JSON.parse(dataStr);
+        const delta = (json.candidates?.[0]?.content?.parts?.[0]?.text) ||
+                      (json.choices?.[0]?.delta?.content) || '';
+        if (delta) {
+          fullText += delta;
+          if (onTextDelta) onTextDelta(delta);
+        }
+      } catch (e) {
+        // Incomplete json line ignored
+      }
+    }
+  }
+
+  if (buffer.trim() && buffer.trim().startsWith('data:')) {
+    const dataStr = buffer.trim().slice(5).trim();
+    if (dataStr && dataStr !== '[DONE]') {
+      try {
+        const json = JSON.parse(dataStr);
+        const delta = (json.candidates?.[0]?.content?.parts?.[0]?.text) ||
+                      (json.choices?.[0]?.delta?.content) || '';
+        if (delta) {
+          fullText += delta;
+          if (onTextDelta) onTextDelta(delta);
+        }
+      } catch (e) {}
+    }
+  }
+
+  return fullText;
+}
+
+// Execute prompt on Gemini API with model fallback sequence and optional SSE streaming
+async function executeGeminiPrompt(prompt, apiKey, preferredModel, customModel, onChunk) {
   if (!apiKey || !apiKey.trim()) {
     throw new Error('Chưa cấu hình Gemini API Key. Vui lòng mở popup tiện ích để nhập API Key từ aistudio.google.com.');
   }
@@ -405,7 +465,9 @@ async function executeGeminiPrompt(prompt, apiKey, preferredModel, customModel) 
 
   for (const model of models) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
+      const isStream = typeof onChunk === 'function';
+      const endpoint = isStream ? 'streamGenerateContent' : 'generateContent';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${cleanKey}${isStream ? '&alt=sse' : ''}`;
       const resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -437,8 +499,14 @@ async function executeGeminiPrompt(prompt, apiKey, preferredModel, customModel) 
         throw new Error(errMsg);
       }
 
-      const resData = await resp.json();
-      const output = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+      let output = '';
+      if (isStream) {
+        output = await readSSEStream(resp, onChunk);
+      } else {
+        const resData = await resp.json();
+        output = resData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      }
+
       if (output && output.trim()) {
         geminiQuotaCooldownUntil = 0; // Model succeeded, clear global cooldown
         geminiModelCooldowns.delete(model); // Model succeeded, xóa cooldown nếu có
@@ -448,7 +516,7 @@ async function executeGeminiPrompt(prompt, apiKey, preferredModel, customModel) 
         }
         return cleaned;
       }
-      const finishReason = resData.candidates?.[0]?.finishReason || resData.promptFeedback?.blockReason;
+      const finishReason = typeof resData !== 'undefined' ? (resData.candidates?.[0]?.finishReason || resData.promptFeedback?.blockReason) : '';
       throw new Error(`Model ${model} không trả về văn bản phản hồi (Lý do: ${finishReason || 'Unknown'})`);
     } catch (err) {
       lastError = err;
@@ -507,14 +575,15 @@ ${text}`;
   }
 }
 
-// xKiro (Mistral) Prompt Execution
-async function executeXkiroPrompt(prompt, apiKey, model = 'mistralai/mistral-small-2603') {
+// xKiro (Mistral) Prompt Execution with optional SSE streaming
+async function executeXkiroPrompt(prompt, apiKey, model = 'mistralai/mistral-small-2603', onChunk) {
   if (!apiKey || !apiKey.trim()) {
     throw new Error('Chưa cấu hình xKiro API Key. Vui lòng mở popup tiện ích để nhập API Key từ xkiro.com.');
   }
 
   const cleanKey = apiKey.trim();
   const targetModel = model || 'mistralai/mistral-small-2603';
+  const isStream = typeof onChunk === 'function';
 
   const resp = await fetch('https://api.xkiro.com/v1/chat/completions', {
     method: 'POST',
@@ -529,7 +598,9 @@ async function executeXkiroPrompt(prompt, apiKey, model = 'mistralai/mistral-sma
           role: 'user',
           content: prompt
         }
-      ]
+      ],
+      stream: isStream,
+      temperature: 0.2
     })
   });
 
@@ -539,8 +610,14 @@ async function executeXkiroPrompt(prompt, apiKey, model = 'mistralai/mistral-sma
     throw new Error(`xKiro API error: ${errMsg}`);
   }
 
-  const data = await resp.json();
-  const text = data?.choices?.[0]?.message?.content;
+  let text = '';
+  if (isStream) {
+    text = await readSSEStream(resp, onChunk);
+  } else {
+    const data = await resp.json();
+    text = data?.choices?.[0]?.message?.content || '';
+  }
+
   if (!text || typeof text !== 'string') {
     throw new Error('xKiro API không trả về nội dung hợp lệ.');
   }
@@ -621,8 +698,8 @@ async function handleTranslation(text, engine, geminiApiKey, geminiModel, gemini
   return result;
 }
 
-// Unified Batch Translation Handler
-async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, geminiCustomModel, xkiroApiKey) {
+// Unified Batch Translation Handler with progressive streaming delivery
+async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, geminiCustomModel, xkiroApiKey, onItemReady) {
   if (!Array.isArray(items) || items.length === 0) return [];
   await initCachePromise;
 
@@ -630,7 +707,7 @@ async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, 
   const results = new Array(items.length);
   const uncachedIndices = [];
 
-  // Check cache first
+  // Check cache first - instantaneous delivery for cached items
   items.forEach((item, index) => {
     const text = (item || '').trim();
     if (!text) {
@@ -639,7 +716,11 @@ async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, 
     }
     const cacheKey = `${eng}:${text}`;
     if (translationCache.has(cacheKey)) {
-      results[index] = translationCache.get(cacheKey);
+      const cached = translationCache.get(cacheKey);
+      results[index] = cached;
+      if (typeof onItemReady === 'function') {
+        onItemReady(index, cached);
+      }
     } else {
       uncachedIndices.push(index);
     }
@@ -653,8 +734,8 @@ async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, 
   const isXkiroActive = eng === 'xkiro' && xkiroApiKey;
 
   if (isGeminiActive) {
-    // Process in batches of up to 12 items to preserve quota and avoid 429 limits
-    const BATCH_SIZE = 12;
+    // Process in batches of up to 10 items with real-time SSE streaming progressive delivery
+    const BATCH_SIZE = 10;
     for (let i = 0; i < uncachedIndices.length; i += BATCH_SIZE) {
       const batchIndices = uncachedIndices.slice(i, i + BATCH_SIZE);
       const batchTexts = batchIndices.map(idx => items[idx].trim());
@@ -664,13 +745,22 @@ async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, 
           const trans = await translateWithGemini(batchTexts[0], geminiApiKey, geminiModel, geminiCustomModel);
           translationCache.set(`${eng}:${batchTexts[0]}`, trans);
           results[batchIndices[0]] = trans;
+          if (typeof onItemReady === 'function') {
+            onItemReady(batchIndices[0], trans);
+          }
         } catch (err) {
           try {
             const trans = await translateWithGoogle(batchTexts[0]);
             translationCache.set(`google:${batchTexts[0]}`, trans);
             results[batchIndices[0]] = trans;
+            if (typeof onItemReady === 'function') {
+              onItemReady(batchIndices[0], trans);
+            }
           } catch (e) {
             results[batchIndices[0]] = batchTexts[0];
+            if (typeof onItemReady === 'function') {
+              onItemReady(batchIndices[0], batchTexts[0]);
+            }
           }
         }
         continue;
@@ -696,9 +786,94 @@ ${viHash}
 Text items to translate:
 ${promptBody}`;
 
+      let streamAccumulated = '';
+      let nextItemToEmit = 0; // index in batchIndices (0 to batchIndices.length - 1)
+
+      const handleStreamDelta = (delta) => {
+        streamAccumulated += delta;
+
+        // As soon as the delimiter for the next item is observed, emit completed item immediately
+        while (nextItemToEmit < batchIndices.length - 1) {
+          const nextDelimPattern = new RegExp(`<?<?<?\\s*CF_TRANSLATE_ITEM_${nextItemToEmit + 1}\\s*>?\\>?>?`, 'i');
+          const matchNext = streamAccumulated.match(nextDelimPattern);
+          if (!matchNext) {
+            break;
+          }
+
+          const nextDelimIndex = matchNext.index;
+          const currDelimPattern = new RegExp(`<?<?<?\\s*CF_TRANSLATE_ITEM_${nextItemToEmit}\\s*>?\\>?>?`, 'i');
+          const matchCurr = streamAccumulated.match(currDelimPattern);
+
+          let rawItem = '';
+          if (matchCurr) {
+            const startIdx = matchCurr.index + matchCurr[0].length;
+            rawItem = streamAccumulated.substring(startIdx, nextDelimIndex);
+          } else {
+            rawItem = streamAccumulated.substring(0, nextDelimIndex);
+          }
+
+          rawItem = rawItem.trim().replace(/^[:\-–—]\s*/, '').trim();
+
+          const origIdx = batchIndices[nextItemToEmit];
+          const origText = batchTexts[nextItemToEmit];
+
+          let trans = rawItem;
+          if (trans && trans.includes(viHash)) {
+            trans = origText;
+          }
+          if (!trans) {
+            trans = origText;
+          }
+
+          translationCache.set(`${eng}:${origText}`, trans);
+          results[origIdx] = trans;
+          if (typeof onItemReady === 'function') {
+            onItemReady(origIdx, trans);
+          }
+
+          nextItemToEmit++;
+        }
+      };
+
       try {
-        const batchOutput = await executeGeminiPrompt(fullPrompt, geminiApiKey, geminiModel, geminiCustomModel);
-        const parts = batchOutput.split(/<?<?<?\s*CF_TRANSLATE_ITEM_(\d+)\s*>?\>?>?/i);
+        const batchOutput = await executeGeminiPrompt(fullPrompt, geminiApiKey, geminiModel, geminiCustomModel, handleStreamDelta);
+
+        // Emit final item upon stream completion
+        if (nextItemToEmit === batchIndices.length - 1) {
+          const currDelimPattern = new RegExp(`<?<?<?\\s*CF_TRANSLATE_ITEM_${nextItemToEmit}\\s*>?\\>?>?`, 'i');
+          const matchCurr = streamAccumulated.match(currDelimPattern);
+          let rawItem = '';
+          if (matchCurr) {
+            const startIdx = matchCurr.index + matchCurr[0].length;
+            rawItem = streamAccumulated.substring(startIdx);
+          } else {
+            rawItem = streamAccumulated;
+          }
+
+          rawItem = rawItem.trim().replace(/^[:\-–—]\s*/, '').trim();
+
+          const origIdx = batchIndices[nextItemToEmit];
+          const origText = batchTexts[nextItemToEmit];
+
+          let trans = rawItem;
+          if (trans && trans.includes(viHash)) {
+            trans = origText;
+          }
+          if (!trans) {
+            trans = origText;
+          }
+
+          translationCache.set(`${eng}:${origText}`, trans);
+          results[origIdx] = trans;
+          if (typeof onItemReady === 'function') {
+            onItemReady(origIdx, trans);
+          }
+          nextItemToEmit++;
+        }
+
+        // Safety fallback: if any items were not emitted, parse from full text
+        const outputText = batchOutput || streamAccumulated;
+        const parts = outputText.split(/<?<?<?\s*CF_TRANSLATE_ITEM_(\d+)\s*>?\>?>?/i);
         const parsedMap = new Map();
         for (let p = 1; p < parts.length; p += 2) {
           const itemIdx = parseInt(parts[p], 10);
@@ -708,18 +883,23 @@ ${promptBody}`;
 
         for (let b = 0; b < batchIndices.length; b++) {
           const origIdx = batchIndices[b];
-          const text = batchTexts[b];
-          let trans = parsedMap.get(b);
-          let actualEng = eng;
-          if (trans && trans.includes(viHash)) {
-            trans = text;
+          if (results[origIdx] === undefined) {
+            const text = batchTexts[b];
+            let trans = parsedMap.get(b);
+            let actualEng = eng;
+            if (trans && trans.includes(viHash)) {
+              trans = text;
+            }
+            if (!trans) {
+              trans = await translateWithGoogle(text).catch(() => text);
+              actualEng = 'google';
+            }
+            translationCache.set(`${actualEng}:${text}`, trans);
+            results[origIdx] = trans;
+            if (typeof onItemReady === 'function') {
+              onItemReady(origIdx, trans);
+            }
           }
-          if (!trans) {
-            trans = await translateWithGoogle(text).catch(() => text);
-            actualEng = 'google';
-          }
-          translationCache.set(`${actualEng}:${text}`, trans);
-          results[origIdx] = trans;
         }
       } catch (err) {
         console.warn('[CF Translator] Batch Gemini thất bại, tự động chuyển Google Translate batch:', err.message);
@@ -731,12 +911,15 @@ ${promptBody}`;
           const trans = transList[b] || text;
           translationCache.set(`google:${text}`, trans);
           results[origIdx] = trans;
+          if (typeof onItemReady === 'function') {
+            onItemReady(origIdx, trans);
+          }
         }
       }
     }
   } else if (isXkiroActive) {
-    // Process in batches of up to 12 items with xKiro
-    const BATCH_SIZE = 12;
+    // Process in batches of up to 10 items with real-time SSE streaming progressive delivery
+    const BATCH_SIZE = 10;
     for (let i = 0; i < uncachedIndices.length; i += BATCH_SIZE) {
       const batchIndices = uncachedIndices.slice(i, i + BATCH_SIZE);
       const batchTexts = batchIndices.map(idx => items[idx].trim());
@@ -746,13 +929,22 @@ ${promptBody}`;
           const trans = await translateWithXkiro(batchTexts[0], xkiroApiKey);
           translationCache.set(`${eng}:${batchTexts[0]}`, trans);
           results[batchIndices[0]] = trans;
+          if (typeof onItemReady === 'function') {
+            onItemReady(batchIndices[0], trans);
+          }
         } catch (err) {
           try {
             const trans = await translateWithGoogle(batchTexts[0]);
             translationCache.set(`google:${batchTexts[0]}`, trans);
             results[batchIndices[0]] = trans;
+            if (typeof onItemReady === 'function') {
+              onItemReady(batchIndices[0], trans);
+            }
           } catch (e) {
             results[batchIndices[0]] = batchTexts[0];
+            if (typeof onItemReady === 'function') {
+              onItemReady(batchIndices[0], batchTexts[0]);
+            }
           }
         }
         continue;
@@ -778,9 +970,94 @@ ${viHash}
 Text items to translate:
 ${promptBody}`;
 
+      let streamAccumulated = '';
+      let nextItemToEmit = 0;
+
+      const handleStreamDelta = (delta) => {
+        streamAccumulated += delta;
+
+        // As soon as the delimiter for the next item is observed, emit completed item immediately
+        while (nextItemToEmit < batchIndices.length - 1) {
+          const nextDelimPattern = new RegExp(`<?<?<?\\s*CF_TRANSLATE_ITEM_${nextItemToEmit + 1}\\s*>?\\>?>?`, 'i');
+          const matchNext = streamAccumulated.match(nextDelimPattern);
+          if (!matchNext) {
+            break;
+          }
+
+          const nextDelimIndex = matchNext.index;
+          const currDelimPattern = new RegExp(`<?<?<?\\s*CF_TRANSLATE_ITEM_${nextItemToEmit}\\s*>?\\>?>?`, 'i');
+          const matchCurr = streamAccumulated.match(currDelimPattern);
+
+          let rawItem = '';
+          if (matchCurr) {
+            const startIdx = matchCurr.index + matchCurr[0].length;
+            rawItem = streamAccumulated.substring(startIdx, nextDelimIndex);
+          } else {
+            rawItem = streamAccumulated.substring(0, nextDelimIndex);
+          }
+
+          rawItem = rawItem.trim().replace(/^[:\-–—]\s*/, '').trim();
+
+          const origIdx = batchIndices[nextItemToEmit];
+          const origText = batchTexts[nextItemToEmit];
+
+          let trans = rawItem;
+          if (trans && trans.includes(viHash)) {
+            trans = origText;
+          }
+          if (!trans) {
+            trans = origText;
+          }
+
+          translationCache.set(`${eng}:${origText}`, trans);
+          results[origIdx] = trans;
+          if (typeof onItemReady === 'function') {
+            onItemReady(origIdx, trans);
+          }
+
+          nextItemToEmit++;
+        }
+      };
+
       try {
-        const batchOutput = await executeXkiroPrompt(fullPrompt, xkiroApiKey);
-        const parts = batchOutput.split(/<?<?<?\s*CF_TRANSLATE_ITEM_(\d+)\s*>?\>?>?/i);
+        const batchOutput = await executeXkiroPrompt(fullPrompt, xkiroApiKey, 'mistralai/mistral-small-2603', handleStreamDelta);
+
+        // Emit final item upon stream completion
+        if (nextItemToEmit === batchIndices.length - 1) {
+          const currDelimPattern = new RegExp(`<?<?<?\\s*CF_TRANSLATE_ITEM_${nextItemToEmit}\\s*>?\\>?>?`, 'i');
+          const matchCurr = streamAccumulated.match(currDelimPattern);
+          let rawItem = '';
+          if (matchCurr) {
+            const startIdx = matchCurr.index + matchCurr[0].length;
+            rawItem = streamAccumulated.substring(startIdx);
+          } else {
+            rawItem = streamAccumulated;
+          }
+
+          rawItem = rawItem.trim().replace(/^[:\-–—]\s*/, '').trim();
+
+          const origIdx = batchIndices[nextItemToEmit];
+          const origText = batchTexts[nextItemToEmit];
+
+          let trans = rawItem;
+          if (trans && trans.includes(viHash)) {
+            trans = origText;
+          }
+          if (!trans) {
+            trans = origText;
+          }
+
+          translationCache.set(`${eng}:${origText}`, trans);
+          results[origIdx] = trans;
+          if (typeof onItemReady === 'function') {
+            onItemReady(origIdx, trans);
+          }
+          nextItemToEmit++;
+        }
+
+        // Safety fallback: if any items were not emitted, parse from full text
+        const outputText = batchOutput || streamAccumulated;
+        const parts = outputText.split(/<?<?<?\s*CF_TRANSLATE_ITEM_(\d+)\s*>?\>?>?/i);
         const parsedMap = new Map();
         for (let p = 1; p < parts.length; p += 2) {
           const itemIdx = parseInt(parts[p], 10);
@@ -790,18 +1067,23 @@ ${promptBody}`;
 
         for (let b = 0; b < batchIndices.length; b++) {
           const origIdx = batchIndices[b];
-          const text = batchTexts[b];
-          let trans = parsedMap.get(b);
-          let actualEng = eng;
-          if (trans && trans.includes(viHash)) {
-            trans = text;
+          if (results[origIdx] === undefined) {
+            const text = batchTexts[b];
+            let trans = parsedMap.get(b);
+            let actualEng = eng;
+            if (trans && trans.includes(viHash)) {
+              trans = text;
+            }
+            if (!trans) {
+              trans = await translateWithGoogle(text).catch(() => text);
+              actualEng = 'google';
+            }
+            translationCache.set(`${actualEng}:${text}`, trans);
+            results[origIdx] = trans;
+            if (typeof onItemReady === 'function') {
+              onItemReady(origIdx, trans);
+            }
           }
-          if (!trans) {
-            trans = await translateWithGoogle(text).catch(() => text);
-            actualEng = 'google';
-          }
-          translationCache.set(`${actualEng}:${text}`, trans);
-          results[origIdx] = trans;
         }
       } catch (err) {
         console.warn('[CF Translator] Batch xKiro thất bại, tự động chuyển Google Translate batch:', err.message);
@@ -812,6 +1094,9 @@ ${promptBody}`;
           const trans = transList[b] || text;
           translationCache.set(`google:${text}`, trans);
           results[origIdx] = trans;
+          if (typeof onItemReady === 'function') {
+            onItemReady(origIdx, trans);
+          }
         }
       }
     }
@@ -843,6 +1128,9 @@ ${promptBody}`;
         const trans = transList[b] || text;
         translationCache.set(`${eng}:${text}`, trans);
         results[origIdx] = trans;
+        if (typeof onItemReady === 'function') {
+          onItemReady(origIdx, trans);
+        }
       }
       if (c < chunks.length - 1) {
         await new Promise(r => setTimeout(r, 40));
@@ -926,13 +1214,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
     return true; // Keep message channel open for async response
   } else if (message && message.action === 'translateBatch') {
+    const tabId = sender && sender.tab && sender.tab.id ? sender.tab.id : null;
+    const onItemReady = (idx, text) => {
+      if (tabId && message.batchId && typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.sendMessage) {
+        chrome.tabs.sendMessage(tabId, {
+          action: 'streamItemReady',
+          batchId: message.batchId,
+          index: idx,
+          text: text
+        }).catch(() => {});
+      }
+    };
+
     handleBatchTranslation(
       message.items,
       message.engine,
       message.geminiApiKey,
       message.geminiModel,
       message.geminiCustomModel,
-      message.xkiroApiKey
+      message.xkiroApiKey,
+      onItemReady
     )
       .then(translatedItems => {
         sendResponse({ success: true, texts: translatedItems });
