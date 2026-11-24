@@ -3318,6 +3318,24 @@
           });
         }
 
+        const isPersonalSidebar = !!box.querySelector('.personal-sidebar, a[href*="/settings"], a[href*="/usertalk"], a[href*="/submissions/"], a[href*="/contests/with/"]') || (box.classList && box.classList.contains('personal-sidebar'));
+        if (isPersonalSidebar) {
+          box.classList.add('cf-personal-sidebar-box');
+          box.querySelectorAll('ul li, li').forEach((li) => {
+            if (li.style && li.style.setProperty) {
+              li.style.setProperty('background', 'transparent', 'important');
+              li.style.setProperty('background-color', 'transparent', 'important');
+              li.style.setProperty('border', 'none', 'important');
+              li.style.setProperty('box-shadow', 'none', 'important');
+              li.style.setProperty('backdrop-filter', 'none', 'important');
+              li.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+              li.style.setProperty('border-radius', '0', 'important');
+              li.style.setProperty('display', 'flex', 'important');
+              li.style.setProperty('width', '100%', 'important');
+            }
+          });
+        }
+
         // Remove any inner roundbox / form framing unless it's problem tags (.tag-box / a.notice)
         box.querySelectorAll('.roundbox').forEach((nested) => {
           if (nested !== box && !nested.querySelector('.tag-box, a.notice')) {
@@ -3329,6 +3347,20 @@
               nested.style.setProperty('backdrop-filter', 'none', 'important');
               nested.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
             }
+          }
+        });
+      });
+
+      document.querySelectorAll('.personal-sidebar').forEach((ps) => {
+        ps.querySelectorAll('ul li, li').forEach((li) => {
+          if (li.style && li.style.setProperty) {
+            li.style.setProperty('background', 'transparent', 'important');
+            li.style.setProperty('background-color', 'transparent', 'important');
+            li.style.setProperty('border', 'none', 'important');
+            li.style.setProperty('box-shadow', 'none', 'important');
+            li.style.setProperty('backdrop-filter', 'none', 'important');
+            li.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+            li.style.setProperty('border-radius', '0', 'important');
           }
         });
       });

@@ -2113,6 +2113,54 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
 
   console.log('✓ Test 40 passed: Telegram Subscription Notice & Date/Time Translation & Restoration verified');
 
+  // ==========================================
+  // Test 41: Personal Profile Sidebar Unboxing & Media Under 100MB without LFS
+  // ==========================================
+  console.log('Test 41: Personal Profile Sidebar Unboxing & Media Under 100MB');
+  body.innerHTML = `
+    <div class="sidebox cf-personal-sidebar-box" id="test41-box">
+      <div class="caption titled">→ PTKhoa</div>
+      <div class="personal-sidebar">
+        <ul class="property-links">
+          <li id="ps-rating">Rating: <span class="user-green">1328</span></li>
+          <li id="ps-contrib">Contribution: <span>0</span></li>
+        </ul>
+        <ul>
+          <li id="ps-settings"><a href="/settings/general">Cài đặt</a></li>
+          <li id="ps-blog"><a href="/blog/PTKhoa">Bài viết</a></li>
+          <li id="ps-teams"><a href="/teams">Đội</a></li>
+          <li id="ps-subs"><a href="/submissions/PTKhoa">Lịch sử nộp</a></li>
+          <li id="ps-groups"><a href="/groups/with/PTKhoa">Nhóm</a></li>
+          <li id="ps-talks"><a href="/usertalk">Talks</a></li>
+          <li id="ps-contests"><a href="/contests/with/PTKhoa">Kỳ thi</a></li>
+        </ul>
+      </div>
+    </div>
+  `;
+
+  // Trigger translation / sidebar layout adjustments
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'vi' } }, 'local'));
+  await new Promise(r => setTimeout(r, 150));
+
+  const psRating = body.querySelector('#ps-rating');
+  assert.strictEqual(psRating.style.background, 'transparent', 'Rating item background must be transparent');
+  assert.strictEqual(psRating.style.border, 'none', 'Rating item must not have a border frame');
+
+  const psSettings = body.querySelector('#ps-settings');
+  assert.strictEqual(psSettings.style.background, 'transparent', 'Settings item background must be transparent');
+  assert.strictEqual(psSettings.style.border, 'none', 'Settings item must not have a border frame');
+
+  // Check CSS defines personal-sidebar unboxing
+  assert(contentCss.includes('.personal-sidebar ul li') && contentCss.includes('border: none'), 'content.css must unbox personal sidebar items');
+
+  // Check default-bg.mp4 size is strictly under 100MB
+  const bgPath = path.join(__dirname, '../assets/default-bg.mp4');
+  const bgStat = fs.statSync(bgPath);
+  assert(bgStat.size < 100 * 1024 * 1024, 'default-bg.mp4 size must be under 100MB');
+  assert(bgStat.size < 50 * 1024 * 1024, 'default-bg.mp4 size must be under 50MB for zero GitHub warnings');
+
+  console.log('✓ Test 41 passed: Personal Profile Sidebar Unboxing & Media Under 100MB verified');
+
   console.log('\nALL content.js TESTS PASSED SUCCESSFULLY!');
 }
 

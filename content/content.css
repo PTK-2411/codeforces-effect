@@ -3153,6 +3153,79 @@ html.cf-light-mode.cf-custom-bg-active .sidebox div:has(> ul > li a[href*="/blog
 }
 
 /* =========================================================
+   Personal Profile Sidebar (Rating, Contribution, Cài đặt, Bài viết, Đội, Lịch sử nộp, Nhóm, Talks, Kỳ thi): Không đóng khung nhỏ bên trong
+   ========================================================= */
+html.cf-custom-bg-active .personal-sidebar ul li,
+html.cf-custom-bg-active .sidebox .personal-sidebar ul li,
+html.cf-custom-bg-active .sidebox:has(.personal-sidebar) ul li,
+html.cf-custom-bg-active .sidebox:has(a[href*="/settings"]) ul li,
+html.cf-custom-bg-active .sidebox:has(a[href*="/usertalk"]) ul li,
+html.cf-custom-bg-active .sidebox:has(a[href*="/submissions/"]) ul li,
+html.cf-custom-bg-active .sidebox:has(a[href*="/contests/with/"]) ul li,
+html.cf-custom-bg-active .sidebox.cf-personal-sidebar-box ul li {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  padding: 6px 4px !important;
+  margin: 2px 0 !important;
+}
+
+html.cf-custom-bg-active .personal-sidebar ul li:hover,
+html.cf-custom-bg-active .sidebox .personal-sidebar ul li:hover,
+html.cf-custom-bg-active .sidebox:has(.personal-sidebar) ul li:hover,
+html.cf-custom-bg-active .sidebox:has(a[href*="/settings"]) ul li:hover,
+html.cf-custom-bg-active .sidebox:has(a[href*="/usertalk"]) ul li:hover,
+html.cf-custom-bg-active .sidebox:has(a[href*="/submissions/"]) ul li:hover,
+html.cf-custom-bg-active .sidebox:has(a[href*="/contests/with/"]) ul li:hover,
+html.cf-custom-bg-active .sidebox.cf-personal-sidebar-box ul li:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 6px !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .personal-sidebar ul li,
+html.cf-light-mode.cf-custom-bg-active .sidebox .personal-sidebar ul li,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(.personal-sidebar) ul li,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(a[href*="/settings"]) ul li,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(a[href*="/usertalk"]) ul li,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(a[href*="/submissions/"]) ul li,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(a[href*="/contests/with/"]) ul li,
+html.cf-light-mode.cf-custom-bg-active .sidebox.cf-personal-sidebar-box ul li {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .personal-sidebar ul li:hover,
+html.cf-light-mode.cf-custom-bg-active .sidebox .personal-sidebar ul li:hover,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(.personal-sidebar) ul li:hover,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(a[href*="/settings"]) ul li:hover,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(a[href*="/usertalk"]) ul li:hover,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(a[href*="/submissions/"]) ul li:hover,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(a[href*="/contests/with/"]) ul li:hover,
+html.cf-light-mode.cf-custom-bg-active .sidebox.cf-personal-sidebar-box ul li:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-radius: 6px !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
    Contest Announcements in Pay Attention / Chú ý (Canh giữa các cuộc thi)
    ========================================================= */
 html.cf-custom-bg-active .sidebox.cf-attention-box,
