@@ -757,7 +757,7 @@ async function runTests() {
   // Test checkForUpdates via message listener
   fetchCalls = [];
   fetchHandler = async (url) => {
-    assert(url.includes('raw.githubusercontent.com/PTK-2411/codeforces-effect/main/manifest.json'));
+    assert(url.includes('raw.githubusercontent.com/PTK-2411/oj-effect/main/manifest.json'));
     return {
       ok: true,
       status: 200,

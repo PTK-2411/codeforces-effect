@@ -92,7 +92,8 @@ const ids = [
   'size-options',
   'popup-streak-badge', 'stat-current-streak', 'stat-streak-subs', 'stat-max-streak', 'stat-total-days', 'popup-streak-status',
   'update-banner', 'update-title', 'update-desc', 'update-tag', 'btn-update-now',
-  'btn-open-tab', 'btn-open-upload-tab', 'upload-popup-view', 'upload-tab-view'
+  'btn-open-tab', 'btn-open-upload-tab', 'upload-popup-view', 'upload-tab-view',
+  'btn-github'
 ];
 
 ids.forEach(id => createMockEl(id));
@@ -181,7 +182,7 @@ const mockChrome = {
           isTestToOfficial: true,
           currentVersionName: 'v1.0.0 Alpha',
           remoteVersionName: 'v1.0.0',
-          repoUrl: 'https://github.com/PTK-2411/codeforces-effect'
+          repoUrl: 'https://github.com/PTK-2411/oj-effect'
         });
       }
     }
@@ -354,7 +355,7 @@ async function runPopupTests() {
           isTestToOfficial: true,
           currentVersionName: 'v1.0.0 Alpha',
           remoteVersionName: 'v1.0.0',
-          repoUrl: 'https://github.com/PTK-2411/codeforces-effect'
+          repoUrl: 'https://github.com/PTK-2411/oj-effect'
         }
       }
     }, 'local');
@@ -377,7 +378,7 @@ async function runPopupTests() {
           isSilent: true,
           currentVersionName: 'v1.0.0',
           remoteVersionName: 'v1.0.0 HF.1.0',
-          repoUrl: 'https://github.com/PTK-2411/codeforces-effect'
+          repoUrl: 'https://github.com/PTK-2411/oj-effect'
         }
       }
     }, 'local');
@@ -398,7 +399,7 @@ async function runPopupTests() {
           isSilent: true,
           currentVersionName: 'v1.0.0 Alpha',
           remoteVersionName: 'v1.0.0 Alpha HF.1.0',
-          repoUrl: 'https://github.com/PTK-2411/codeforces-effect'
+          repoUrl: 'https://github.com/PTK-2411/oj-effect'
         }
       }
     }, 'local');
@@ -419,7 +420,7 @@ async function runPopupTests() {
           isTrial: true,
           currentVersionName: 'v1.0.0',
           remoteVersionName: 'v1.1.0 Alpha',
-          repoUrl: 'https://github.com/PTK-2411/codeforces-effect'
+          repoUrl: 'https://github.com/PTK-2411/oj-effect'
         }
       }
     }, 'local');
@@ -517,6 +518,14 @@ async function runPopupTests() {
   btnOpenUploadTabEl.click();
   assert.strictEqual(tabsCreated.length, 2, 'btn-open-upload-tab must create dedicated tab');
   console.log('✓ Test 10 passed: Dedicated tab buttons correctly open full tab to prevent popup auto-close');
+
+  // Test 11: GitHub repository button opens OJ Effect repo
+  console.log('Test 11: GitHub repository button opens OJ Effect repo');
+  const btnGithubEl = elements['btn-github'];
+  assert(btnGithubEl, 'btn-github must exist in popup');
+  btnGithubEl.click();
+  assert(tabsCreated.some(t => t.url === 'https://github.com/PTK-2411/oj-effect'), 'btn-github must open https://github.com/PTK-2411/oj-effect');
+  console.log('✓ Test 11 passed: GitHub button opens oj-effect repository');
 
   console.log('\nALL popup.js TESTS PASSED SUCCESSFULLY!');
 }

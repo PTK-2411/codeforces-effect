@@ -12,6 +12,7 @@
   const panelUpload = document.getElementById('panel-upload');
   const panelUrl = document.getElementById('panel-url');
   const btnOpenTab = document.getElementById('btn-open-tab');
+  const btnGithub = document.getElementById('btn-github');
   const btnOpenUploadTab = document.getElementById('btn-open-upload-tab');
   const uploadPopupView = document.getElementById('upload-popup-view');
   const uploadTabView = document.getElementById('upload-tab-view');
@@ -974,7 +975,18 @@
     }
   }
 
+  // Open GitHub Repository
+  function openGithubRepo() {
+    const ghUrl = 'https://github.com/PTK-2411/oj-effect';
+    if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
+      chrome.tabs.create({ url: ghUrl });
+    } else if (typeof window !== 'undefined') {
+      window.open(ghUrl, '_blank');
+    }
+  }
+
   if (btnOpenTab) btnOpenTab.addEventListener('click', openDedicatedTab);
+  if (btnGithub) btnGithub.addEventListener('click', openGithubRepo);
   if (btnOpenUploadTab) {
     btnOpenUploadTab.addEventListener('click', (e) => {
       e.stopPropagation();

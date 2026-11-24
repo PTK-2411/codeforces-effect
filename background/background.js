@@ -1339,9 +1339,9 @@ chrome.storage.onChanged.addListener((changes, area) => {
 // Automatic Version & Update Checking (TEST -> Official)
 // =========================================================
 
-const GITHUB_REPO_URL = 'https://github.com/PTK-2411/codeforces-effect';
-const GITHUB_RAW_MANIFEST_URL = 'https://raw.githubusercontent.com/PTK-2411/codeforces-effect/main/manifest.json';
-const GITHUB_DOWNLOAD_URL = 'https://github.com/PTK-2411/codeforces-effect/archive/refs/heads/main.zip';
+const GITHUB_REPO_URL = 'https://github.com/PTK-2411/oj-effect';
+const GITHUB_RAW_MANIFEST_URL = 'https://raw.githubusercontent.com/PTK-2411/oj-effect/main/manifest.json';
+const GITHUB_DOWNLOAD_URL = 'https://github.com/PTK-2411/oj-effect/archive/refs/heads/main.zip';
 
 /**
  * Quy ước đặt tên phiên bản (Version Scheme):

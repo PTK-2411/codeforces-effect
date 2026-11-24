@@ -1,13 +1,13 @@
 <div align="center">
 
-# 🌌 Codeforces Effect
+# 🌌 OJ Effect
 
-**Tiện ích Chrome mở rộng Manifest V3 tùy biến hình nền, giao diện tối/sáng và dịch thuật thông minh cho Codeforces**
+**Tiện ích Chrome mở rộng Manifest V3 tùy biến hình nền, giao diện tối/sáng và dịch thuật thông minh cho Online Judges (Codeforces)**
 
 <br />
 
 <p align="center">
-  <img src="https://img.shields.io/badge/CODEFORCES_EFFECT-V1.3.0_ALPHA-7B2CBF?style=for-the-badge&logo=codeforces&logoColor=white" alt="Codeforces Effect" />
+  <img src="https://img.shields.io/badge/OJ_EFFECT-V1.4.0_ALPHA-7B2CBF?style=for-the-badge&logo=codeforces&logoColor=white" alt="OJ Effect" />
   <img src="https://img.shields.io/badge/NODE.JS-%3E%3D20.12-238636?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
   <img src="https://img.shields.io/badge/MANIFEST-V3-1f6feb?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/LICENSE-MIT-007ACC?style=for-the-badge" alt="License" />
@@ -21,7 +21,7 @@
 https://github.com/user-attachments/assets/ae90bd75-06f7-49f7-b89e-071c69ee9092
 
 
-<sub>*(Video demo trải nghiệm trực tiếp tính năng Codeforces Effect)*</sub>
+<sub>*(Video demo trải nghiệm trực tiếp tính năng OJ Effect)*</sub>
 
 </div>
 
@@ -85,8 +85,8 @@ https://github.com/user-attachments/assets/ae90bd75-06f7-49f7-b89e-071c69ee9092
    - **Brave**: Nhập `brave://extensions/`.
 2. Bật chế độ **"Chế độ dành cho nhà phát triển" (Developer mode)** ở góc trên bên phải.
 3. Nhấp vào nút **"Tải tiện ích đã giải nén" (Load unpacked)** ở góc trên bên trái.
-4. Chọn thư mục chứa mã nguồn tiện ích đã tải về (thư mục `codeforces-effect`).
-5. Tiện ích **Codeforces Effect** sẽ xuất hiện trên thanh công cụ của trình duyệt. Bạn có thể ghim (Pin) icon lên thanh công cụ để mở nhanh bất cứ lúc nào!
+4. Chọn thư mục chứa mã nguồn tiện ích đã tải về (thư mục `oj-effect`).
+5. Tiện ích **OJ Effect** sẽ xuất hiện trên thanh công cụ của trình duyệt. Bạn có thể ghim (Pin) icon lên thanh công cụ để mở nhanh bất cứ lúc nào!
 
 ---
 
@@ -102,6 +102,6 @@ https://github.com/user-attachments/assets/ae90bd75-06f7-49f7-b89e-071c69ee9092
 
 ## 📄 Bản quyền & Mã nguồn (License & Source)
 
-- **Repository**: [https://github.com/PTK-2411/codeforces-effect](https://github.com/PTK-2411/codeforces-effect)
+- **Repository**: [https://github.com/PTK-2411/oj-effect](https://github.com/PTK-2411/oj-effect)
 - **License**: Phát hành theo giấy phép [MIT License](LICENSE) (Copyright (c) 2026 PTK-2411).
 - **Cơ chế cập nhật**: Tự động kiểm tra bản phát hành trên GitHub; nếu đang ở bản `TEST` và phát hiện có bản chính thức (`Official`) thì sẽ hiển thị thông báo và nút cập nhật trực tiếp trên Popup.
