@@ -1190,9 +1190,12 @@ html.cf-custom-bg-active .sidebox img {
 /* =========================================================
    Problem Tags in Sidebox (Thẻ bài tập tinh tế, dạng badge/pill gọn gàng)
    ========================================================= */
-html.cf-custom-bg-active .sidebox .roundbox,
-html.cf-custom-bg-active .roundbox.sidebox .roundbox,
-html.cf-custom-bg-active .sidebox div.roundbox {
+html.cf-custom-bg-active .sidebox .roundbox:has(a.notice),
+html.cf-custom-bg-active .sidebox .roundbox:has(.tag-box),
+html.cf-custom-bg-active .roundbox.sidebox .roundbox:has(a.notice),
+html.cf-custom-bg-active .roundbox.sidebox .roundbox:has(.tag-box),
+html.cf-custom-bg-active .sidebox:has(a[href*="/problemset/tags/"]) .roundbox,
+html.cf-custom-bg-active .sidebox .tag-box {
   background: rgba(255, 255, 255, 0.15) !important;
   background-color: rgba(255, 255, 255, 0.15) !important;
   border: 1px solid rgba(255, 255, 255, 0.28) !important;
@@ -1211,8 +1214,11 @@ html.cf-custom-bg-active .sidebox div.roundbox {
   transition: all 0.2s ease !important;
 }
 
-html.cf-custom-bg-active .sidebox .roundbox:hover,
-html.cf-custom-bg-active .roundbox.sidebox .roundbox:hover {
+html.cf-custom-bg-active .sidebox .roundbox:has(a.notice):hover,
+html.cf-custom-bg-active .sidebox .roundbox:has(.tag-box):hover,
+html.cf-custom-bg-active .roundbox.sidebox .roundbox:has(a.notice):hover,
+html.cf-custom-bg-active .roundbox.sidebox .roundbox:has(.tag-box):hover,
+html.cf-custom-bg-active .sidebox:has(a[href*="/problemset/tags/"]) .roundbox:hover {
   background: rgba(255, 255, 255, 0.26) !important;
   border-color: rgba(255, 255, 255, 0.55) !important;
   transform: translateY(-1px) !important;
@@ -1234,19 +1240,38 @@ html.cf-custom-bg-active .sidebox .roundbox span {
 }
 
 /* Light mode for problem tags */
-html.cf-light-mode.cf-custom-bg-active .sidebox .roundbox,
-html.cf-light-mode.cf-custom-bg-active .roundbox.sidebox .roundbox,
-html.cf-light-mode.cf-custom-bg-active .sidebox div.roundbox {
+html.cf-light-mode.cf-custom-bg-active .sidebox .roundbox:has(a.notice),
+html.cf-light-mode.cf-custom-bg-active .sidebox .roundbox:has(.tag-box),
+html.cf-light-mode.cf-custom-bg-active .roundbox.sidebox .roundbox:has(a.notice),
+html.cf-light-mode.cf-custom-bg-active .roundbox.sidebox .roundbox:has(.tag-box),
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(a[href*="/problemset/tags/"]) .roundbox {
   background: rgba(0, 0, 0, 0.06) !important;
   background-color: rgba(0, 0, 0, 0.06) !important;
   border-color: rgba(0, 0, 0, 0.14) !important;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important;
 }
 
-html.cf-light-mode.cf-custom-bg-active .sidebox .roundbox:hover,
-html.cf-light-mode.cf-custom-bg-active .roundbox.sidebox .roundbox:hover {
+html.cf-light-mode.cf-custom-bg-active .sidebox .roundbox:has(a.notice):hover,
+html.cf-light-mode.cf-custom-bg-active .sidebox .roundbox:has(.tag-box):hover,
+html.cf-light-mode.cf-custom-bg-active .roundbox.sidebox .roundbox:has(a.notice):hover,
+html.cf-light-mode.cf-custom-bg-active .roundbox.sidebox .roundbox:has(.tag-box):hover,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(a[href*="/problemset/tags/"]) .roundbox:hover {
   background: rgba(0, 0, 0, 0.1) !important;
   border-color: rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Loại bỏ hoàn toàn khung con (roundbox/form lồng nhau) bên trong Sidebox */
+html.cf-custom-bg-active .sidebox .roundbox:not(:has(a.notice)):not(:has(.tag-box)),
+html.cf-custom-bg-active .roundbox.sidebox .roundbox:not(:has(a.notice)):not(:has(.tag-box)),
+html.cf-custom-bg-active .sidebox form,
+html.cf-custom-bg-active .sidebox form div:not(.cf-form-actions),
+html.cf-custom-bg-active .sidebox form .roundbox {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 html.cf-light-mode.cf-custom-bg-active .sidebox .roundbox a,
@@ -3065,6 +3090,104 @@ html.cf-light-mode.cf-custom-bg-active .sidebox ul li:hover {
 
 html.cf-light-mode.cf-custom-bg-active .sidebox ul li a {
   color: #0284c7 !important;
+}
+
+/* =========================================================
+   Recent actions (Hoạt động gần đây): Không đóng khung nhỏ bên trong
+   ========================================================= */
+html.cf-custom-bg-active .sidebox.cf-recent-actions-box ul li,
+html.cf-custom-bg-active .sidebox:has(.recent-actions) ul li,
+html.cf-custom-bg-active .sidebox .recent-actions ul li,
+html.cf-custom-bg-active .sidebox:has(a[href*="/blog/entry/"]):not(:has(.countdown)) ul li,
+html.cf-custom-bg-active .sidebox div:has(> ul > li a[href*="/blog/entry/"]) ul li {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  display: block !important;
+  width: 100% !important;
+  padding: 6px 4px !important;
+  margin: 2px 0 !important;
+}
+
+html.cf-custom-bg-active .sidebox.cf-recent-actions-box ul li:hover,
+html.cf-custom-bg-active .sidebox:has(.recent-actions) ul li:hover,
+html.cf-custom-bg-active .sidebox .recent-actions ul li:hover,
+html.cf-custom-bg-active .sidebox:has(a[href*="/blog/entry/"]):not(:has(.countdown)) ul li:hover,
+html.cf-custom-bg-active .sidebox div:has(> ul > li a[href*="/blog/entry/"]) ul li:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 6px !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .sidebox.cf-recent-actions-box ul li,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(.recent-actions) ul li,
+html.cf-light-mode.cf-custom-bg-active .sidebox .recent-actions ul li,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(a[href*="/blog/entry/"]):not(:has(.countdown)) ul li,
+html.cf-light-mode.cf-custom-bg-active .sidebox div:has(> ul > li a[href*="/blog/entry/"]) ul li {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+html.cf-light-mode.cf-custom-bg-active .sidebox.cf-recent-actions-box ul li:hover,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(.recent-actions) ul li:hover,
+html.cf-light-mode.cf-custom-bg-active .sidebox .recent-actions ul li:hover,
+html.cf-light-mode.cf-custom-bg-active .sidebox:has(a[href*="/blog/entry/"]):not(:has(.countdown)) ul li:hover,
+html.cf-light-mode.cf-custom-bg-active .sidebox div:has(> ul > li a[href*="/blog/entry/"]) ul li:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-radius: 6px !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   Contest Announcements in Pay Attention / Chú ý (Canh giữa các cuộc thi)
+   ========================================================= */
+html.cf-custom-bg-active .sidebox.cf-attention-box,
+html.cf-custom-bg-active .sidebox:has(.countdown),
+html.cf-custom-bg-active .sidebox:has(a[href*="register"]),
+html.cf-custom-bg-active .sidebox:has(a[href*="/contest/"]):not(:has(table.rtable)):not(:has(.recent-actions)) {
+  text-align: center !important;
+}
+
+html.cf-custom-bg-active .sidebox.cf-attention-box > div,
+html.cf-custom-bg-active .sidebox:has(.countdown) > div,
+html.cf-custom-bg-active .sidebox:has(a[href*="register"]) > div,
+html.cf-custom-bg-active .sidebox:has(a[href*="/contest/"]):not(:has(table.rtable)):not(:has(.recent-actions)) > div {
+  text-align: center !important;
+  display: block !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+html.cf-custom-bg-active .sidebox.cf-attention-box a,
+html.cf-custom-bg-active .sidebox:has(.countdown) a,
+html.cf-custom-bg-active .sidebox:has(a[href*="register"]) a,
+html.cf-custom-bg-active .sidebox:has(a[href*="/contest/"]):not(:has(table.rtable)):not(:has(.recent-actions)) a,
+html.cf-custom-bg-active .sidebox.cf-attention-box span,
+html.cf-custom-bg-active .sidebox:has(.countdown) span,
+html.cf-custom-bg-active .sidebox:has(a[href*="register"]) span,
+html.cf-custom-bg-active .sidebox:has(a[href*="/contest/"]):not(:has(table.rtable)):not(:has(.recent-actions)) span,
+html.cf-custom-bg-active .sidebox.cf-attention-box p,
+html.cf-custom-bg-active .sidebox:has(.countdown) p {
+  text-align: center !important;
+  display: inline-block !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 html.cf-custom-bg-active .sidebox input[type="submit"],

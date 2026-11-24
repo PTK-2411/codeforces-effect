@@ -32,8 +32,16 @@ class MockNode {
     };
     this._classes = classes;
     this.style = {
-      setProperty: (prop, val) => { this.style[prop] = val; },
-      removeProperty: (prop) => { delete this.style[prop]; }
+      setProperty: (prop, val) => {
+        this.style[prop] = val;
+        const camel = prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+        this.style[camel] = val;
+      },
+      removeProperty: (prop) => {
+        delete this.style[prop];
+        const camel = prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+        delete this.style[camel];
+      }
     };
     this.load = () => {};
     this.play = async () => {};
@@ -1969,6 +1977,76 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert.strictEqual(p1.dataset.cfTranslated, 'true');
   assert.strictEqual(p2.dataset.cfTranslated, 'true');
   console.log('✓ Test 38 passed: Real-time progressive streamItemReady rendering verified');
+
+  // Test 39: Sidebox layout - Contest centering in Attention, Recent actions unboxed, No inner frames
+  console.log('Test 39: Sidebox layout - Contest centering in Attention, Recent actions unboxed, No inner frames');
+  body.innerHTML = `
+    <div id="sidebar">
+      <!-- Pay attention sidebox with contest -->
+      <div class="roundbox sidebox cf-attention-box">
+        <div class="caption titled">→ Chú ý</div>
+        <div id="attention-content" style="padding: 0.5em;">
+          Trước cuộc thi<br>
+          <a href="/contest/2167">Codeforces Round (Div. 3)</a><br>
+          <span class="countdown">4 ngày</span><br>
+          <a href="/contest/2167/register">Đăng ký ngay »</a>
+        </div>
+      </div>
+
+      <!-- Recent actions sidebox -->
+      <div class="roundbox sidebox cf-recent-actions-box">
+        <div class="caption titled">→ Hoạt động gần đây</div>
+        <div class="recent-actions">
+          <ul>
+            <li id="ra-item-1">
+              <a href="/profile/Imakf">Imakf</a> → <a href="/blog/entry/123">Editorial</a>
+            </li>
+            <li id="ra-item-2">
+              <a href="/profile/Amao_Fox">Amao_Fox</a> → <a href="/blog/entry/456">I feel stuck</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Submit sidebox with nested roundbox -->
+      <div class="roundbox sidebox" id="submit-sidebox">
+        <div class="caption titled">→ Nộp bài?</div>
+        <div class="roundbox" id="nested-roundbox">
+          <input type="submit" value="Nộp bài">
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Trigger language change or format update
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'en' } }, 'local'));
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'vi' } }, 'local'));
+  await new Promise(r => setTimeout(r, 150));
+
+  // 1. Attention contest centering
+  const test39AttentionBox = body.querySelector('.cf-attention-box');
+  assert(test39AttentionBox, 'Attention box must exist');
+  const attentionDiv = body.querySelector('#attention-content');
+  assert(attentionDiv, 'Attention content div must exist');
+  assert.strictEqual(attentionDiv.style.textAlign, 'center', 'Attention inner div must be centered');
+
+  // 2. Recent actions unboxing (no small inner frames)
+  const raItem1 = body.querySelector('#ra-item-1');
+  assert.strictEqual(raItem1.style.background, 'transparent', 'Recent action item background must be transparent');
+  assert.strictEqual(raItem1.style.border, 'none', 'Recent action item must not have a border frame');
+
+  // 3. No nested roundbox framing in submit
+  const nestedRoundbox = body.querySelector('#nested-roundbox');
+  assert.strictEqual(nestedRoundbox.style.background, 'transparent', 'Nested roundbox must not have card background');
+  assert.strictEqual(nestedRoundbox.style.border, 'none', 'Nested roundbox must not have a border');
+
+  // 4. CSS file checks
+  const contentCss = fs.readFileSync(path.join(__dirname, '../content/content.css'), 'utf8');
+  assert(contentCss.includes('.cf-attention-box') && contentCss.includes('text-align: center'), 'content.css must define centering for Attention contests');
+  assert(contentCss.includes('.cf-recent-actions-box') && contentCss.includes('border: none'), 'content.css must define unboxed transparent items for Recent actions');
+  assert(contentCss.includes('.roundbox:not(:has(a.notice)):not(:has(.tag-box))'), 'content.css must prevent inner roundbox framing in sideboxes');
+
+  console.log('✓ Test 39 passed: Contest centering in Attention, Recent actions unboxed, No inner frames verified');
 
   console.log('\nALL content.js TESTS PASSED SUCCESSFULLY!');
 }

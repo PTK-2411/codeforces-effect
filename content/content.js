@@ -2258,6 +2258,7 @@
       translateNode(rootEl, isVi, dict);
     }
     translateSideboxTitles(isVi, dict);
+    fixSideboxFormButtons();
 
     // Dynamic translation for problems, posts, comments, announcements
     await applyDynamicContentTranslation(isVi);
@@ -2943,10 +2944,9 @@
       const sideboxButtons = document.querySelectorAll(
         '.sidebox form input[type="submit"], .sidebox form input[type="button"], .sidebox form input[type="reset"], .sidebox form button, .sidebox form a[href*="reset"], .sidebox form a[href*="setup"], .sidebox form a.button'
       );
-      if (!sideboxButtons || sideboxButtons.length === 0) return;
-
-      const parentSet = new Set();
-      sideboxButtons.forEach((btn) => {
+      if (sideboxButtons && sideboxButtons.length > 0) {
+        const parentSet = new Set();
+        sideboxButtons.forEach((btn) => {
         btn.classList.add('cf-sidebox-btn');
 
         // Translate Apply, Reset, and Find buttons cleanly
@@ -3018,6 +3018,7 @@
           }
         }
       });
+    }
 
       // Ensure form labels, inputs and text in sidebox forms are cleanly left-aligned with compact vertical spacing
       const sideboxForms = document.querySelectorAll('.sidebox form');
@@ -3083,6 +3084,67 @@
             inp.style.setProperty('height', '30px', 'important');
             inp.style.setProperty('min-height', '30px', 'important');
             inp.style.setProperty('padding', '4px 8px', 'important');
+          }
+        });
+      });
+
+      // Sidebox layout handling: Attention contest centering, Recent actions unboxing, No inner frames
+      const allSideboxes = document.querySelectorAll('.sidebox, .roundbox.sidebox');
+      allSideboxes.forEach((box) => {
+        const captionEl = box.querySelector('.caption');
+        const captionText = (captionEl ? captionEl.textContent : '').replace(/\u00A0/g, ' ').trim().toLowerCase();
+        const isAttention = captionText.includes('chú ý') || captionText.includes('pay attention') || captionText.includes('attention') || !!box.querySelector('.countdown, a[href*="register"]');
+        const isRecentActions = captionText.includes('hoạt động gần đây') || captionText.includes('recent actions') || !!box.querySelector('.recent-actions');
+
+        if (isAttention) {
+          box.classList.add('cf-attention-box');
+          if (box.style && box.style.setProperty) {
+            box.style.setProperty('text-align', 'center', 'important');
+          }
+          const innerDiv = Array.from(box.childNodes).find(c => c.nodeType === 1 && (!c.classList || (!c.classList.contains('caption') && !c.classList.contains('roundbox-lt') && !c.classList.contains('roundbox-rt') && !c.classList.contains('roundbox-lb') && !c.classList.contains('roundbox-rb'))));
+          if (innerDiv && innerDiv.style && innerDiv.style.setProperty) {
+            innerDiv.style.setProperty('text-align', 'center', 'important');
+            innerDiv.style.setProperty('display', 'block', 'important');
+            innerDiv.style.setProperty('background', 'transparent', 'important');
+            innerDiv.style.setProperty('border', 'none', 'important');
+            innerDiv.style.setProperty('box-shadow', 'none', 'important');
+            innerDiv.style.setProperty('backdrop-filter', 'none', 'important');
+          }
+          box.querySelectorAll('a, span, p').forEach((el) => {
+            if (el.style && el.style.setProperty) {
+              el.style.setProperty('text-align', 'center', 'important');
+            }
+          });
+        }
+
+        if (isRecentActions) {
+          box.classList.add('cf-recent-actions-box');
+          box.querySelectorAll('ul li').forEach((li) => {
+            if (li.style && li.style.setProperty) {
+              li.style.setProperty('background', 'transparent', 'important');
+              li.style.setProperty('background-color', 'transparent', 'important');
+              li.style.setProperty('border', 'none', 'important');
+              li.style.setProperty('box-shadow', 'none', 'important');
+              li.style.setProperty('backdrop-filter', 'none', 'important');
+              li.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+              li.style.setProperty('border-radius', '0', 'important');
+              li.style.setProperty('display', 'block', 'important');
+              li.style.setProperty('width', '100%', 'important');
+            }
+          });
+        }
+
+        // Remove any inner roundbox / form framing unless it's problem tags (.tag-box / a.notice)
+        box.querySelectorAll('.roundbox').forEach((nested) => {
+          if (nested !== box && !nested.querySelector('.tag-box, a.notice')) {
+            if (nested.style && nested.style.setProperty) {
+              nested.style.setProperty('background', 'transparent', 'important');
+              nested.style.setProperty('background-color', 'transparent', 'important');
+              nested.style.setProperty('border', 'none', 'important');
+              nested.style.setProperty('box-shadow', 'none', 'important');
+              nested.style.setProperty('backdrop-filter', 'none', 'important');
+              nested.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+            }
           }
         });
       });
