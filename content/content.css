@@ -3156,16 +3156,28 @@ html.cf-light-mode.cf-custom-bg-active .sidebox div:has(> ul > li a[href*="/blog
    Contest Announcements in Pay Attention / Chú ý (Canh giữa các cuộc thi)
    ========================================================= */
 html.cf-custom-bg-active .sidebox.cf-attention-box,
+html.cf-custom-bg-active .sidebox.cf-attention-box div:not(.caption),
+html.cf-custom-bg-active .sidebox.cf-attention-box a,
+html.cf-custom-bg-active .sidebox.cf-attention-box span,
+html.cf-custom-bg-active .sidebox.cf-attention-box p,
 html.cf-custom-bg-active .sidebox:has(.countdown),
+html.cf-custom-bg-active .sidebox:has(.countdown) div:not(.caption),
+html.cf-custom-bg-active .sidebox:has(.countdown) a,
+html.cf-custom-bg-active .sidebox:has(.countdown) span,
+html.cf-custom-bg-active .sidebox:has(.countdown) p,
 html.cf-custom-bg-active .sidebox:has(a[href*="register"]),
+html.cf-custom-bg-active .sidebox:has(a[href*="register"]) div:not(.caption),
+html.cf-custom-bg-active .sidebox:has(a[href*="register"]) a,
+html.cf-custom-bg-active .sidebox:has(a[href*="register"]) span,
+html.cf-custom-bg-active .sidebox:has(a[href*="register"]) p,
 html.cf-custom-bg-active .sidebox:has(a[href*="/contest/"]):not(:has(table.rtable)):not(:has(.recent-actions)) {
   text-align: center !important;
 }
 
-html.cf-custom-bg-active .sidebox.cf-attention-box > div,
-html.cf-custom-bg-active .sidebox:has(.countdown) > div,
-html.cf-custom-bg-active .sidebox:has(a[href*="register"]) > div,
-html.cf-custom-bg-active .sidebox:has(a[href*="/contest/"]):not(:has(table.rtable)):not(:has(.recent-actions)) > div {
+html.cf-custom-bg-active .sidebox.cf-attention-box div:not(.caption),
+html.cf-custom-bg-active .sidebox:has(.countdown) div:not(.caption),
+html.cf-custom-bg-active .sidebox:has(a[href*="register"]) div:not(.caption),
+html.cf-custom-bg-active .sidebox:has(a[href*="/contest/"]):not(:has(table.rtable)):not(:has(.recent-actions)) div:not(.caption) {
   text-align: center !important;
   display: block !important;
   background: transparent !important;

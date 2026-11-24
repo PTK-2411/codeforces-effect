@@ -137,6 +137,9 @@ class MockNode {
   }
 
   getAttribute(name) { return this.attributes[name] || null; }
+  hasAttribute(name) { return this.attributes[name] !== undefined; }
+  get title() { return this.attributes['title'] || ''; }
+  set title(val) { this.setAttribute('title', val); }
   setAttribute(name, val) {
     this.attributes[name] = String(val);
     if (name === 'class') {
@@ -2047,6 +2050,68 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert(contentCss.includes('.roundbox:not(:has(a.notice)):not(:has(.tag-box))'), 'content.css must prevent inner roundbox framing in sideboxes');
 
   console.log('✓ Test 39 passed: Contest centering in Attention, Recent actions unboxed, No inner frames verified');
+
+  // ==========================================
+  // Test 40: Telegram Subscription Notice & Date/Time Translation & Restoration
+  // ==========================================
+  console.log('Test 40: Telegram Subscription Notice & Date/Time Translation & Restoration');
+  body.innerHTML = `
+    <div id="test40-container">
+      <div id="tg-text-1">  Please subscribe to the official Codeforces channel in Telegram via the link https://t.me/codeforces_official.</div>
+      <div id="tg-text-2">
+        <span>Please subscribe to the official Codeforces channel in Telegram via the link </span>
+        <a href="https://t.me/codeforces_official">https://t.me/codeforces_official</a>
+      </div>
+      <div id="datetime-items">
+        <span id="dt-contest" class="format-timewithseconds">Nov/24/2026 17:35</span>
+        <span id="dt-full" class="format-date" title="Monday, November 24, 2026 17:35">Nov 24, 2026</span>
+        <span id="dt-humantime" class="format-humantime" title="Nov/24/2026 17:35">4 days ago</span>
+        <span id="dt-countdown" class="countdown">in 3 days</span>
+        <span id="dt-left">2 hours left</span>
+      </div>
+    </div>
+  `;
+
+  // Switch to Vietnamese
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'vi' } }, 'local'));
+  await new Promise(r => setTimeout(r, 150));
+
+  const tg1 = body.querySelector('#tg-text-1');
+  assert(tg1.textContent.includes('Vui lòng đăng ký kênh Codeforces chính thức trên Telegram qua liên kết https://t.me/codeforces_official.'), 'Full Telegram string must be translated');
+  assert(tg1.textContent.startsWith('  '), 'Leading spaces must be preserved');
+
+  const tg2 = body.querySelector('#tg-text-2');
+  assert(tg2.textContent.includes('Vui lòng đăng ký kênh Codeforces chính thức trên Telegram qua liên kết'), 'Partial Telegram notice before link must be translated');
+
+  const dtContest = body.querySelector('#dt-contest');
+  assert(dtContest.textContent.includes('24 Th11, 2026 17:35'), 'Nov/24/2026 17:35 must be formatted into Vietnamese date');
+
+  const dtFull = body.querySelector('#dt-full');
+  assert(dtFull.textContent.includes('24 Th11, 2026'), 'Nov 24, 2026 must be formatted into Vietnamese date');
+  assert(dtFull.getAttribute('title').includes('Thứ Hai, 24 Tháng 11, 2026 17:35'), 'Title tooltip must be translated with day of week');
+
+  const dtHuman = body.querySelector('#dt-humantime');
+  assert.strictEqual(dtHuman.textContent.trim(), '4 ngày trước', 'Relative time 4 days ago must be translated');
+
+  const dtCountdown = body.querySelector('#dt-countdown');
+  assert.strictEqual(dtCountdown.textContent.trim(), 'trong 3 ngày', 'in 3 days must be translated');
+
+  const dtLeft = body.querySelector('#dt-left');
+  assert.strictEqual(dtLeft.textContent.trim(), 'còn 2 giờ', '2 hours left must be translated');
+
+  // Switch back to English (clean restoration)
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'en' } }, 'local'));
+  await new Promise(r => setTimeout(r, 150));
+
+  assert.strictEqual(tg1.textContent, '  Please subscribe to the official Codeforces channel in Telegram via the link https://t.me/codeforces_official.', 'Telegram notice must cleanly revert to English');
+  assert.strictEqual(dtContest.textContent, 'Nov/24/2026 17:35', 'Contest date must cleanly revert to English');
+  assert.strictEqual(dtFull.textContent, 'Nov 24, 2026', 'Full date text must cleanly revert to English');
+  assert.strictEqual(dtFull.getAttribute('title'), 'Monday, November 24, 2026 17:35', 'Tooltip title must cleanly revert to English');
+  assert.strictEqual(dtHuman.textContent, '4 days ago', 'Humantime must cleanly revert to English');
+  assert.strictEqual(dtCountdown.textContent, 'in 3 days', 'Countdown must cleanly revert to English');
+  assert.strictEqual(dtLeft.textContent, '2 hours left', 'Hours left must cleanly revert to English');
+
+  console.log('✓ Test 40 passed: Telegram Subscription Notice & Date/Time Translation & Restoration verified');
 
   console.log('\nALL content.js TESTS PASSED SUCCESSFULLY!');
 }

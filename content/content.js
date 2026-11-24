@@ -882,20 +882,196 @@
     });
   }
 
+  const VI_MONTHS = {
+    'January': 'Tháng 1', 'February': 'Tháng 2', 'March': 'Tháng 3', 'April': 'Tháng 4',
+    'May': 'Tháng 5', 'June': 'Tháng 6', 'July': 'Tháng 7', 'August': 'Tháng 8',
+    'September': 'Tháng 9', 'October': 'Tháng 10', 'November': 'Tháng 11', 'December': 'Tháng 12'
+  };
+  const VI_SHORT_MONTHS = {
+    'Jan': 'Th1', 'Feb': 'Th2', 'Mar': 'Th3', 'Apr': 'Th4', 'May': 'Th5', 'Jun': 'Th6',
+    'Jul': 'Th7', 'Aug': 'Th8', 'Sep': 'Th9', 'Oct': 'Th10', 'Nov': 'Th11', 'Dec': 'Th12'
+  };
+  const VI_DAYS = {
+    'Monday': 'Thứ Hai', 'Tuesday': 'Thứ Ba', 'Wednesday': 'Thứ Tư', 'Thursday': 'Thứ Năm',
+    'Friday': 'Thứ Sáu', 'Saturday': 'Thứ Bảy', 'Sunday': 'Chủ Nhật'
+  };
+  const VI_SHORT_DAYS = {
+    'Mon': 'Thứ 2', 'Tue': 'Thứ 3', 'Wed': 'Thứ 4', 'Thu': 'Thứ 5',
+    'Fri': 'Thứ 6', 'Sat': 'Thứ 7', 'Sun': 'CN'
+  };
+
+  function formatVietnameseDateTime(text) {
+    if (!text || typeof text !== 'string') return text;
+    let res = text;
+
+    // Telegram link / channel notice in text
+    res = res.replace(/Please subscribe to the official Codeforces channel in Telegram via the link/gi, 'Vui lòng đăng ký kênh Codeforces chính thức trên Telegram qua liên kết');
+    res = res.replace(/Please subscribe to the official Codeforces channel in Telegram/gi, 'Vui lòng đăng ký kênh Codeforces chính thức trên Telegram');
+
+    // 1. Full dates with day of week: Monday, November 24, 2026 or Monday, Nov 24, 2026
+    res = res.replace(/\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s+([A-Z][a-z]+)\s+(\d{1,2}),\s+(\d{4})\b/g, (m, day, month, d, y) => {
+      const dStr = VI_DAYS[day] || day;
+      const mStr = VI_MONTHS[month] || VI_SHORT_MONTHS[month] || month;
+      return `${dStr}, ${d} ${mStr}, ${y}`;
+    });
+
+    res = res.replace(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s+([A-Z][a-z]+)\s+(\d{1,2}),\s+(\d{4})\b/g, (m, day, month, d, y) => {
+      const dStr = VI_SHORT_DAYS[day] || day;
+      const mStr = VI_MONTHS[month] || VI_SHORT_MONTHS[month] || month;
+      return `${dStr}, ${d} ${mStr}, ${y}`;
+    });
+
+    // 2. Dates like Nov/24/2026 or Nov/24/2026 17:35(:00)
+    res = res.replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\/(\d{1,2})\/(\d{4})\b/g, (m, month, d, y) => {
+      const mStr = VI_SHORT_MONTHS[month] || month;
+      return `${d} ${mStr}, ${y}`;
+    });
+
+    // 3. Dates like November 24, 2026 or Nov 24, 2026
+    res = res.replace(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(\d{4})\b/g, (m, month, d, y) => {
+      return `${d} ${VI_MONTHS[month] || month}, ${y}`;
+    });
+    res = res.replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}),\s+(\d{4})\b/g, (m, month, d, y) => {
+      return `${d} ${VI_SHORT_MONTHS[month] || month}, ${y}`;
+    });
+
+    // 4. Dates like 24 November 2026 or 24 Nov 2026
+    res = res.replace(/\b(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})\b/g, (m, d, month, y) => {
+      return `${d} ${VI_MONTHS[month] || month}, ${y}`;
+    });
+    res = res.replace(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})\b/g, (m, d, month, y) => {
+      return `${d} ${VI_SHORT_MONTHS[month] || month}, ${y}`;
+    });
+
+    // 5. Relative time ago
+    res = res.replace(/\bjust now\b/gi, 'vừa xong');
+    res = res.replace(/\byesterday\b/gi, 'hôm qua');
+    res = res.replace(/\ban?\s+hour\s+ago\b/gi, '1 giờ trước');
+    res = res.replace(/\ba\s+minute\s+ago\b/gi, '1 phút trước');
+    res = res.replace(/\ba\s+day\s+ago\b/gi, '1 ngày trước');
+    res = res.replace(/\ba\s+week\s+ago\b/gi, '1 tuần trước');
+    res = res.replace(/\ba\s+month\s+ago\b/gi, '1 tháng trước');
+    res = res.replace(/\ba\s+year\s+ago\b/gi, '1 năm trước');
+    res = res.replace(/\b(\d+)\s+seconds?\s+ago\b/gi, '$1 giây trước');
+    res = res.replace(/\b(\d+)\s+minutes?\s+ago\b/gi, '$1 phút trước');
+    res = res.replace(/\b(\d+)\s+hours?\s+ago\b/gi, '$1 giờ trước');
+    res = res.replace(/\b(\d+)\s+days?\s+ago\b/gi, '$1 ngày trước');
+    res = res.replace(/\b(\d+)\s+weeks?\s+ago\b/gi, '$1 tuần trước');
+    res = res.replace(/\b(\d+)\s+months?\s+ago\b/gi, '$1 tháng trước');
+    res = res.replace(/\b(\d+)\s+years?\s+ago\b/gi, '$1 năm trước');
+
+    // 6. In X time / X left
+    res = res.replace(/\bin\s+(\d+)\s+seconds?\b/gi, 'trong $1 giây');
+    res = res.replace(/\bin\s+(\d+)\s+minutes?\b/gi, 'trong $1 phút');
+    res = res.replace(/\bin\s+(\d+)\s+hours?\b/gi, 'trong $1 giờ');
+    res = res.replace(/\bin\s+(\d+)\s+days?\b/gi, 'trong $1 ngày');
+    res = res.replace(/\bin\s+(\d+)\s+weeks?\b/gi, 'trong $1 tuần');
+    res = res.replace(/\bin\s+(\d+)\s+months?\b/gi, 'trong $1 tháng');
+    res = res.replace(/\bin\s+(\d+)\s+years?\b/gi, 'trong $1 năm');
+
+    res = res.replace(/\b(\d+)\s+seconds?\s+left\b/gi, 'còn $1 giây');
+    res = res.replace(/\b(\d+)\s+minutes?\s+left\b/gi, 'còn $1 phút');
+    res = res.replace(/\b(\d+)\s+hours?\s+left\b/gi, 'còn $1 giờ');
+    res = res.replace(/\b(\d+)\s+days?\s+left\b/gi, 'còn $1 ngày');
+    res = res.replace(/\b(\d+)\s+weeks?\s+left\b/gi, 'còn $1 tuần');
+
+    // 7. Moscow time
+    res = res.replace(/\(Moscow time\)/gi, '(Giờ Moscow)');
+    res = res.replace(/\bMoscow time\b/gi, 'Giờ Moscow');
+
+    // 8. Standalone days of week
+    for (const [day, vnDay] of Object.entries(VI_DAYS)) {
+      const reg = new RegExp(`\\b${day}\\b`, 'g');
+      res = res.replace(reg, vnDay);
+    }
+
+    // 9. Standalone full month names (e.g. "October", "November 2026")
+    for (const [month, vnMonth] of Object.entries(VI_MONTHS)) {
+      const reg = new RegExp(`\\b${month}\\b`, 'g');
+      res = res.replace(reg, vnMonth);
+    }
+
+    return res;
+  }
+
+  function translateTimeAndDateElements(root, enable) {
+    try {
+      const container = root || document;
+      if (!container || !container.querySelectorAll) return;
+
+      const timeEls = container.querySelectorAll(
+        '.format-date, .format-time, .format-timewithseconds, .format-humantime, .countdown'
+      );
+
+      timeEls.forEach(el => {
+        if (enable) {
+          const currentTitle = (el.getAttribute && el.getAttribute('title')) || el.title || '';
+          if (currentTitle) {
+            if (!el.dataset.cfOrigTitle) {
+              el.dataset.cfOrigTitle = currentTitle;
+            }
+            const formattedTitle = formatVietnameseDateTime(el.dataset.cfOrigTitle);
+            if (formattedTitle !== currentTitle) {
+              el.setAttribute('title', formattedTitle);
+            }
+          }
+          const currentText = el.textContent || '';
+          if (!el.dataset.cfOrigTimeText && currentText.trim()) {
+            el.dataset.cfOrigTimeText = currentText;
+          }
+          if (el.dataset.cfOrigTimeText) {
+            const formattedText = formatVietnameseDateTime(el.dataset.cfOrigTimeText);
+            if (formattedText !== currentText) {
+              el.textContent = formattedText;
+            }
+          }
+        } else {
+          if (el.dataset && el.dataset.cfOrigTitle !== undefined) {
+            el.setAttribute('title', el.dataset.cfOrigTitle);
+            delete el.dataset.cfOrigTitle;
+          }
+          if (el.dataset && el.dataset.cfOrigTimeText !== undefined) {
+            el.textContent = el.dataset.cfOrigTimeText;
+            delete el.dataset.cfOrigTimeText;
+          }
+        }
+      });
+    } catch (e) {
+      // Ignore
+    }
+  }
+
   function translateNode(node, enable, dict) {
     if (!node) return;
 
     if (node.nodeType === Node.ELEMENT_NODE) {
-      // Exclude posts, comments, problem statement, codeblocks, math, user handles, problem index columns
+      // Exclude posts, comments, problem statement, codeblocks, math, user handles, problem index columns, and dedicated time elements
       if (node.matches && (
-        node.matches('.problem-statement, .sample-test, .topic, .blog-entry, .comment, .comments, .comment-table, pre, code, .ace_editor, .katex, math, a[href*="/profile/"], [class*="user-"], [class*="rated-"], #cf-theme-toggle-btn, #cf-header-streak, #cf-lang-vn-btn, .cf-comment-trans-link, .cf-problem-translate-bar, .cf-topic-translate-bar, td.id, th.id, .id.left, td.id.left, th.id.left, table.problems td.id, table.problems th.id, table.rtable td.id, table.rtable th.id')
+        node.matches('.problem-statement, .sample-test, .topic, .blog-entry, .comment, .comments, .comment-table, pre, code, .ace_editor, .katex, math, a[href*="/profile/"], [class*="user-"], [class*="rated-"], #cf-theme-toggle-btn, #cf-header-streak, #cf-lang-vn-btn, .cf-comment-trans-link, .cf-problem-translate-bar, .cf-topic-translate-bar, td.id, th.id, .id.left, td.id.left, th.id.left, table.problems td.id, table.problems th.id, table.rtable td.id, table.rtable th.id, .format-date, .format-time, .format-timewithseconds, .format-humantime, .countdown')
       )) {
         return;
       }
       if (node.closest && (
-        node.closest('.problem-statement, .sample-test, .topic, .blog-entry, .comment, .comments, .comment-table, pre, code, .ace_editor, .katex, math, a[href*="/profile/"], [class*="user-"], [class*="rated-"], td.id, th.id, .id.left, td.id.left, th.id.left, table.problems td.id, table.problems th.id, table.rtable td.id, table.rtable th.id')
+        node.closest('.problem-statement, .sample-test, .topic, .blog-entry, .comment, .comments, .comment-table, pre, code, .ace_editor, .katex, math, a[href*="/profile/"], [class*="user-"], [class*="rated-"], td.id, th.id, .id.left, td.id.left, th.id.left, table.problems td.id, table.problems th.id, table.rtable td.id, table.rtable th.id, .format-date, .format-time, .format-timewithseconds, .format-humantime, .countdown')
       )) {
         return;
+      }
+
+      // Tooltip title translation & restoration
+      if (enable) {
+        const title = (node.getAttribute && node.getAttribute('title')) || node.title || '';
+        if (title && !node.dataset.cfOrigTitle) {
+          const transTitle = dict[title] || dict[title.trim()] || formatVietnameseDateTime(title);
+          if (transTitle && transTitle !== title) {
+            node.dataset.cfOrigTitle = title;
+            node.setAttribute('title', transTitle);
+          }
+        }
+      } else {
+        if (node.dataset && node.dataset.cfOrigTitle !== undefined) {
+          node.setAttribute('title', node.dataset.cfOrigTitle);
+          delete node.dataset.cfOrigTitle;
+        }
       }
 
       // Input placeholders & submit buttons
@@ -970,7 +1146,13 @@
         if (!text) return;
         const normalized = text.replace(/\s+/g, ' ');
         const normalizedApos = normalized.replace(/[\u2018\u2019]/g, "'");
-        const translated = dict[text] || dict[normalized] || dict[normalizedApos] || dict[text.toLowerCase()] || dict[normalized.toLowerCase()] || dict[normalizedApos.toLowerCase()];
+        let translated = dict[text] || dict[normalized] || dict[normalizedApos] || dict[text.toLowerCase()] || dict[normalized.toLowerCase()] || dict[normalizedApos.toLowerCase()];
+        if (!translated) {
+          const formatted = formatVietnameseDateTime(text);
+          if (formatted !== text) {
+            translated = formatted;
+          }
+        }
         if (translated) {
           node._cfOrigText = node.nodeValue;
           const matchLeading = node.nodeValue.match(/^\s*/);
@@ -2256,12 +2438,16 @@
     const rootEl = document.body;
     if (rootEl) {
       translateNode(rootEl, isVi, dict);
+      translateTimeAndDateElements(rootEl, isVi);
     }
     translateSideboxTitles(isVi, dict);
     fixSideboxFormButtons();
 
     // Dynamic translation for problems, posts, comments, announcements
     await applyDynamicContentTranslation(isVi);
+    if (rootEl) {
+      translateTimeAndDateElements(rootEl, isVi);
+    }
     alignTableColumns();
     styleSubmissionVerdicts();
     fixSideboxFormButtons();
@@ -2301,8 +2487,10 @@
             try {
               removeProblemStatementChangeNotice();
               translateNode(document.body, true, window.CF_TRANSLATIONS || {});
+              translateTimeAndDateElements(document.body, true);
               translateSideboxTitles(true, window.CF_TRANSLATIONS || {});
               await applyDynamicContentTranslation(true);
+              translateTimeAndDateElements(document.body, true);
               alignTableColumns();
               styleSubmissionVerdicts();
               fixSideboxFormButtons();
@@ -3101,25 +3289,21 @@
           if (box.style && box.style.setProperty) {
             box.style.setProperty('text-align', 'center', 'important');
           }
-          const innerDiv = Array.from(box.childNodes).find(c => c.nodeType === 1 && (!c.classList || (!c.classList.contains('caption') && !c.classList.contains('roundbox-lt') && !c.classList.contains('roundbox-rt') && !c.classList.contains('roundbox-lb') && !c.classList.contains('roundbox-rb'))));
-          if (innerDiv && innerDiv.style && innerDiv.style.setProperty) {
-            innerDiv.style.setProperty('text-align', 'center', 'important');
-            innerDiv.style.setProperty('display', 'block', 'important');
-            innerDiv.style.setProperty('background', 'transparent', 'important');
-            innerDiv.style.setProperty('border', 'none', 'important');
-            innerDiv.style.setProperty('box-shadow', 'none', 'important');
-            innerDiv.style.setProperty('backdrop-filter', 'none', 'important');
-          }
-          box.querySelectorAll('a, span, p').forEach((el) => {
+          box.querySelectorAll('div, a, span, p').forEach((el) => {
+            if (el.classList && el.classList.contains('caption')) return;
             if (el.style && el.style.setProperty) {
               el.style.setProperty('text-align', 'center', 'important');
+              el.style.setProperty('background', 'transparent', 'important');
+              el.style.setProperty('border', 'none', 'important');
+              el.style.setProperty('box-shadow', 'none', 'important');
+              el.style.setProperty('backdrop-filter', 'none', 'important');
             }
           });
         }
 
         if (isRecentActions) {
           box.classList.add('cf-recent-actions-box');
-          box.querySelectorAll('ul li').forEach((li) => {
+          box.querySelectorAll('ul li, li').forEach((li) => {
             if (li.style && li.style.setProperty) {
               li.style.setProperty('background', 'transparent', 'important');
               li.style.setProperty('background-color', 'transparent', 'important');
