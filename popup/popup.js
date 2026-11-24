@@ -3,6 +3,9 @@
 
   // DOM Elements - Header & Main
   const toggleEnabled = document.getElementById('toggle-enabled');
+  const toggleCodeforces = document.getElementById('toggle-codeforces');
+  const toggleVJudge = document.getElementById('toggle-vjudge');
+  const sitesCard = document.getElementById('sites-card');
   const controlsSection = document.getElementById('controls-section');
   const btnReset = document.getElementById('btn-reset');
 
@@ -96,6 +99,8 @@
 
   const DEFAULT_SETTINGS = {
     enabled: true,
+    enableCodeforces: true,
+    enableVJudge: true,
     bgType: 'video',
     bgImage: DEFAULT_BG,
     bgHistory: [
@@ -364,11 +369,22 @@
   function updateUI(settings) {
     toggleEnabled.checked = settings.enabled !== false;
 
+    if (toggleCodeforces) {
+      toggleCodeforces.checked = settings.enableCodeforces !== false;
+      toggleCodeforces.disabled = !settings.enabled;
+    }
+    if (toggleVJudge) {
+      toggleVJudge.checked = settings.enableVJudge !== false;
+      toggleVJudge.disabled = !settings.enabled;
+    }
+
     if (!settings.enabled) {
       controlsSection.classList.add('disabled-opacity');
+      if (sitesCard) sitesCard.classList.add('disabled-opacity');
       if (previewState) previewState.classList.add('disabled-opacity');
     } else {
       controlsSection.classList.remove('disabled-opacity');
+      if (sitesCard) sitesCard.classList.remove('disabled-opacity');
       if (previewState) previewState.classList.remove('disabled-opacity');
     }
 
@@ -953,6 +969,20 @@
     updateUI(currentSettings);
   });
 
+  if (toggleCodeforces) {
+    toggleCodeforces.addEventListener('change', () => {
+      saveSettings({ enableCodeforces: toggleCodeforces.checked });
+      updateUI(currentSettings);
+    });
+  }
+
+  if (toggleVJudge) {
+    toggleVJudge.addEventListener('change', () => {
+      saveSettings({ enableVJudge: toggleVJudge.checked });
+      updateUI(currentSettings);
+    });
+  }
+
   // Source Tabs Navigation
   tabBtnUpload.addEventListener('click', () => {
     tabBtnUpload.classList.add('active');
@@ -1263,7 +1293,9 @@
       overlay: DEFAULT_SETTINGS.overlay,
       contentOpacity: DEFAULT_SETTINGS.contentOpacity,
       bgSize: DEFAULT_SETTINGS.bgSize,
-      themeMode: DEFAULT_SETTINGS.themeMode
+      themeMode: DEFAULT_SETTINGS.themeMode,
+      enableCodeforces: true,
+      enableVJudge: true
     });
     updateUI(currentSettings);
   });

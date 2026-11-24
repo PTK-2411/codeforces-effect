@@ -1,6 +1,8 @@
 (() => {
   'use strict';
 
+  const isVJudge = typeof window !== 'undefined' && window.location && Boolean(window.location.hostname && window.location.hostname.includes('vjudge.net'));
+
   function isExcludedPage() {
     try {
       const path = (window.location && window.location.pathname) ? window.location.pathname : '';
@@ -31,6 +33,7 @@
   let bgYtEl = null;
 
   function isCloudflareChallenge() {
+    if (isVJudge) return false;
     if (typeof window._cf_chl_opt !== 'undefined') return true;
     if (document.title && (
       document.title.includes('Just a moment') ||
@@ -195,6 +198,8 @@
     lastSettings = settings;
     let {
       enabled = true,
+      enableCodeforces = true,
+      enableVJudge = true,
       bgType = 'video',
       bgImage = DEFAULT_BG,
       bgHistory = [],
@@ -205,6 +210,8 @@
       bgSize = 'cover',
       themeMode = 'dark'
     } = settings || {};
+
+    const isSiteEnabled = enabled && (isVJudge ? (enableVJudge !== false) : (enableCodeforces !== false));
 
     // If bgImage is empty or was the YouTube 784dsKVrdjQ link, use the downloaded 1080p video
     if (!bgImage || (typeof bgImage === 'string' && bgImage.includes('784dsKVrdjQ'))) {
@@ -225,10 +232,14 @@
 
     const docEl = document.documentElement;
 
-    if (!enabled || !bgImage) {
+    if (!isSiteEnabled || !bgImage) {
       docEl.classList.remove('cf-custom-bg-active');
+      docEl.classList.remove('vjudge-custom-bg-active');
       docEl.classList.remove('cf-dark-mode');
       docEl.classList.remove('cf-light-mode');
+      if (isVJudge) {
+        docEl.removeAttribute('data-bs-theme');
+      }
       docEl.style.removeProperty('--cf-bg-url');
       docEl.style.removeProperty('--cf-bg-blur');
       docEl.style.removeProperty('--cf-bg-brightness');
@@ -294,12 +305,21 @@
     }
 
     // Activate custom background class
-    docEl.classList.add('cf-custom-bg-active');
+    if (isVJudge) {
+      docEl.classList.add('vjudge-custom-bg-active');
+      docEl.classList.remove('cf-custom-bg-active');
+    } else {
+      docEl.classList.add('cf-custom-bg-active');
+      docEl.classList.remove('vjudge-custom-bg-active');
+    }
 
     // Apply Dark Reader or Light mode
     const isDark = themeMode !== 'light';
     docEl.classList.toggle('cf-dark-mode', isDark);
     docEl.classList.toggle('cf-light-mode', !isDark);
+    if (isVJudge) {
+      docEl.setAttribute('data-bs-theme', isDark ? 'dark' : 'light');
+    }
     renderThemeToggle(isDark ? 'dark' : 'light');
 
     // Ensure layer elements exist inside document.body
@@ -1027,6 +1047,7 @@
   }
 
   function translateTimeAndDateElements(root, enable) {
+    if (isVJudge) return;
     try {
       const container = root || document;
       if (!container || !container.querySelectorAll) return;
@@ -1074,6 +1095,7 @@
   }
 
   function translateNode(node, enable, dict) {
+    if (isVJudge) return;
     if (!node) return;
 
     if (node.nodeType === Node.ELEMENT_NODE) {
@@ -2437,6 +2459,7 @@
   }
 
   async function applyDynamicContentTranslation(enable) {
+    if (isVJudge) return;
     removeProblemStatementChangeNotice();
     document.querySelectorAll('.cf-comment-trans-link, .cf-problem-translate-bar, .cf-topic-translate-bar').forEach(el => el.remove());
 
@@ -2463,6 +2486,7 @@
   }
 
   function translateSideboxTitles(enable, dict) {
+    if (isVJudge) return;
     if (!dict) dict = window.CF_TRANSLATIONS || {};
     const captions = document.querySelectorAll('.sidebox .caption, .sidebox .caption.titled, .roundbox .caption, .caption.titled');
     captions.forEach(caption => {
@@ -2497,6 +2521,7 @@
   let isAutoTranslating = false;
 
   async function applyVietnameseTranslation(isVi) {
+    if (isVJudge) return;
     const targetLang = isVi ? 'vi' : 'en';
     const langChanged = (currentCfLang !== targetLang);
     currentCfLang = targetLang;
@@ -3745,6 +3770,34 @@
       teardownForCloudflare();
       return;
     }
+    if (isVJudge) {
+      if (!document.body) return;
+      attachBgLayer();
+      if (!isInitialized) {
+        isInitialized = true;
+        chrome.storage.local.get([
+          'enabled',
+          'enableCodeforces',
+          'enableVJudge',
+          'bgType',
+          'bgImage',
+          'bgHistory',
+          'blur',
+          'brightness',
+          'overlay',
+          'contentOpacity',
+          'bgSize',
+          'themeMode',
+          'videoLoop',
+          'videoMuted',
+          'videoSpeed',
+          'playbackSpeed'
+        ], (result) => {
+          applySettings(result);
+        });
+      }
+      return;
+    }
     if (!document.getElementById('header') && !document.getElementById('body') && !document.getElementById('pageContent') && !document.body) {
       return;
     }
@@ -3769,6 +3822,8 @@
       isInitialized = true;
       chrome.storage.local.get([
         'enabled',
+        'enableCodeforces',
+        'enableVJudge',
         'bgType',
         'bgImage',
         'bgHistory',
@@ -3817,13 +3872,13 @@
     }
   }
 
-  // Handle Cloudflare challenge vs Codeforces initialization
+  // Handle Cloudflare challenge vs Codeforces / VJudge initialization
   if (isCloudflareChallenge()) {
     teardownForCloudflare();
     const cfObserver = new MutationObserver(() => {
-      if (!isCloudflareChallenge() && (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body)) {
+      if (!isCloudflareChallenge() && (isVJudge ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body))) {
         cfObserver.disconnect();
-        startHeaderObserver();
+        if (!isVJudge) startHeaderObserver();
         checkAndInit();
       }
     });
@@ -3832,17 +3887,17 @@
     const initObserver = new MutationObserver(() => {
       if (isCloudflareChallenge()) {
         teardownForCloudflare();
-      } else if (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body) {
+      } else if (isVJudge ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body)) {
         initObserver.disconnect();
-        startHeaderObserver();
+        if (!isVJudge) startHeaderObserver();
         checkAndInit();
       }
     });
     initObserver.observe(document.documentElement, { childList: true, subtree: true });
 
-    if (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body) {
+    if (isVJudge ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body)) {
       initObserver.disconnect();
-      startHeaderObserver();
+      if (!isVJudge) startHeaderObserver();
       checkAndInit();
     }
   }
@@ -3995,6 +4050,28 @@
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       if (!isCloudflareChallenge()) {
+        if (!isVJudge) {
+          startHeaderObserver();
+          checkAndInit();
+          if (currentCfLang === 'vi') {
+            applyDynamicContentTranslation(true);
+          }
+          alignTableColumns();
+          styleSubmissionVerdicts();
+          fixSideboxFormButtons();
+          styleProblemsetRows();
+          highlightOnlineStatus();
+        } else {
+          checkAndInit();
+        }
+        setupPageDragAndDrop();
+      } else {
+        teardownForCloudflare();
+      }
+    });
+  } else {
+    if (!isCloudflareChallenge()) {
+      if (!isVJudge) {
         startHeaderObserver();
         checkAndInit();
         if (currentCfLang === 'vi') {
@@ -4005,23 +4082,9 @@
         fixSideboxFormButtons();
         styleProblemsetRows();
         highlightOnlineStatus();
-        setupPageDragAndDrop();
       } else {
-        teardownForCloudflare();
+        checkAndInit();
       }
-    });
-  } else {
-    if (!isCloudflareChallenge()) {
-      startHeaderObserver();
-      checkAndInit();
-      if (currentCfLang === 'vi') {
-        applyDynamicContentTranslation(true);
-      }
-      alignTableColumns();
-      styleSubmissionVerdicts();
-      fixSideboxFormButtons();
-      styleProblemsetRows();
-      highlightOnlineStatus();
       setupPageDragAndDrop();
     }
   }
@@ -4030,7 +4093,7 @@
     window.addEventListener('pageshow', (event) => {
       if (event.persisted && !isCloudflareChallenge()) {
         checkAndInit();
-        if (currentCfLang === 'vi') {
+        if (!isVJudge && currentCfLang === 'vi') {
           applyDynamicContentTranslation(true);
         }
       }
@@ -4038,14 +4101,14 @@
 
     window.addEventListener('popstate', () => {
       checkAndInit();
-      if (currentCfLang === 'vi') {
+      if (!isVJudge && currentCfLang === 'vi') {
         applyDynamicContentTranslation(true);
       }
     });
   }
 
   document.addEventListener('mouseover', (e) => {
-    if (e.target && e.target.closest && e.target.closest('.second-level-menu, .second-level-menu-list, ul')) {
+    if (!isVJudge && e.target && e.target.closest && e.target.closest('.second-level-menu, .second-level-menu-list, ul')) {
       removeLavaLampBack();
     }
   }, { passive: true });
@@ -4058,11 +4121,11 @@
         return;
       }
 
-      if (changes.cfStreak && changes.cfStreak.newValue) {
+      if (!isVJudge && changes.cfStreak && changes.cfStreak.newValue) {
         renderStreakBadge(changes.cfStreak.newValue);
       }
 
-      if (changes.translationEngine) {
+      if (!isVJudge && changes.translationEngine) {
         const newEng = changes.translationEngine.newValue || 'google';
         const changed = newEng !== currentTranslationEngine;
         currentTranslationEngine = newEng;
@@ -4095,7 +4158,7 @@
         currentXkiroApiKey = changes.xkiroApiKey.newValue || '';
       }
 
-      if (changes.cfLang) {
+      if (!isVJudge && changes.cfLang) {
         const newLang = changes.cfLang.newValue || 'en';
         currentCfLang = newLang;
         renderVietnameseFlag(newLang);
@@ -4105,6 +4168,8 @@
       // Sync visual theme & background settings ONLY when a visual setting actually changed
       const visualKeys = [
         'enabled',
+        'enableCodeforces',
+        'enableVJudge',
         'bgType',
         'bgImage',
         'bgHistory',

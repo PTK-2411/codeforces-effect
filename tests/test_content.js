@@ -2191,10 +2191,10 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
 
   console.log('✓ Test 41 passed: Personal Profile Sidebar Unboxing & Media Under 100MB verified');
 
-  // Test 42: WebM playback fix, chilling-cat fallback and version 1.4.1 Alpha verification
+  // Test 42: WebM playback fix, chilling-cat fallback and version 1.5.0 Alpha verification
   const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../manifest.json'), 'utf8'));
-  assert.strictEqual(manifest.version, '1.4.1', 'Manifest version must be 1.4.1');
-  assert.strictEqual(manifest.version_name, 'v1.4.1 Alpha', 'Manifest version_name must be v1.4.1 Alpha');
+  assert.strictEqual(manifest.version, '1.5.0', 'Manifest version must be 1.5.0');
+  assert.strictEqual(manifest.version_name, 'v1.5.0 Alpha', 'Manifest version_name must be v1.5.0 Alpha');
 
   const webRes = manifest.web_accessible_resources[0].resources;
   assert(webRes.includes('assets/chilling-cat.webm'), 'manifest resources must include chilling-cat.webm');
@@ -2204,7 +2204,7 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert(fs.existsSync(path.join(__dirname, '../assets/chilling-cat.mp4')), 'chilling-cat.mp4 must exist');
 
   const popupHtml = fs.readFileSync(path.join(__dirname, '../popup/popup.html'), 'utf8');
-  assert(popupHtml.includes('v1.4.1 Alpha'), 'popup.html must display v1.4.1 Alpha');
+  assert(popupHtml.includes('v1.5.0 Alpha'), 'popup.html must display v1.5.0 Alpha');
 
   const popupJs = fs.readFileSync(path.join(__dirname, '../popup/popup.js'), 'utf8');
   assert(popupJs.includes("currentSettings.bgImage.includes('assets/chilling-cat')"), 'popup.js must normalize chilling-cat');
@@ -2213,7 +2213,7 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert(contentCode.includes("bgImage.includes('assets/chilling-cat')"), 'content.js must normalize chilling-cat');
   assert(contentCode.includes('_cfErrorHandlerAdded'), 'content.js must include video error fallback');
 
-  console.log('✓ Test 42 passed: Chilling Cat WebM/MP4 dual compatibility and v1.4.1 Alpha verified');
+  console.log('✓ Test 42 passed: Chilling Cat WebM/MP4 dual compatibility and v1.5.0 Alpha verified');
 
   // ==========================================
   // Test 43: Google Translate Draft First -> AI Replacement
@@ -2295,6 +2295,39 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert(contentCode.includes('setupFaceboxSubmissionHandler'), 'content.js must define setupFaceboxSubmissionHandler');
 
   console.log('✓ Test 44 passed: Submission Source Code Popup (Facebox Modal) Styling verified');
+
+  // ==========================================
+  // Test 45: VJudge (vjudge.net) Custom Background ONLY (No blur, no button/layout modification)
+  // ==========================================
+  console.log('Test 45: VJudge (vjudge.net) Custom Background ONLY');
+
+  // Verify manifest includes vjudge.net
+  const manifestData = JSON.parse(fs.readFileSync(path.join(__dirname, '../manifest.json'), 'utf8'));
+  assert(manifestData.content_scripts[0].matches.some(m => m.includes('vjudge.net')), 'content_scripts matches must include vjudge.net');
+  assert(manifestData.web_accessible_resources[0].matches.some(m => m.includes('vjudge.net')), 'web_accessible_resources matches must include vjudge.net');
+  assert(manifestData.host_permissions.some(m => m.includes('vjudge.net')), 'host_permissions must include vjudge.net');
+
+  // Verify VJudge CSS minimal background rules (no blur, no card styling, no button changes)
+  assert(cssStyles.includes('html.vjudge-custom-bg-active'), 'content.css must define html.vjudge-custom-bg-active');
+  assert(cssStyles.includes('--bs-body-bg: transparent !important'), 'content.css must define transparent body-bg variable for VJudge Bootstrap 5');
+  assert(cssStyles.includes('html.vjudge-custom-bg-active #cf-custom-bg-layer'), 'content.css must scope #cf-custom-bg-layer for VJudge');
+  assert(cssStyles.includes('z-index: -1 !important'), 'content.css must position bg-layer strictly behind all content (z-index: -1) on VJudge');
+  assert(cssStyles.includes('filter: blur(0px)'), 'content.css must ensure 0px blur on VJudge background layer');
+
+  // Ensure NO button hiding and NO layout overrides
+  assert(!cssStyles.includes('#top-nav .navbar-toggler'), 'content.css must NOT modify or hide VJudge navbar-toggler button');
+  assert(!cssStyles.includes('.fixed-left-panel-layout'), 'content.css must NOT override .fixed-left-panel-layout');
+  assert(!contentCode.includes('alignVJudgeSidebar'), 'content.js must NOT contain alignVJudgeSidebar');
+
+  // Verify content.js defines isVJudge and handles VJudge separately (strictly no translation on VJudge)
+  assert(contentCode.includes('isVJudge'), 'content.js must define isVJudge');
+  assert(contentCode.includes('data-bs-theme'), 'content.js must sync data-bs-theme for VJudge');
+  assert(contentCode.includes('vjudge-custom-bg-active'), 'content.js must toggle vjudge-custom-bg-active on VJudge');
+  assert(contentCode.includes('enableCodeforces') && contentCode.includes('enableVJudge'), 'content.js must handle enableCodeforces and enableVJudge settings');
+  assert(contentCode.includes('if (isVJudge) return;\n    const targetLang'), 'applyVietnameseTranslation must short-circuit on VJudge');
+  assert(contentCode.includes('if (isVJudge) return;\n    removeProblemStatementChangeNotice'), 'applyDynamicContentTranslation must short-circuit on VJudge');
+
+  console.log('✓ Test 45 passed: VJudge (vjudge.net) Custom Background ONLY verified');
 
   console.log('\nALL content.js TESTS PASSED SUCCESSFULLY!');
 }

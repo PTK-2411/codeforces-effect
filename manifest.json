@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "OJ Effect",
-  "version": "1.4.1",
-  "version_name": "v1.4.1 Alpha",
+  "version": "1.5.0",
+  "version_name": "v1.5.0 Alpha",
   "homepage_url": "https://github.com/PTK-2411/oj-effect",
   "description": "OJ Effect - Tùy chỉnh hình nền, giao diện hiệu ứng blur glassmorphism, streak tracker và dịch thuật các nền tảng Online Judge.",
   "permissions": [
@@ -27,6 +27,8 @@
     "*://codeforces.net/*",
     "*://*.codeforces.ru/*",
     "*://codeforces.ru/*",
+    "*://*.vjudge.net/*",
+    "*://vjudge.net/*",
     "<all_urls>"
   ],
   "background": {
@@ -56,7 +58,9 @@
         "*://*.codeforces.net/*",
         "*://codeforces.net/*",
         "*://*.codeforces.ru/*",
-        "*://codeforces.ru/*"
+        "*://codeforces.ru/*",
+        "*://*.vjudge.net/*",
+        "*://vjudge.net/*"
       ],
       "exclude_globs": [
         "*://*.codeforces.com/*/hacks/*/test*",
@@ -121,7 +125,9 @@
         "*://*.codeforces.net/*",
         "*://codeforces.net/*",
         "*://*.codeforces.ru/*",
-        "*://codeforces.ru/*"
+        "*://codeforces.ru/*",
+        "*://*.vjudge.net/*",
+        "*://vjudge.net/*"
       ]
     }
   ]
