@@ -1476,6 +1476,8 @@
     restoreInteractiveText(el);
     delete el.dataset.cfTranslated;
     delete el.dataset.cfTransPending;
+    delete el.dataset.cfTransDraft;
+    delete el.dataset.cfTransFinal;
     delete el.dataset.cfEngine;
   }
 
@@ -1558,12 +1560,18 @@
     const dict = window.CF_TRANSLATIONS || {};
     const interactiveSel = 'a, button, [role="button"], [role="tab"], .read-more, .disclosure-link';
 
-    function applyTranslationToItem(item, transText) {
+    function applyTranslationToItem(item, transText, isDraft = false) {
       if (!item || !item.el || !transText || !transText.trim()) return;
       if (item.isInteractive) {
         updateTextNodeDirect(item.el, transText);
         item.el.dataset.cfTranslated = 'true';
-        item.el.dataset.cfEngine = currentTranslationEngine;
+        item.el.dataset.cfEngine = isDraft ? 'google' : (engine || currentTranslationEngine);
+        if (isDraft) {
+          item.el.dataset.cfTransDraft = 'true';
+        } else {
+          item.el.dataset.cfTransFinal = 'true';
+          delete item.el.dataset.cfTransDraft;
+        }
         return;
       }
 
@@ -1651,7 +1659,13 @@
       }
       item.el._cfPlaceholders = item.placeholders;
       item.el.dataset.cfTranslated = 'true';
-      item.el.dataset.cfEngine = currentTranslationEngine;
+      item.el.dataset.cfEngine = isDraft ? 'google' : (engine || currentTranslationEngine);
+      if (isDraft) {
+        item.el.dataset.cfTransDraft = 'true';
+      } else {
+        item.el.dataset.cfTransFinal = 'true';
+        delete item.el.dataset.cfTransDraft;
+      }
     }
 
     for (const el of elements) {
@@ -1705,6 +1719,17 @@
           el.dataset.cfTranslated = 'true';
           el.dataset.cfEngine = currentTranslationEngine;
           continue;
+        }
+
+        const isAiEngineActive = (engine || currentTranslationEngine) === 'gemini' || (engine || currentTranslationEngine) === 'xkiro';
+        if (isAiEngineActive) {
+          const googleDraft = contentTranslationCache.get(`google:${textToTranslate}`);
+          if (googleDraft) {
+            updateTextNodeDirect(el, googleDraft);
+            el.dataset.cfTranslated = 'true';
+            el.dataset.cfEngine = 'google';
+            el.dataset.cfTransDraft = 'true';
+          }
         }
 
         el.dataset.cfTransPending = 'true';
@@ -1820,6 +1845,15 @@
         continue;
       }
 
+      // If translating with AI (Gemini or xKiro), display cached Google Translate version immediately as draft if available
+      const isAiMode = (engine || currentTranslationEngine) === 'gemini' || (engine || currentTranslationEngine) === 'xkiro';
+      if (isAiMode) {
+        const googleDraft = contentTranslationCache.get(`google:${textToTranslate}`) || contentTranslationCache.get(`google:${normText}`);
+        if (googleDraft) {
+          applyTranslationToItem({ el, isInteractive: false, text: textToTranslate, placeholders }, googleDraft, true);
+        }
+      }
+
       el.dataset.cfTransPending = 'true';
       validItems.push({
         el,
@@ -1844,23 +1878,31 @@
         const appliedIndices = new Set();
 
         // Progressive real-time stream listener: as AI finishes translating each element, render it immediately!
+        // Also receives immediate Google Translate drafts to eliminate waiting perception
         const streamListener = (msg) => {
           if (msg && msg.action === 'streamItemReady' && msg.batchId === batchId) {
             if (currentCfLang !== 'vi' || batchSession !== currentTranslationSession) return;
             const item = chunk[msg.index];
-            if (item && item.el && item.el.dataset.cfTranslated !== 'true') {
-              const transText = msg.text;
-              if (transText && transText.trim()) {
-                appliedIndices.add(msg.index);
-                setCachedTranslation(item.text, transText);
-                applyTranslationToItem(item, transText);
-                delete item.el.dataset.cfTransPending;
+            if (!item || !item.el) return;
+            const transText = msg.text;
+            if (!transText || !transText.trim()) return;
+
+            if (msg.isDraft) {
+              if (!appliedIndices.has(msg.index) && item.el.dataset.cfTransFinal !== 'true') {
+                applyTranslationToItem(item, transText, true);
                 typesetMath(item.el);
-                if (!isRetry && currentCfLang === 'vi' && batchSession === currentTranslationSession) {
-                  completedTranslationTasks++;
-                  updateTranslationProgress(completedTranslationTasks, activeTranslationTasks);
-                }
               }
+              return;
+            }
+
+            appliedIndices.add(msg.index);
+            delete item.el.dataset.cfTransPending;
+            setCachedTranslation(item.text, transText);
+            applyTranslationToItem(item, transText, false);
+            typesetMath(item.el);
+            if (!isRetry && currentCfLang === 'vi' && batchSession === currentTranslationSession) {
+              completedTranslationTasks++;
+              updateTranslationProgress(completedTranslationTasks, activeTranslationTasks);
             }
           }
         };
@@ -1909,8 +1951,9 @@
               if (!item) return;
               if (!appliedIndices.has(i) && transText && transText.trim()) {
                 appliedIndices.add(i);
+                delete item.el.dataset.cfTransPending;
                 setCachedTranslation(item.text, transText);
-                applyTranslationToItem(item, transText);
+                applyTranslationToItem(item, transText, false);
                 typesetMath(item.el);
                 if (!isRetry && currentCfLang === 'vi' && batchSession === currentTranslationSession) {
                   completedTranslationTasks++;
@@ -1927,6 +1970,7 @@
           }
           chunk.forEach(item => {
             delete item.el.dataset.cfTransPending;
+            delete item.el.dataset.cfTransDraft;
           });
           if (!isRetry && currentCfLang === 'vi' && batchSession === currentTranslationSession) {
             const uncounted = chunk.length - appliedIndices.size;

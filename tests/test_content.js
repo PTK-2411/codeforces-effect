@@ -396,12 +396,38 @@ const storage = {
   translationEngine: 'google'
 };
 let storageChangeListeners = [];
+let runtimeMessageListeners = [];
 
 const mockChrome = {
   runtime: {
     getURL: (p) => `chrome-extension://mock/${p}`,
+    onMessage: {
+      addListener: (fn) => runtimeMessageListeners.push(fn),
+      removeListener: (fn) => {
+        const idx = runtimeMessageListeners.indexOf(fn);
+        if (idx >= 0) runtimeMessageListeners.splice(idx, 1);
+      }
+    },
     sendMessage: (msg, callback) => {
       if (msg.action === 'translateBatch') {
+        // If AI engine is used and batchId is provided, simulate Google draft stream first
+        if ((msg.engine === 'gemini' || msg.engine === 'xkiro') && msg.batchId) {
+          msg.items.forEach((t, idx) => {
+            const draftText = 'Bản dịch Google nháp: ' + t;
+            runtimeMessageListeners.forEach(fn => {
+              try {
+                fn({
+                  action: 'streamItemReady',
+                  batchId: msg.batchId,
+                  index: idx,
+                  text: draftText,
+                  isDraft: true
+                });
+              } catch (e) {}
+            });
+          });
+        }
+
         // Mock translation response: return translated dummy text
         const texts = msg.items.map(t => {
           if (t.includes('Watermelon')) return 'Dưa hấu';
@@ -2165,10 +2191,10 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
 
   console.log('✓ Test 41 passed: Personal Profile Sidebar Unboxing & Media Under 100MB verified');
 
-  // Test 42: WebM playback fix, chilling-cat fallback and version 1.2.4 Alpha verification
+  // Test 42: WebM playback fix, chilling-cat fallback and version 1.3.0 Alpha verification
   const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../manifest.json'), 'utf8'));
-  assert.strictEqual(manifest.version, '1.2.4', 'Manifest version must be 1.2.4');
-  assert.strictEqual(manifest.version_name, 'v1.2.4 Alpha', 'Manifest version_name must be v1.2.4 Alpha');
+  assert.strictEqual(manifest.version, '1.3.0', 'Manifest version must be 1.3.0');
+  assert.strictEqual(manifest.version_name, 'v1.3.0 Alpha', 'Manifest version_name must be v1.3.0 Alpha');
 
   const webRes = manifest.web_accessible_resources[0].resources;
   assert(webRes.includes('assets/chilling-cat.webm'), 'manifest resources must include chilling-cat.webm');
@@ -2178,7 +2204,7 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert(fs.existsSync(path.join(__dirname, '../assets/chilling-cat.mp4')), 'chilling-cat.mp4 must exist');
 
   const popupHtml = fs.readFileSync(path.join(__dirname, '../popup/popup.html'), 'utf8');
-  assert(popupHtml.includes('v1.2.4 Alpha'), 'popup.html must display v1.2.4 Alpha');
+  assert(popupHtml.includes('v1.3.0 Alpha'), 'popup.html must display v1.3.0 Alpha');
 
   const popupJs = fs.readFileSync(path.join(__dirname, '../popup/popup.js'), 'utf8');
   assert(popupJs.includes("currentSettings.bgImage.includes('assets/chilling-cat')"), 'popup.js must normalize chilling-cat');
@@ -2187,7 +2213,40 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert(contentCode.includes("bgImage.includes('assets/chilling-cat')"), 'content.js must normalize chilling-cat');
   assert(contentCode.includes('_cfErrorHandlerAdded'), 'content.js must include video error fallback');
 
-  console.log('✓ Test 42 passed: Chilling Cat WebM/MP4 dual compatibility and v1.2.4 Alpha verified');
+  console.log('✓ Test 42 passed: Chilling Cat WebM/MP4 dual compatibility and v1.3.0 Alpha verified');
+
+  // ==========================================
+  // Test 43: Google Translate Draft First -> AI Replacement
+  // ==========================================
+  console.log('Test 43: Google Translate Draft First -> AI Replacement');
+  body.innerHTML = `
+    <div class="problem-statement">
+      <div class="header"><div class="title">C. Sorting Query</div></div>
+      <p id="test43-p">The array is sorted in ascending order.</p>
+    </div>
+  `;
+
+  // Switch to Vietnamese with AI engine
+  storageChangeListeners.forEach(fn => fn({
+    cfLang: { newValue: 'vi' },
+    translationEngine: { newValue: 'gemini' }
+  }, 'local'));
+  await new Promise(r => setTimeout(r, 150));
+
+  const p43 = body.querySelector('#test43-p');
+  assert.strictEqual(p43.dataset.cfTranslated, 'true', 'Element must be marked translated');
+  assert.strictEqual(p43.dataset.cfTransFinal, 'true', 'Final AI translation flag must be set');
+  assert.strictEqual(p43.dataset.cfTransDraft, undefined, 'Draft flag must be cleared upon final AI translation');
+  assert(p43.textContent.includes('Đã dịch:'), 'Final AI translation text must be present');
+
+  // Verify revert to English restores original text cleanly
+  storageChangeListeners.forEach(fn => fn({ cfLang: { newValue: 'en' } }, 'local'));
+  await new Promise(r => setTimeout(r, 150));
+
+  assert.strictEqual(p43.textContent.trim(), 'The array is sorted in ascending order.', 'English text must be completely restored');
+  assert.strictEqual(p43.dataset.cfTranslated, undefined, 'cfTranslated attribute must be removed');
+  assert.strictEqual(p43.dataset.cfTransFinal, undefined, 'cfTransFinal attribute must be removed');
+  console.log('✓ Test 43 passed: Google Translate Draft First -> AI Replacement verified');
 
   console.log('\nALL content.js TESTS PASSED SUCCESSFULLY!');
 }

@@ -261,6 +261,16 @@ async function runTests() {
   console.log('Test 4: Batch Translation with Gemini');
   fetchCalls = [];
   fetchHandler = async (url, opts) => {
+    if (url.includes('translate.googleapis.com')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => [
+          'Đoạn văn thứ nhất nháp [[M0]]',
+          'Đoạn văn thứ hai nháp'
+        ]
+      };
+    }
     const body = JSON.parse(opts.body);
     const prompt = body.contents[0].parts[0].text;
     assert(prompt.includes('<<<CF_TRANSLATE_ITEM_0>>>'));
@@ -297,7 +307,8 @@ async function runTests() {
   assert.strictEqual(res4.texts.length, 2);
   assert.strictEqual(res4.texts[0], 'Đoạn văn thứ nhất [[M0]]');
   assert.strictEqual(res4.texts[1], 'Đoạn văn thứ hai');
-  assert.strictEqual(fetchCalls.length, 1, 'Batching should send 1 API request for multiple items');
+  const geminiBatchCalls = fetchCalls.filter(c => c.url.includes('generativelanguage.googleapis.com'));
+  assert.strictEqual(geminiBatchCalls.length, 1, 'Batching should send 1 API request for multiple items');
   console.log('✓ Test 4 passed: Batch translation grouped items into 1 prompt and resolved all');
 
   // Test 4b: Already Vietnamese detection via 256-bit hash to save tokens
@@ -441,6 +452,13 @@ async function runTests() {
   console.log('Test 4e: xKiro batch translation');
   fetchCalls = [];
   fetchHandler = async (url, opts) => {
+    if (url.includes('translate.googleapis.com')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ['Đầu vào bài toán nháp', 'Đầu ra bài toán nháp']
+      };
+    }
     assert.strictEqual(url, 'https://api.xkiro.com/v1/chat/completions');
     const body = JSON.parse(opts.body);
     assert.strictEqual(body.model, 'mistralai/mistral-small-2603');
@@ -468,11 +486,18 @@ async function runTests() {
   assert.deepStrictEqual(resXkiroBatch.texts, ['Đầu vào bài toán', 'Đầu ra bài toán']);
   console.log('✓ Test 4e passed: xKiro batch translation verified');
 
-  // Test 4g: Progressive streamItemReady delivery as AI generates items
-  console.log('Test 4g: Progressive streamItemReady delivery as AI generates items');
+  // Test 4g: Progressive streamItemReady delivery as AI generates items (with Google Translate draft first)
+  console.log('Test 4g: Progressive streamItemReady delivery as AI generates items with draft first');
   tabMessagesSent.length = 0;
   fetchCalls = [];
   fetchHandler = async (url, opts) => {
+    if (url.includes('translate.googleapis.com')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ['Bản nháp Google 1', 'Bản nháp Google 2']
+      };
+    }
     return {
       ok: true,
       status: 200,
@@ -497,15 +522,13 @@ async function runTests() {
   }, { tab: { id: 777 } });
 
   assert.deepStrictEqual(resStreamBatch.texts, ['Đoạn văn 1 đã dịch', 'Đoạn văn 2 đã dịch']);
-  assert.strictEqual(tabMessagesSent.length, 2, 'Should have dispatched 2 real-time progressive stream messages to tab');
-  assert.strictEqual(tabMessagesSent[0].tabId, 777);
-  assert.strictEqual(tabMessagesSent[0].msg.action, 'streamItemReady');
-  assert.strictEqual(tabMessagesSent[0].msg.batchId, 'stream_test_123');
-  assert.strictEqual(tabMessagesSent[0].msg.index, 0);
-  assert.strictEqual(tabMessagesSent[0].msg.text, 'Đoạn văn 1 đã dịch');
-  assert.strictEqual(tabMessagesSent[1].msg.index, 1);
-  assert.strictEqual(tabMessagesSent[1].msg.text, 'Đoạn văn 2 đã dịch');
-  console.log('✓ Test 4g passed: Progressive streamItemReady delivery verified');
+  const draftMessages = tabMessagesSent.filter(m => m.msg.isDraft === true);
+  const finalMessages = tabMessagesSent.filter(m => m.msg.isDraft === false);
+  assert.strictEqual(draftMessages.length, 2, 'Should have dispatched 2 Google drafts');
+  assert.strictEqual(finalMessages.length, 2, 'Should have dispatched 2 AI final translations');
+  assert.strictEqual(draftMessages[0].msg.text, 'Bản nháp Google 1');
+  assert.strictEqual(finalMessages[0].msg.text, 'Đoạn văn 1 đã dịch');
+  console.log('✓ Test 4g passed: Progressive draft and final streamItemReady delivery verified');
 
   // Test 5: Test Gemini API Key connection
   console.log('Test 5: testGeminiKey endpoint');

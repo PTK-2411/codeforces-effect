@@ -733,6 +733,48 @@ async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, 
   const isGeminiActive = eng === 'gemini' && geminiApiKey && geminiQuotaCooldownUntil <= Date.now();
   const isXkiroActive = eng === 'xkiro' && xkiroApiKey;
 
+  // Helper to trigger concurrent instant Google Translate draft for items waiting on AI translation.
+  // The user sees Vietnamese immediately (~150ms), and it gets seamlessly replaced when AI finishes!
+  const triggerGoogleDraft = (batchIndices, batchTexts) => {
+    (async () => {
+      try {
+        const uncachedForGoogle = [];
+        const uncachedGoogleIndices = [];
+        for (let b = 0; b < batchIndices.length; b++) {
+          const origIdx = batchIndices[b];
+          const text = batchTexts[b];
+          const gKey = `google:${text}`;
+          if (translationCache.has(gKey)) {
+            const cachedG = translationCache.get(gKey);
+            if (cachedG && results[origIdx] === undefined && typeof onItemReady === 'function') {
+              onItemReady(origIdx, cachedG, true);
+            }
+          } else {
+            uncachedForGoogle.push(text);
+            uncachedGoogleIndices.push(origIdx);
+          }
+        }
+
+        if (uncachedForGoogle.length > 0) {
+          const googleResults = await translateBatchWithGoogle(uncachedForGoogle);
+          for (let g = 0; g < uncachedGoogleIndices.length; g++) {
+            const origIdx = uncachedGoogleIndices[g];
+            const text = uncachedForGoogle[g];
+            const gTrans = googleResults && googleResults[g];
+            if (gTrans) {
+              translationCache.set(`google:${text}`, gTrans);
+              if (results[origIdx] === undefined && typeof onItemReady === 'function') {
+                onItemReady(origIdx, gTrans, true);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // Silent fallback for draft
+      }
+    })();
+  };
+
   if (isGeminiActive) {
     // Process in batches of up to 10 items with real-time SSE streaming progressive delivery
     const BATCH_SIZE = 10;
@@ -740,13 +782,15 @@ async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, 
       const batchIndices = uncachedIndices.slice(i, i + BATCH_SIZE);
       const batchTexts = batchIndices.map(idx => items[idx].trim());
 
+      triggerGoogleDraft(batchIndices, batchTexts);
+
       if (batchTexts.length === 1) {
         try {
           const trans = await translateWithGemini(batchTexts[0], geminiApiKey, geminiModel, geminiCustomModel);
           translationCache.set(`${eng}:${batchTexts[0]}`, trans);
           results[batchIndices[0]] = trans;
           if (typeof onItemReady === 'function') {
-            onItemReady(batchIndices[0], trans);
+            onItemReady(batchIndices[0], trans, false);
           }
         } catch (err) {
           try {
@@ -754,12 +798,12 @@ async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, 
             translationCache.set(`google:${batchTexts[0]}`, trans);
             results[batchIndices[0]] = trans;
             if (typeof onItemReady === 'function') {
-              onItemReady(batchIndices[0], trans);
+              onItemReady(batchIndices[0], trans, false);
             }
           } catch (e) {
             results[batchIndices[0]] = batchTexts[0];
             if (typeof onItemReady === 'function') {
-              onItemReady(batchIndices[0], batchTexts[0]);
+              onItemReady(batchIndices[0], batchTexts[0], false);
             }
           }
         }
@@ -924,13 +968,15 @@ ${promptBody}`;
       const batchIndices = uncachedIndices.slice(i, i + BATCH_SIZE);
       const batchTexts = batchIndices.map(idx => items[idx].trim());
 
+      triggerGoogleDraft(batchIndices, batchTexts);
+
       if (batchTexts.length === 1) {
         try {
           const trans = await translateWithXkiro(batchTexts[0], xkiroApiKey);
           translationCache.set(`${eng}:${batchTexts[0]}`, trans);
           results[batchIndices[0]] = trans;
           if (typeof onItemReady === 'function') {
-            onItemReady(batchIndices[0], trans);
+            onItemReady(batchIndices[0], trans, false);
           }
         } catch (err) {
           try {
@@ -938,12 +984,12 @@ ${promptBody}`;
             translationCache.set(`google:${batchTexts[0]}`, trans);
             results[batchIndices[0]] = trans;
             if (typeof onItemReady === 'function') {
-              onItemReady(batchIndices[0], trans);
+              onItemReady(batchIndices[0], trans, false);
             }
           } catch (e) {
             results[batchIndices[0]] = batchTexts[0];
             if (typeof onItemReady === 'function') {
-              onItemReady(batchIndices[0], batchTexts[0]);
+              onItemReady(batchIndices[0], batchTexts[0], false);
             }
           }
         }
@@ -1215,13 +1261,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Keep message channel open for async response
   } else if (message && message.action === 'translateBatch') {
     const tabId = sender && sender.tab && sender.tab.id ? sender.tab.id : null;
-    const onItemReady = (idx, text) => {
+    const onItemReady = (idx, text, isDraft = false) => {
       if (tabId && message.batchId && typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.sendMessage) {
         chrome.tabs.sendMessage(tabId, {
           action: 'streamItemReady',
           batchId: message.batchId,
           index: idx,
-          text: text
+          text: text,
+          isDraft: Boolean(isDraft)
         }).catch(() => {});
       }
     };
