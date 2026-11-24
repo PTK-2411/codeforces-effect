@@ -314,13 +314,42 @@
       previewTypeBadge.textContent = '🎬 Video nền (Lặp lại)';
       previewImg.classList.add('hidden');
       previewVideo.classList.remove('hidden');
-      if (previewVideo.src !== mediaUrl) {
-        previewVideo.src = mediaUrl;
+
+      let resolvedMediaUrl = mediaUrl;
+      if (typeof mediaUrl === 'string') {
+        if (mediaUrl.includes('assets/chilling-cat')) {
+          resolvedMediaUrl = SAMPLE_CAT_BG;
+        } else if (mediaUrl.includes('assets/default-bg')) {
+          resolvedMediaUrl = DEFAULT_BG;
+        }
+      }
+
+      if (previewVideo.src !== resolvedMediaUrl) {
+        previewVideo.src = resolvedMediaUrl;
         previewVideo.load();
       }
       previewVideo.muted = true;
       previewVideo.loop = true;
       previewVideo.play().catch(() => {});
+
+      if (!previewVideo._cfErrorHandlerAdded) {
+        previewVideo._cfErrorHandlerAdded = true;
+        previewVideo.addEventListener('error', () => {
+          if (previewVideo.src && previewVideo.src.includes('chilling-cat')) {
+            const mp4Fallback = chrome.runtime.getURL('assets/chilling-cat.mp4');
+            const webmFallback = chrome.runtime.getURL('assets/chilling-cat.webm');
+            if (previewVideo.src.endsWith('.webm') && previewVideo.src !== mp4Fallback) {
+              previewVideo.src = mp4Fallback;
+              previewVideo.load();
+              previewVideo.play().catch(() => {});
+            } else if (previewVideo.src.endsWith('.mp4') && previewVideo.src !== webmFallback) {
+              previewVideo.src = webmFallback;
+              previewVideo.load();
+              previewVideo.play().catch(() => {});
+            }
+          }
+        });
+      }
     } else {
       previewTypeBadge.textContent = '🖼️ Ảnh nền';
       previewVideo.classList.add('hidden');
@@ -751,38 +780,49 @@
   }
 
   function selectHistoryItem(item) {
-    if (item.hasCache || (item.url && item.url.startsWith('cf_cache_'))) {
-      const cacheKey = (item.url && item.url.startsWith('cf_cache_')) ? item.url : ('cf_cache_' + item.id);
+    let targetUrl = item.url;
+    if (item.id === 'sample_chilling_cat_1080p' || (targetUrl && targetUrl.includes('assets/chilling-cat'))) {
+      targetUrl = SAMPLE_CAT_BG;
+    } else if (item.id === 'default_gargantua_1080p' || (targetUrl && targetUrl.includes('assets/default-bg'))) {
+      targetUrl = DEFAULT_BG;
+    }
+
+    if (item.hasCache || (targetUrl && targetUrl.startsWith('cf_cache_'))) {
+      const cacheKey = (targetUrl && targetUrl.startsWith('cf_cache_')) ? targetUrl : ('cf_cache_' + item.id);
       chrome.storage.local.get([cacheKey], (res) => {
         const cached = res && res[cacheKey];
         if (cached) {
           saveSettings({
             bgType: item.type,
             bgImage: cached,
-            bgImageOriginal: item.url,
+            bgImageOriginal: targetUrl,
             bgImageId: item.id,
             enabled: true
           });
           currentSettings.bgImage = cached;
           currentSettings.bgImageId = item.id;
           updateUI(currentSettings);
-        } else if (item.url && !item.url.startsWith('cf_cache_')) {
+        } else if (targetUrl && !targetUrl.startsWith('cf_cache_')) {
           saveSettings({
             bgType: item.type,
-            bgImage: item.url,
+            bgImage: targetUrl,
             bgImageId: item.id,
             enabled: true
           });
+          currentSettings.bgImage = targetUrl;
+          currentSettings.bgImageId = item.id;
           updateUI(currentSettings);
         }
       });
     } else {
       saveSettings({
         bgType: item.type,
-        bgImage: item.url,
+        bgImage: targetUrl,
         bgImageId: item.id,
         enabled: true
       });
+      currentSettings.bgImage = targetUrl;
+      currentSettings.bgImageId = item.id;
       updateUI(currentSettings);
 
       if (!item.url.startsWith('data:') && item.type !== 'youtube' && item.url.startsWith('http')) {
@@ -821,9 +861,45 @@
       chrome.storage.local.set({ bgType: 'video', bgImage: DEFAULT_BG });
     }
 
+    // Automatic migration & normalization for bundled video backgrounds:
+    if (typeof currentSettings.bgImage === 'string') {
+      if (currentSettings.bgImage.includes('assets/chilling-cat')) {
+        if (currentSettings.bgImage !== SAMPLE_CAT_BG || currentSettings.bgType !== 'video') {
+          currentSettings.bgImage = SAMPLE_CAT_BG;
+          currentSettings.bgType = 'video';
+          chrome.storage.local.set({ bgType: 'video', bgImage: SAMPLE_CAT_BG });
+        }
+      } else if (currentSettings.bgImage.includes('assets/default-bg')) {
+        if (currentSettings.bgImage !== DEFAULT_BG || currentSettings.bgType !== 'video') {
+          currentSettings.bgImage = DEFAULT_BG;
+          currentSettings.bgType = 'video';
+          chrome.storage.local.set({ bgType: 'video', bgImage: DEFAULT_BG });
+        }
+      }
+    }
+
     // Ensure default samples (Gargantua 1080p & Chilling Cat) are in history
     let history = currentSettings.bgHistory || [];
     let historyChanged = false;
+
+    // Migrate any legacy/outdated sample URLs in history to current bundled assets
+    history.forEach(h => {
+      if (h.id === 'sample_chilling_cat_1080p' || (h.url && h.url.includes('assets/chilling-cat'))) {
+        if (h.url !== SAMPLE_CAT_BG || h.thumbnail !== SAMPLE_CAT_THUMB) {
+          h.url = SAMPLE_CAT_BG;
+          h.thumbnail = SAMPLE_CAT_THUMB;
+          historyChanged = true;
+        }
+      }
+      if (h.id === 'default_gargantua_1080p' || (h.url && h.url.includes('assets/default-bg'))) {
+        if (h.url !== DEFAULT_BG || h.thumbnail !== DEFAULT_THUMB) {
+          h.url = DEFAULT_BG;
+          h.thumbnail = DEFAULT_THUMB;
+          historyChanged = true;
+        }
+      }
+    });
+
     if (!history.some(h => h.url === DEFAULT_BG || h.id === 'default_gargantua_1080p')) {
       history.unshift({
         id: 'default_gargantua_1080p',

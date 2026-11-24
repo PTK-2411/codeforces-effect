@@ -212,6 +212,17 @@
       bgType = 'video';
     }
 
+    // Automatic migration & normalization for bundled video backgrounds
+    if (typeof bgImage === 'string') {
+      if (bgImage.includes('assets/chilling-cat')) {
+        bgImage = SAMPLE_CAT_BG;
+        bgType = 'video';
+      } else if (bgImage.includes('assets/default-bg')) {
+        bgImage = DEFAULT_BG;
+        bgType = 'video';
+      }
+    }
+
     const docEl = document.documentElement;
 
     if (!enabled || !bgImage) {
@@ -400,6 +411,27 @@
               bgVideoEl._cfPendingCacheSrc = null;
               bgVideoEl.load();
               bgVideoEl.play().catch(() => {});
+            }
+          });
+        }
+
+        if (!bgVideoEl._cfErrorHandlerAdded) {
+          bgVideoEl._cfErrorHandlerAdded = true;
+          bgVideoEl.addEventListener('error', () => {
+            if (bgVideoEl.src && bgVideoEl.src.includes('chilling-cat')) {
+              const mp4Fallback = chrome.runtime.getURL('assets/chilling-cat.mp4');
+              const webmFallback = chrome.runtime.getURL('assets/chilling-cat.webm');
+              if (bgVideoEl.src.endsWith('.webm') && bgVideoEl.src !== mp4Fallback) {
+                console.warn('[Codeforces BG] WebM error, attempting MP4 fallback');
+                bgVideoEl.src = mp4Fallback;
+                bgVideoEl.load();
+                bgVideoEl.play().catch(() => {});
+              } else if (bgVideoEl.src.endsWith('.mp4') && bgVideoEl.src !== webmFallback) {
+                console.warn('[Codeforces BG] MP4 error, attempting WebM fallback');
+                bgVideoEl.src = webmFallback;
+                bgVideoEl.load();
+                bgVideoEl.play().catch(() => {});
+              }
             }
           });
         }

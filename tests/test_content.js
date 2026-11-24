@@ -2165,6 +2165,30 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
 
   console.log('✓ Test 41 passed: Personal Profile Sidebar Unboxing & Media Under 100MB verified');
 
+  // Test 42: WebM playback fix, chilling-cat fallback and version 1.2.4 Alpha verification
+  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../manifest.json'), 'utf8'));
+  assert.strictEqual(manifest.version, '1.2.4', 'Manifest version must be 1.2.4');
+  assert.strictEqual(manifest.version_name, 'v1.2.4 Alpha', 'Manifest version_name must be v1.2.4 Alpha');
+
+  const webRes = manifest.web_accessible_resources[0].resources;
+  assert(webRes.includes('assets/chilling-cat.webm'), 'manifest resources must include chilling-cat.webm');
+  assert(webRes.includes('assets/chilling-cat.mp4'), 'manifest resources must include chilling-cat.mp4');
+
+  assert(fs.existsSync(path.join(__dirname, '../assets/chilling-cat.webm')), 'chilling-cat.webm must exist');
+  assert(fs.existsSync(path.join(__dirname, '../assets/chilling-cat.mp4')), 'chilling-cat.mp4 must exist');
+
+  const popupHtml = fs.readFileSync(path.join(__dirname, '../popup/popup.html'), 'utf8');
+  assert(popupHtml.includes('v1.2.4 Alpha'), 'popup.html must display v1.2.4 Alpha');
+
+  const popupJs = fs.readFileSync(path.join(__dirname, '../popup/popup.js'), 'utf8');
+  assert(popupJs.includes("currentSettings.bgImage.includes('assets/chilling-cat')"), 'popup.js must normalize chilling-cat');
+  assert(popupJs.includes('_cfErrorHandlerAdded'), 'popup.js must include video error fallback');
+
+  assert(contentCode.includes("bgImage.includes('assets/chilling-cat')"), 'content.js must normalize chilling-cat');
+  assert(contentCode.includes('_cfErrorHandlerAdded'), 'content.js must include video error fallback');
+
+  console.log('✓ Test 42 passed: Chilling Cat WebM/MP4 dual compatibility and v1.2.4 Alpha verified');
+
   console.log('\nALL content.js TESTS PASSED SUCCESSFULLY!');
 }
 
