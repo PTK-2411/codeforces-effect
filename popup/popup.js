@@ -88,9 +88,9 @@
   const updateTag = document.getElementById('update-tag');
   const btnUpdateNow = document.getElementById('btn-update-now');
 
-  const DEFAULT_BG = chrome.runtime.getURL('assets/default-bg.mp4');
+  const DEFAULT_BG = chrome.runtime.getURL('assets/default-bg.webm');
   const DEFAULT_THUMB = chrome.runtime.getURL('assets/default-thumb.jpg');
-  const SAMPLE_CAT_BG = chrome.runtime.getURL('assets/chilling-cat.mp4');
+  const SAMPLE_CAT_BG = chrome.runtime.getURL('assets/chilling-cat.webm');
   const SAMPLE_CAT_THUMB = chrome.runtime.getURL('assets/chilling-cat-thumb.jpg');
 
   const DEFAULT_SETTINGS = {
@@ -156,7 +156,7 @@
     if (type === 'video') return true;
     if (type === 'image') return false;
     if (!url || typeof url !== 'string') return false;
-    if (url.includes('assets/default-bg.mp4') || url.includes('assets/chilling-cat.mp4')) return true;
+    if (url.includes('assets/default-bg') || url.includes('assets/chilling-cat')) return true;
     if (extractYouTubeId(url)) return false;
     if (url.startsWith('data:video/')) return true;
     return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);

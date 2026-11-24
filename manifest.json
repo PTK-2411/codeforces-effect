@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Codeforces Effect",
-  "version": "1.2.2",
-  "version_name": "v1.2.2 Alpha",
+  "version": "1.2.3",
+  "version_name": "v1.2.3 Alpha",
   "homepage_url": "https://github.com/PTK-2411/codeforces-effect",
   "description": "Codeforces Effect - Tùy chỉnh hình nền, giao diện hiệu ứng blur glassmorphism, streak tracker và dịch thuật Codeforces.",
   "permissions": [
@@ -107,9 +107,9 @@
         "content/cf-mathjax-bridge.js",
         "codeforces-logo.png",
         "codeforces-logo-dark.png",
-        "assets/default-bg.mp4",
+        "assets/default-bg.webm",
         "assets/default-thumb.jpg",
-        "assets/chilling-cat.mp4",
+        "assets/chilling-cat.webm",
         "assets/chilling-cat-thumb.jpg",
         "assets/vietnam.png",
         "vietnam.png"

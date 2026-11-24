@@ -2153,11 +2153,15 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   // Check CSS defines personal-sidebar unboxing
   assert(contentCss.includes('.personal-sidebar ul li') && contentCss.includes('border: none'), 'content.css must unbox personal sidebar items');
 
-  // Check default-bg.mp4 size is strictly under 100MB
-  const bgPath = path.join(__dirname, '../assets/default-bg.mp4');
+  // Check default-bg.webm size is strictly under 100MB and under 50MB
+  const bgPath = path.join(__dirname, '../assets/default-bg.webm');
   const bgStat = fs.statSync(bgPath);
-  assert(bgStat.size < 100 * 1024 * 1024, 'default-bg.mp4 size must be under 100MB');
-  assert(bgStat.size < 50 * 1024 * 1024, 'default-bg.mp4 size must be under 50MB for zero GitHub warnings');
+  assert(bgStat.size < 100 * 1024 * 1024, 'default-bg.webm size must be under 100MB');
+  assert(bgStat.size < 50 * 1024 * 1024, 'default-bg.webm size must be under 50MB for zero GitHub warnings');
+
+  // Verify demo.mp4 is removed and chilling-cat.webm exists
+  assert(!fs.existsSync(path.join(__dirname, '../assets/demo.mp4')), 'assets/demo.mp4 must be removed');
+  assert(fs.existsSync(path.join(__dirname, '../assets/chilling-cat.webm')), 'assets/chilling-cat.webm must exist');
 
   console.log('✓ Test 41 passed: Personal Profile Sidebar Unboxing & Media Under 100MB verified');
 

@@ -175,14 +175,14 @@
     return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1&playsinline=1&enablejsapi=1`;
   }
 
-  const DEFAULT_BG = chrome.runtime.getURL('assets/default-bg.mp4');
-  const SAMPLE_CAT_BG = chrome.runtime.getURL('assets/chilling-cat.mp4');
+  const DEFAULT_BG = chrome.runtime.getURL('assets/default-bg.webm');
+  const SAMPLE_CAT_BG = chrome.runtime.getURL('assets/chilling-cat.webm');
 
   function isVideoSource(type, url) {
     if (type === 'video') return true;
     if (type === 'image') return false;
     if (!url || typeof url !== 'string') return false;
-    if (url.includes('assets/default-bg.mp4') || url.includes('assets/chilling-cat.mp4')) return true;
+    if (url.includes('assets/default-bg') || url.includes('assets/chilling-cat')) return true;
     if (url.startsWith('data:video/')) return true;
     return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
   }

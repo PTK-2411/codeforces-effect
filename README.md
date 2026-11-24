@@ -7,7 +7,7 @@
 <br />
 
 <p align="center">
-  <img src="https://img.shields.io/badge/CODEFORCES_EFFECT-V1.2.2_ALPHA-7B2CBF?style=for-the-badge&logo=codeforces&logoColor=white" alt="Codeforces Effect" />
+  <img src="https://img.shields.io/badge/CODEFORCES_EFFECT-V1.2.3_ALPHA-7B2CBF?style=for-the-badge&logo=codeforces&logoColor=white" alt="Codeforces Effect" />
   <img src="https://img.shields.io/badge/NODE.JS-%3E%3D20.12-238636?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
   <img src="https://img.shields.io/badge/MANIFEST-V3-1f6feb?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/LICENSE-MIT-007ACC?style=for-the-badge" alt="License" />
@@ -21,7 +21,7 @@
 https://github.com/user-attachments/assets/ae90bd75-06f7-49f7-b89e-071c69ee9092
 
 
-<sub>*(Nếu không xem được video trực tiếp, bạn có thể [nhấp vào đây để xem hoặc tải về video demo](assets/demo.mp4))*</sub>
+<sub>*(Video demo trải nghiệm trực tiếp tính năng Codeforces Effect)*</sub>
 
 </div>
 
@@ -30,7 +30,7 @@ https://github.com/user-attachments/assets/ae90bd75-06f7-49f7-b89e-071c69ee9092
 ## ✨ Tính năng nổi bật
 
 1. **Tải ảnh và video tùy thích qua Popup**:
-   - **Tích hợp sẵn Video mẫu chất lượng cao**: Đi kèm sẵn video nền siêu mượt *Interstellar Gargantua (1080p Full HD)* và *Chilling Cat (Live Wallpaper)*.
+   - **Tích hợp sẵn Video mẫu chất lượng cao**: Đi kèm sẵn video nền siêu mượt định dạng WebM nhẹ *Interstellar Gargantua (1080p Full HD)* và *Chilling Cat (Live Wallpaper)*.
    - **Tải tệp lên**: Kéo & thả hoặc nhấp duyệt từ máy tính. Hỗ trợ ảnh (JPG, PNG, WebP, GIF) và video (MP4, WebM).
    - **Nhập liên kết (URL)**: Dán link **YouTube** (`https://www.youtube.com/watch?v=...`, `youtu.be/...`, shorts) hoặc link trực tiếp đến ảnh / video MP4/WebM để áp dụng ngay.
    - **Video nền phát lặp lại (Loop)**: Hỗ trợ cả YouTube iframe nhúng lẫn video HTML5, tự động chạy lặp lại không tiếng (`autoplay`, `loop`, `muted`).
