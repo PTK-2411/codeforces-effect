@@ -2191,10 +2191,10 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
 
   console.log('✓ Test 41 passed: Personal Profile Sidebar Unboxing & Media Under 100MB verified');
 
-  // Test 42: WebM playback fix, chilling-cat fallback and version 1.4.0 Alpha verification
+  // Test 42: WebM playback fix, chilling-cat fallback and version 1.4.1 Alpha verification
   const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../manifest.json'), 'utf8'));
-  assert.strictEqual(manifest.version, '1.4.0', 'Manifest version must be 1.4.0');
-  assert.strictEqual(manifest.version_name, 'v1.4.0 Alpha', 'Manifest version_name must be v1.4.0 Alpha');
+  assert.strictEqual(manifest.version, '1.4.1', 'Manifest version must be 1.4.1');
+  assert.strictEqual(manifest.version_name, 'v1.4.1 Alpha', 'Manifest version_name must be v1.4.1 Alpha');
 
   const webRes = manifest.web_accessible_resources[0].resources;
   assert(webRes.includes('assets/chilling-cat.webm'), 'manifest resources must include chilling-cat.webm');
@@ -2204,7 +2204,7 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert(fs.existsSync(path.join(__dirname, '../assets/chilling-cat.mp4')), 'chilling-cat.mp4 must exist');
 
   const popupHtml = fs.readFileSync(path.join(__dirname, '../popup/popup.html'), 'utf8');
-  assert(popupHtml.includes('v1.4.0 Alpha'), 'popup.html must display v1.4.0 Alpha');
+  assert(popupHtml.includes('v1.4.1 Alpha'), 'popup.html must display v1.4.1 Alpha');
 
   const popupJs = fs.readFileSync(path.join(__dirname, '../popup/popup.js'), 'utf8');
   assert(popupJs.includes("currentSettings.bgImage.includes('assets/chilling-cat')"), 'popup.js must normalize chilling-cat');
@@ -2213,7 +2213,7 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert(contentCode.includes("bgImage.includes('assets/chilling-cat')"), 'content.js must normalize chilling-cat');
   assert(contentCode.includes('_cfErrorHandlerAdded'), 'content.js must include video error fallback');
 
-  console.log('✓ Test 42 passed: Chilling Cat WebM/MP4 dual compatibility and v1.4.0 Alpha verified');
+  console.log('✓ Test 42 passed: Chilling Cat WebM/MP4 dual compatibility and v1.4.1 Alpha verified');
 
   // ==========================================
   // Test 43: Google Translate Draft First -> AI Replacement
@@ -2247,6 +2247,54 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert.strictEqual(p43.dataset.cfTranslated, undefined, 'cfTranslated attribute must be removed');
   assert.strictEqual(p43.dataset.cfTransFinal, undefined, 'cfTransFinal attribute must be removed');
   console.log('✓ Test 43 passed: Google Translate Draft First -> AI Replacement verified');
+
+  // ==========================================
+  // Test 44: Submission Source Code Popup (Facebox Modal) Styling
+  // ==========================================
+  console.log('Test 44: Submission Source Code Popup (Facebox Modal) Styling');
+  const cssStyles = fs.readFileSync(path.join(__dirname, '../content/content.css'), 'utf8');
+
+  // Verify Backdrop Overlay Styling
+  assert(cssStyles.includes('#facebox_overlay'), 'content.css must define #facebox_overlay');
+  assert(cssStyles.includes('backdrop-filter: blur(8px) saturate(140%) !important'), '#facebox_overlay must include glass blur backdrop filter');
+
+  // Verify old table border removal
+  assert(cssStyles.includes('#facebox td.tl') && cssStyles.includes('display: none !important'), 'Old facebox table border images must be hidden');
+
+  // Verify popup card body & popup glassmorphism styling
+  assert(cssStyles.includes('#facebox .popup') && cssStyles.includes('rgba(18, 22, 32, 0.92) !important'), 'Facebox popup must be dark glass card');
+  assert(cssStyles.includes('#facebox .content') && cssStyles.includes('background: transparent !important'), 'Facebox content must be transparent');
+  assert(cssStyles.includes('border-radius: 16px !important'), 'Facebox body must have modern 16px rounded corners');
+
+  // Verify modern close button with ✕
+  assert(cssStyles.includes('#facebox .close') && cssStyles.includes('content: "✕" !important'), 'Facebox close button must use modern ✕ symbol');
+
+  // Verify code block styling & scrollbar
+  assert(cssStyles.includes('#facebox pre') && cssStyles.includes('border-radius: 10px !important'), 'Facebox code block must have rounded corners');
+  assert(cssStyles.includes('#facebox pre::-webkit-scrollbar'), 'Facebox pre must have custom elegant scrollbar');
+
+  // Verify code syntax highlighting
+  assert(cssStyles.includes('#facebox pre .kwd') && cssStyles.includes('#f43f5e'), 'Keywords must be highlighted in modern vibrant color');
+  assert(cssStyles.includes('#facebox pre .str') && cssStyles.includes('#4ade80'), 'Strings must be highlighted in clean green');
+  assert(cssStyles.includes('#facebox pre .typ') && cssStyles.includes('#38bdf8'), 'Types must be highlighted in sky blue');
+
+  // Verify modal centering & popup scroll behavior
+  assert(cssStyles.includes('justify-content: center !important') && cssStyles.includes('align-items: center !important'), 'Facebox container must center modal with full viewport flex');
+  assert(cssStyles.includes('overflow-y: auto !important') && cssStyles.includes('overscroll-behavior: contain !important'), 'Facebox popup must be scrollable from anywhere with overscroll-behavior contain');
+  assert(cssStyles.includes('html.cf-facebox-open') && cssStyles.includes('overflow: hidden !important'), 'Background page scroll must be locked when modal is open');
+
+  // Verify line numbers & left margin alignment
+  assert(cssStyles.includes('#facebox pre ol.linenums') && cssStyles.includes('list-style-type: decimal !important'), 'Line numbers must be displayed on every code line');
+  assert(cssStyles.includes('padding: 12px 14px 12px 4px !important') || cssStyles.includes('padding: 0 0 0 34px !important'), 'Code and line numbers must be aligned close to the left border');
+  assert(contentCode.includes('ensureCodeLineNumbers'), 'content.js must define ensureCodeLineNumbers');
+
+  // Verify copy button styling
+  assert(cssStyles.includes('#facebox #copy-button') || cssStyles.includes('#facebox a[href*="copy"]'), 'Copy button inside facebox must be styled as modern pill button');
+
+  // Verify content.js has setupFaceboxSubmissionHandler
+  assert(contentCode.includes('setupFaceboxSubmissionHandler'), 'content.js must define setupFaceboxSubmissionHandler');
+
+  console.log('✓ Test 44 passed: Submission Source Code Popup (Facebox Modal) Styling verified');
 
   console.log('\nALL content.js TESTS PASSED SUCCESSFULLY!');
 }

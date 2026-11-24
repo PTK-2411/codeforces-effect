@@ -3588,6 +3588,156 @@
     }
   }
 
+  // Enhance and clean up submission source code Facebox popup
+  function setupFaceboxSubmissionHandler() {
+    try {
+      function syncBodyScrollLock() {
+        const fb = document.getElementById('facebox');
+        const overlay = document.getElementById('facebox_overlay');
+        const isOpen = fb && fb.style.display !== 'none' && (typeof getComputedStyle !== 'function' || getComputedStyle(fb).display !== 'none');
+        if (isOpen) {
+          if (document.documentElement) document.documentElement.classList.add('cf-facebox-open');
+          if (document.body) document.body.classList.add('cf-facebox-open');
+        } else {
+          if (document.documentElement) document.documentElement.classList.remove('cf-facebox-open');
+          if (document.body) document.body.classList.remove('cf-facebox-open');
+        }
+      }
+
+      function ensureCodeLineNumbers(fb) {
+        if (!fb) return;
+        const pre = fb.querySelector('#program-source-text, pre.prettyprint, pre');
+        if (!pre) return;
+
+        const existingOl = pre.querySelector('ol');
+        if (existingOl) {
+          if (!existingOl.classList.contains('linenums')) {
+            existingOl.classList.add('linenums');
+          }
+          return;
+        }
+
+        // If no <ol> exists yet and pre contains code lines
+        const rawHtml = pre.innerHTML;
+        if (!rawHtml || !rawHtml.trim()) return;
+
+        if (!pre._cfLineNumbersApplied) {
+          pre._cfLineNumbersApplied = true;
+          const lines = rawHtml.split(/\r?\n/);
+          const ol = document.createElement('ol');
+          ol.className = 'linenums';
+
+          for (let idx = 0; idx < lines.length; idx++) {
+            if (idx === lines.length - 1 && !lines[idx].trim() && lines.length > 1) {
+              continue;
+            }
+            const li = document.createElement('li');
+            li.className = 'L' + (idx % 10);
+            li.innerHTML = lines[idx] || '&nbsp;';
+            ol.appendChild(li);
+          }
+
+          pre.innerHTML = '';
+          pre.appendChild(ol);
+        }
+      }
+
+      function enhanceFacebox(node) {
+        if (!node) return;
+        const fb = node.id === 'facebox' ? node : (node.querySelector ? node.querySelector('#facebox') : null);
+        if (!fb) return;
+
+        fb.classList.add('cf-styled-facebox');
+        const popup = fb.querySelector('.popup');
+        if (popup) popup.classList.add('cf-styled-popup');
+        const content = fb.querySelector('.content');
+        if (content) content.classList.add('cf-styled-content');
+
+        // Prevent wheel scrolling from propagating to background page
+        if (!fb._cfWheelHandled) {
+          fb._cfWheelHandled = true;
+          fb.addEventListener('wheel', (e) => {
+            e.stopPropagation();
+          }, { passive: true });
+        }
+
+        // Close on clicking empty space around modal card
+        if (!fb._cfClickHandled) {
+          fb._cfClickHandled = true;
+          fb.addEventListener('click', (e) => {
+            if (e.target === fb) {
+              const closeBtn = fb.querySelector('.close, a.close');
+              if (closeBtn) closeBtn.click();
+            }
+          });
+        }
+
+        // Strip inline white background styles that Codeforces or Facebox may inject
+        fb.querySelectorAll('*').forEach(el => {
+          if (el.style) {
+            const bg = (el.style.backgroundColor || el.style.background || '').toLowerCase();
+            if (bg.includes('white') || bg.includes('#fff') || bg.includes('rgb(255, 255, 255)') || bg.includes('rgb(255,255,255)')) {
+              el.style.backgroundColor = '';
+              el.style.background = '';
+            }
+          }
+        });
+
+        ensureCodeLineNumbers(fb);
+        syncBodyScrollLock();
+      }
+
+      enhanceFacebox(document.getElementById('facebox'));
+
+      if (typeof MutationObserver !== 'undefined' && document.body && !document.body._cfFaceboxObserved) {
+        document.body._cfFaceboxObserved = true;
+        const fbObserver = new MutationObserver((mutations) => {
+          let shouldSync = false;
+          for (let i = 0; i < mutations.length; i++) {
+            const added = mutations[i].addedNodes;
+            if (added) {
+              for (let j = 0; j < added.length; j++) {
+                const node = added[j];
+                if (node.nodeType === 1) {
+                  if (node.id === 'facebox' || (node.querySelector && node.querySelector('#facebox')) || node.id === 'program-source-text' || (node.querySelector && node.querySelector('#program-source-text'))) {
+                    enhanceFacebox(document.getElementById('facebox'));
+                    shouldSync = true;
+                  }
+                }
+              }
+            }
+            if (mutations[i].attributeName === 'style' || mutations[i].attributeName === 'class') {
+              const target = mutations[i].target;
+              if (target && (target.id === 'facebox' || target.id === 'facebox_overlay')) {
+                shouldSync = true;
+              }
+            }
+          }
+          if (shouldSync) {
+            syncBodyScrollLock();
+          }
+        });
+        fbObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+      }
+
+      // Close on ESC
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+          const closeBtn = document.querySelector('#facebox .close, #facebox a.close');
+          if (closeBtn) closeBtn.click();
+          setTimeout(syncBodyScrollLock, 50);
+        }
+      });
+
+      // Cleanup lock on clicking overlay or close button
+      document.addEventListener('click', (e) => {
+        if (e.target && (e.target.id === 'facebox_overlay' || (e.target.classList && e.target.classList.contains('close')) || (e.target.closest && e.target.closest('.close')))) {
+          setTimeout(syncBodyScrollLock, 50);
+        }
+      });
+    } catch (e) {}
+  }
+
   let isInitialized = false;
 
   function checkAndInit() {
@@ -3606,6 +3756,7 @@
     replaceCodeforcesLogo();
     initStreakTracker();
     setupRatingTooltipHandler();
+    setupFaceboxSubmissionHandler();
     alignTableColumns();
     styleSubmissionVerdicts();
     fixSideboxFormButtons();
