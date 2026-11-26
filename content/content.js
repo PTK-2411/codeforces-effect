@@ -3,6 +3,7 @@
 
   const isVJudge = typeof window !== 'undefined' && window.location && Boolean(window.location.hostname && window.location.hostname.includes('vjudge.net'));
   const isVNOJ = typeof window !== 'undefined' && window.location && Boolean(window.location.hostname && window.location.hostname.includes('oj.vnoi.info'));
+  const isCSES = typeof window !== 'undefined' && window.location && Boolean(window.location.hostname && (window.location.hostname === 'cses.fi' || window.location.hostname.endsWith('.cses.fi')));
   const isBgOnlySite = isVJudge || isVNOJ;
 
   function isExcludedPage() {
@@ -35,7 +36,7 @@
   let bgYtEl = null;
 
   function isCloudflareChallenge() {
-    if (isBgOnlySite) return false;
+    if (isBgOnlySite || isCSES) return false;
     if (typeof window._cf_chl_opt !== 'undefined') return true;
     if (document.title && (
       document.title.includes('Just a moment') ||
@@ -797,6 +798,10 @@
   // =========================================================
 
   let currentCfLang = 'vi';
+  let currentCsesLang = 'en';
+  function isTargetVietnameseActive() {
+    return isCSES ? (currentCsesLang === 'vi') : (currentCfLang === 'vi');
+  }
   let currentTranslationEngine = 'google';
   let currentGeminiApiKey = '';
   let currentGeminiModel = 'auto';
@@ -841,7 +846,7 @@
     // Icons
     '.material-icons', 'material-icon', 'span[class^="material-symbols-"]', '.google-symbols', 'i.fa', 'i[class^="fa-"]',
     // Math, Formulas & TeX
-    'visuallyhidden', '.visuallyhidden', '.MathJax', '.MathJax_Preview', '.MathJax_Display', '.katex', '.mwe-math-element', 'mjx-container',
+    'visuallyhidden', '.visuallyhidden', '.MathJax', '.MathJax_Preview', '.MathJax_Display', '.katex', '.math', '.mwe-math-element', 'mjx-container',
     'tex-span', '.tex-span', 'mjx-math', '.tex-formula', 'script[type*="math"]',
     // Codeforces specific interactive & excluded components
     '.sample-test', '.input', '.output', '.test-example-line',
@@ -1258,6 +1263,7 @@
   const typesetTargets = new Set();
 
   function colorizeMathElements(root) {
+    if (isCSES) return;
     try {
       const container = root || document;
       const isLight = document.documentElement.classList.contains('cf-light-mode');
@@ -1296,6 +1302,7 @@
   }
 
   function typesetMath(container) {
+    if (isCSES) return;
     const el = container || document.querySelector('.problem-statement') || document.body;
     if (el) {
       if (!el.id) {
@@ -1911,7 +1918,7 @@
       const isAi = (engine || currentTranslationEngine) === 'gemini' || (engine || currentTranslationEngine) === 'xkiro';
       const BATCH_CHUNK_SIZE = isAi ? 10 : 25;
       for (let c = 0; c < itemsToProcess.length; c += BATCH_CHUNK_SIZE) {
-        if (currentCfLang !== 'vi' || batchSession !== currentTranslationSession) return;
+        if (!isTargetVietnameseActive() || batchSession !== currentTranslationSession) return;
         const chunk = itemsToProcess.slice(c, c + BATCH_CHUNK_SIZE);
         const batchId = 'cf_batch_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
         const appliedIndices = new Set();
@@ -1920,7 +1927,7 @@
         // Also receives immediate Google Translate drafts to eliminate waiting perception
         const streamListener = (msg) => {
           if (msg && msg.action === 'streamItemReady' && msg.batchId === batchId) {
-            if (currentCfLang !== 'vi' || batchSession !== currentTranslationSession) return;
+            if (!isTargetVietnameseActive() || batchSession !== currentTranslationSession) return;
             const item = chunk[msg.index];
             if (!item || !item.el) return;
             const transText = msg.text;
@@ -1939,7 +1946,7 @@
             setCachedTranslation(item.text, transText);
             applyTranslationToItem(item, transText, false);
             typesetMath(item.el);
-            if (!isRetry && currentCfLang === 'vi' && batchSession === currentTranslationSession) {
+            if (!isRetry && isTargetVietnameseActive() && batchSession === currentTranslationSession) {
               completedTranslationTasks++;
               updateTranslationProgress(completedTranslationTasks, activeTranslationTasks);
             }
@@ -1965,7 +1972,7 @@
           });
 
           // Guard against race conditions: if language was switched or session was invalidated, abort DOM mutation
-          if (currentCfLang !== 'vi' || batchSession !== currentTranslationSession) {
+          if (!isTargetVietnameseActive() || batchSession !== currentTranslationSession) {
             chunk.forEach(item => {
               (item.placeholders || []).forEach(ph => {
                 if (ph && ph.nodeType) {
@@ -1994,7 +2001,7 @@
                 setCachedTranslation(item.text, transText);
                 applyTranslationToItem(item, transText, false);
                 typesetMath(item.el);
-                if (!isRetry && currentCfLang === 'vi' && batchSession === currentTranslationSession) {
+                if (!isRetry && isTargetVietnameseActive() && batchSession === currentTranslationSession) {
                   completedTranslationTasks++;
                   updateTranslationProgress(completedTranslationTasks, activeTranslationTasks);
                 }
@@ -2011,7 +2018,7 @@
             delete item.el.dataset.cfTransPending;
             delete item.el.dataset.cfTransDraft;
           });
-          if (!isRetry && currentCfLang === 'vi' && batchSession === currentTranslationSession) {
+          if (!isRetry && isTargetVietnameseActive() && batchSession === currentTranslationSession) {
             const uncounted = chunk.length - appliedIndices.size;
             if (uncounted > 0) {
               completedTranslationTasks += uncounted;
@@ -3791,11 +3798,350 @@
     } catch (e) {}
   }
 
+  // =========================================================
+  // CSES (cses.fi) Dual Language Flags (EN / VI) & Translation
+  // =========================================================
+
+  function renderCsesLanguageFlags(lang) {
+    if (!isCSES || typeof document === 'undefined') return;
+    const header = document.querySelector('.header');
+    if (!header) return;
+
+    const controls = header.querySelector('.controls') || header.querySelector('div') || header;
+    if (!controls) return;
+
+    const activeLang = lang !== undefined ? lang : currentCsesLang;
+    currentCsesLang = activeLang;
+
+    let wrapper = document.getElementById('cses-lang-flags');
+    if (!wrapper) {
+      wrapper = document.createElement('span');
+      wrapper.id = 'cses-lang-flags';
+
+      // UK Flag (English / Original)
+      const enBtn = document.createElement('a');
+      enBtn.id = 'cses-lang-en-btn';
+      enBtn.className = 'cses-lang-flag-btn';
+      enBtn.href = 'javascript:void(0)';
+      enBtn.title = 'English (Ngôn ngữ gốc)';
+      enBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width="24" height="16" aria-label="English">
+        <clipPath id="cses-uk-clip"><path d="M0,0 v30 h60 v-30 z"/></clipPath>
+        <clipPath id="cses-uk-diag"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath>
+        <g clip-path="url(#cses-uk-clip)">
+          <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
+          <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/>
+          <path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#cses-uk-diag)" stroke="#C8102E" stroke-width="4"/>
+          <path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/>
+          <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/>
+        </g>
+      </svg>`;
+
+      // Vietnam Flag (Tiếng Việt)
+      const viBtn = document.createElement('a');
+      viBtn.id = 'cses-lang-vi-btn';
+      viBtn.className = 'cses-lang-flag-btn';
+      viBtn.href = 'javascript:void(0)';
+      viBtn.title = 'Tiếng Việt (Dịch bài & tiêu đề)';
+      const viImg = document.createElement('img');
+      viImg.src = chrome.runtime.getURL('assets/vietnam.png');
+      viImg.alt = 'Tiếng Việt';
+      viBtn.appendChild(viImg);
+
+      enBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (currentCsesLang !== 'en') {
+          currentCsesLang = 'en';
+          if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+            chrome.storage.local.set({ csesLang: 'en' });
+          }
+          renderCsesLanguageFlags('en');
+          applyCsesTranslation(false);
+        }
+      });
+
+      viBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (currentCsesLang !== 'vi') {
+          currentCsesLang = 'vi';
+          if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+            chrome.storage.local.set({ csesLang: 'vi' });
+          }
+          renderCsesLanguageFlags('vi');
+          applyCsesTranslation(true);
+        }
+      });
+
+      wrapper.appendChild(enBtn);
+      wrapper.appendChild(viBtn);
+      controls.appendChild(wrapper);
+    }
+
+    const enBtnEl = document.getElementById('cses-lang-en-btn');
+    const viBtnEl = document.getElementById('cses-lang-vi-btn');
+    if (enBtnEl) enBtnEl.classList.toggle('active', activeLang !== 'vi');
+    if (viBtnEl) viBtnEl.classList.toggle('active', activeLang === 'vi');
+  }
+
+  function getCsesFirstTextNode(el) {
+    if (!el || !el.childNodes) return null;
+    for (let i = 0; i < el.childNodes.length; i++) {
+      const node = el.childNodes[i];
+      if (node.nodeType === Node.TEXT_NODE && node.nodeValue && node.nodeValue.trim()) {
+        return node;
+      }
+    }
+    return null;
+  }
+
+  function setCsesTitleElementText(el, text, hasChildElements) {
+    if (!el) return;
+    if (hasChildElements) {
+      const tn = getCsesFirstTextNode(el);
+      if (tn) {
+        tn.nodeValue = text;
+        return;
+      }
+    }
+    el.textContent = text;
+  }
+
+  async function translateCsesTitleElements(elements, enable, session) {
+    if (!elements || elements.length === 0) return;
+
+    if (!enable) {
+      elements.forEach(el => {
+        if (el.dataset && el.dataset.csesOrigText !== undefined) {
+          const hasChildren = el.dataset.csesHasChildNodes === 'true';
+          setCsesTitleElementText(el, el.dataset.csesOrigText, hasChildren);
+          delete el.dataset.csesOrigText;
+          delete el.dataset.csesTranslatedTitle;
+          delete el.dataset.csesHasChildNodes;
+        }
+      });
+      return;
+    }
+
+    const pendingItems = [];
+    const formatTitle = (origText, transText) => {
+      const cleanTrans = (transText || '').trim();
+      if (!cleanTrans || cleanTrans.toLowerCase() === origText.toLowerCase()) {
+        return origText;
+      }
+      // Avoid double parentheses if already formatted
+      if (cleanTrans.endsWith(`(${origText})`)) return cleanTrans;
+      return `${cleanTrans} (${origText})`;
+    };
+
+    elements.forEach(el => {
+      if (!el || (el.dataset && el.dataset.csesTranslatedTitle === 'true')) return;
+      const hasChildren = el.children && el.children.length > 0;
+      let origText = '';
+      if (hasChildren) {
+        const tn = getCsesFirstTextNode(el);
+        origText = tn ? tn.nodeValue.trim() : '';
+      } else {
+        origText = (el.textContent || '').trim();
+      }
+      if (!origText) return;
+
+      el.dataset.csesOrigText = origText;
+      if (hasChildren) el.dataset.csesHasChildNodes = 'true';
+
+      const cached = getCachedTranslation(origText);
+      if (cached) {
+        setCsesTitleElementText(el, formatTitle(origText, cached), hasChildren);
+        el.dataset.csesTranslatedTitle = 'true';
+        return;
+      }
+
+      const isAiMode = currentTranslationEngine === 'gemini' || currentTranslationEngine === 'xkiro';
+      if (isAiMode) {
+        const googleDraft = contentTranslationCache.get(`google:${origText}`);
+        if (googleDraft) {
+          setCsesTitleElementText(el, formatTitle(origText, googleDraft), hasChildren);
+        }
+      }
+
+      pendingItems.push({ el, origText, hasChildren });
+    });
+
+    if (pendingItems.length === 0) return;
+
+    const CHUNK_SIZE = (currentTranslationEngine === 'gemini' || currentTranslationEngine === 'xkiro') ? 20 : 40;
+    for (let c = 0; c < pendingItems.length; c += CHUNK_SIZE) {
+      if (currentCsesLang !== 'vi' || session !== currentTranslationSession) return;
+      const chunk = pendingItems.slice(c, c + CHUNK_SIZE);
+      const batchId = 'cses_title_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+      const appliedIndices = new Set();
+
+      const streamListener = (msg) => {
+        if (msg && msg.action === 'streamItemReady' && msg.batchId === batchId) {
+          if (currentCsesLang !== 'vi' || session !== currentTranslationSession) return;
+          const item = chunk[msg.index];
+          if (!item || !item.el || !msg.text || !msg.text.trim()) return;
+          if (msg.isDraft) {
+            if (!appliedIndices.has(msg.index) && item.el.dataset.csesTranslatedTitle !== 'true') {
+              setCsesTitleElementText(item.el, formatTitle(item.origText, msg.text), item.hasChildren);
+            }
+            return;
+          }
+          appliedIndices.add(msg.index);
+          setCachedTranslation(item.origText, msg.text);
+          setCsesTitleElementText(item.el, formatTitle(item.origText, msg.text), item.hasChildren);
+          item.el.dataset.csesTranslatedTitle = 'true';
+        }
+      };
+
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+        chrome.runtime.onMessage.addListener(streamListener);
+      }
+
+      try {
+        const response = await new Promise((resolve) => {
+          chrome.runtime.sendMessage({
+            action: 'translateBatch',
+            batchId: batchId,
+            items: chunk.map(item => item.origText),
+            engine: currentTranslationEngine,
+            geminiApiKey: currentGeminiApiKey,
+            geminiModel: currentGeminiModel,
+            geminiCustomModel: currentGeminiCustomModel,
+            xkiroApiKey: currentXkiroApiKey
+          }, resolve);
+        });
+
+        if (currentCsesLang !== 'vi' || session !== currentTranslationSession) return;
+
+        if (response && response.success && Array.isArray(response.texts)) {
+          response.texts.forEach((transText, idx) => {
+            const item = chunk[idx];
+            if (!item || appliedIndices.has(idx) || !transText || !transText.trim()) return;
+            appliedIndices.add(idx);
+            setCachedTranslation(item.origText, transText);
+            setCsesTitleElementText(item.el, formatTitle(item.origText, transText), item.hasChildren);
+            item.el.dataset.csesTranslatedTitle = 'true';
+          });
+        }
+      } catch (err) {
+        console.warn('[CSES Translator] Lỗi dịch tiêu đề:', err);
+      } finally {
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+          chrome.runtime.onMessage.removeListener(streamListener);
+        }
+      }
+    }
+  }
+
+  async function applyCsesTranslation(isVi) {
+    if (!isCSES || typeof document === 'undefined') return;
+    const targetLang = isVi ? 'vi' : 'en';
+    currentCsesLang = targetLang;
+    currentTranslationSession++;
+    const session = currentTranslationSession;
+
+    // 1. Topic titles & Problem names (translated with "(Original English)" suffix)
+    const titleEls = [];
+    document.querySelectorAll(
+      '.content > h2, .nav.sidebar > h4, .content ul.task-list li.task > a, .content ul.task-list li.text > a, .navigation .title-block > h1, .nav.sidebar > a[href*="/problemset/task/"]'
+    ).forEach(el => {
+      if (!titleEls.includes(el)) titleEls.push(el);
+    });
+
+    // 2. Task constraints (Time limit / Memory limit)
+    const constraintLabels = document.querySelectorAll('.task-constraints li b');
+    if (!isVi) {
+      constraintLabels.forEach(b => {
+        if (b.dataset && b.dataset.csesOrigText !== undefined) {
+          b.textContent = b.dataset.csesOrigText;
+          delete b.dataset.csesOrigText;
+        }
+      });
+    } else {
+      constraintLabels.forEach(b => {
+        if (b.dataset && b.dataset.csesOrigText !== undefined) return;
+        const txt = (b.textContent || '').trim();
+        if (/^Time limit:/i.test(txt)) {
+          b.dataset.csesOrigText = b.textContent;
+          b.textContent = 'Giới hạn thời gian:';
+        } else if (/^Memory limit:/i.test(txt)) {
+          b.dataset.csesOrigText = b.textContent;
+          b.textContent = 'Giới hạn bộ nhớ:';
+        }
+      });
+    }
+
+    // 3. Problem statement (.content .md)
+    const mdContainer = document.querySelector('.content .md');
+    if (!isVi) {
+      if (mdContainer) {
+        mdContainer.querySelectorAll('[data-cf-translated="true"], [data-cf-trans-pending="true"]').forEach(el => {
+          restoreElementToOriginal(el);
+        });
+      }
+      await translateCsesTitleElements(titleEls, false, session);
+      return;
+    }
+
+    const statementTargets = [];
+    if (mdContainer) {
+      const candidateBlocks = mdContainer.querySelectorAll('h1, h2, h3, h4, p, li, td, th, blockquote');
+      candidateBlocks.forEach(el => {
+        if (el.closest('pre, code, .math, .katex')) return;
+        // Skip outer containers that wrap other candidate blocks
+        const hasChildBlock = Array.from(el.children || []).some(ch =>
+          ch.matches && ch.matches('p, li, h1, h2, h3, h4, ul, ol, table, blockquote, pre')
+        );
+        if (hasChildBlock) return;
+        if (el.dataset.cfTranslated === 'true' || el.dataset.cfTransPending === 'true') return;
+        const txt = (el.textContent || '').trim();
+        if (!txt) return;
+        statementTargets.push(el);
+      });
+    }
+
+    await Promise.all([
+      translateCsesTitleElements(titleEls, true, session),
+      statementTargets.length > 0
+        ? translateElementsBatch(statementTargets, currentTranslationEngine, currentGeminiApiKey, currentGeminiModel)
+        : Promise.resolve()
+    ]);
+  }
+
   let isInitialized = false;
 
   function checkAndInit() {
     if (isCloudflareChallenge()) {
       teardownForCloudflare();
+      return;
+    }
+    if (isCSES) {
+      if (!document.body) return;
+      renderCsesLanguageFlags(currentCsesLang);
+      if (!isInitialized) {
+        isInitialized = true;
+        chrome.storage.local.get([
+          'csesLang',
+          'translationEngine',
+          'geminiApiKey',
+          'geminiModel',
+          'geminiCustomModel',
+          'xkiroApiKey'
+        ], (result) => {
+          currentTranslationEngine = (result && result.translationEngine) || 'google';
+          currentGeminiApiKey = (result && result.geminiApiKey) || '';
+          currentGeminiModel = (result && result.geminiModel) || 'auto';
+          currentGeminiCustomModel = (result && result.geminiCustomModel) || '';
+          currentXkiroApiKey = (result && result.xkiroApiKey) || '';
+          const lang = (result && result.csesLang) || 'en';
+          currentCsesLang = lang;
+          renderCsesLanguageFlags(lang);
+          if (lang === 'vi') {
+            applyCsesTranslation(true);
+          }
+        });
+      }
       return;
     }
     if (isBgOnlySite) {
@@ -3902,13 +4248,13 @@
     }
   }
 
-  // Handle Cloudflare challenge vs Codeforces / VJudge / VNOJ initialization
+  // Handle Cloudflare challenge vs Codeforces / VJudge / VNOJ / CSES initialization
   if (isCloudflareChallenge()) {
     teardownForCloudflare();
     const cfObserver = new MutationObserver(() => {
-      if (!isCloudflareChallenge() && (isBgOnlySite ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body))) {
+      if (!isCloudflareChallenge() && ((isBgOnlySite || isCSES) ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body))) {
         cfObserver.disconnect();
-        if (!isBgOnlySite) startHeaderObserver();
+        if (!isBgOnlySite && !isCSES) startHeaderObserver();
         checkAndInit();
       }
     });
@@ -3917,17 +4263,17 @@
     const initObserver = new MutationObserver(() => {
       if (isCloudflareChallenge()) {
         teardownForCloudflare();
-      } else if (isBgOnlySite ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body)) {
+      } else if ((isBgOnlySite || isCSES) ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body)) {
         initObserver.disconnect();
-        if (!isBgOnlySite) startHeaderObserver();
+        if (!isBgOnlySite && !isCSES) startHeaderObserver();
         checkAndInit();
       }
     });
     initObserver.observe(document.documentElement, { childList: true, subtree: true });
 
-    if (isBgOnlySite ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body)) {
+    if ((isBgOnlySite || isCSES) ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body)) {
       initObserver.disconnect();
-      if (!isBgOnlySite) startHeaderObserver();
+      if (!isBgOnlySite && !isCSES) startHeaderObserver();
       checkAndInit();
     }
   }
@@ -4080,7 +4426,7 @@
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       if (!isCloudflareChallenge()) {
-        if (!isBgOnlySite) {
+        if (!isBgOnlySite && !isCSES) {
           startHeaderObserver();
           checkAndInit();
           if (currentCfLang === 'vi') {
@@ -4093,15 +4439,18 @@
           highlightOnlineStatus();
         } else {
           checkAndInit();
+          if (isCSES && currentCsesLang === 'vi') {
+            applyCsesTranslation(true);
+          }
         }
-        setupPageDragAndDrop();
+        if (!isCSES) setupPageDragAndDrop();
       } else {
         teardownForCloudflare();
       }
     });
   } else {
     if (!isCloudflareChallenge()) {
-      if (!isBgOnlySite) {
+      if (!isBgOnlySite && !isCSES) {
         startHeaderObserver();
         checkAndInit();
         if (currentCfLang === 'vi') {
@@ -4114,8 +4463,11 @@
         highlightOnlineStatus();
       } else {
         checkAndInit();
+        if (isCSES && currentCsesLang === 'vi') {
+          applyCsesTranslation(true);
+        }
       }
-      setupPageDragAndDrop();
+      if (!isCSES) setupPageDragAndDrop();
     }
   }
 
@@ -4123,22 +4475,26 @@
     window.addEventListener('pageshow', (event) => {
       if (event.persisted && !isCloudflareChallenge()) {
         checkAndInit();
-        if (!isBgOnlySite && currentCfLang === 'vi') {
+        if (!isBgOnlySite && !isCSES && currentCfLang === 'vi') {
           applyDynamicContentTranslation(true);
+        } else if (isCSES && currentCsesLang === 'vi') {
+          applyCsesTranslation(true);
         }
       }
     });
 
     window.addEventListener('popstate', () => {
       checkAndInit();
-      if (!isBgOnlySite && currentCfLang === 'vi') {
+      if (!isBgOnlySite && !isCSES && currentCfLang === 'vi') {
         applyDynamicContentTranslation(true);
+      } else if (isCSES && currentCsesLang === 'vi') {
+        applyCsesTranslation(true);
       }
     });
   }
 
   document.addEventListener('mouseover', (e) => {
-    if (!isBgOnlySite && e.target && e.target.closest && e.target.closest('.second-level-menu, .second-level-menu-list, ul')) {
+    if (!isBgOnlySite && !isCSES && e.target && e.target.closest && e.target.closest('.second-level-menu, .second-level-menu-list, ul')) {
       removeLavaLampBack();
     }
   }, { passive: true });
@@ -4151,7 +4507,7 @@
         return;
       }
 
-      if (!isBgOnlySite && changes.cfStreak && changes.cfStreak.newValue) {
+      if (!isBgOnlySite && !isCSES && changes.cfStreak && changes.cfStreak.newValue) {
         renderStreakBadge(changes.cfStreak.newValue);
       }
 
@@ -4159,7 +4515,7 @@
         const newEng = changes.translationEngine.newValue || 'google';
         const changed = newEng !== currentTranslationEngine;
         currentTranslationEngine = newEng;
-        if (changed && currentCfLang === 'vi') {
+        if (changed && !isCSES && currentCfLang === 'vi') {
           currentTranslationSession++;
           if (newEng === 'gemini' || newEng === 'xkiro') {
             // Restore any Google-translated elements so AI translates them fluently
@@ -4169,6 +4525,9 @@
           }
           await applyDynamicContentTranslation(false);
           await applyDynamicContentTranslation(true);
+        } else if (changed && isCSES && currentCsesLang === 'vi') {
+          await applyCsesTranslation(false);
+          await applyCsesTranslation(true);
         }
       }
 
@@ -4188,14 +4547,21 @@
         currentXkiroApiKey = changes.xkiroApiKey.newValue || '';
       }
 
-      if (!isBgOnlySite && changes.cfLang) {
+      if (isCSES && changes.csesLang) {
+        const newLang = changes.csesLang.newValue || 'en';
+        currentCsesLang = newLang;
+        renderCsesLanguageFlags(newLang);
+        applyCsesTranslation(newLang === 'vi');
+      }
+
+      if (!isBgOnlySite && !isCSES && changes.cfLang) {
         const newLang = changes.cfLang.newValue || 'en';
         currentCfLang = newLang;
         renderVietnameseFlag(newLang);
         applyVietnameseTranslation(newLang === 'vi');
       }
 
-      // Sync visual theme & background settings ONLY when a visual setting actually changed
+      // Sync visual theme & background settings ONLY when a visual setting actually changed (never on CSES)
       const visualKeys = [
         'enabled',
         'enableCodeforces',
@@ -4212,7 +4578,7 @@
         'themeMode'
       ];
       const hasVisualChange = visualKeys.some(k => changes[k] !== undefined);
-      if (hasVisualChange) {
+      if (!isCSES && hasVisualChange) {
         chrome.storage.local.get(visualKeys, (result) => {
           applySettings(result);
         });

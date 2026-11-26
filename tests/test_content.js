@@ -2191,10 +2191,10 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
 
   console.log('✓ Test 41 passed: Personal Profile Sidebar Unboxing & Media Under 100MB verified');
 
-  // Test 42: WebM playback fix, chilling-cat fallback and version 1.5.1 Alpha verification
+  // Test 42: WebM playback fix, chilling-cat fallback and version 1.6.0 Alpha verification
   const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../manifest.json'), 'utf8'));
-  assert.strictEqual(manifest.version, '1.5.1', 'Manifest version must be 1.5.1');
-  assert.strictEqual(manifest.version_name, 'v1.5.1 Alpha', 'Manifest version_name must be v1.5.1 Alpha');
+  assert.strictEqual(manifest.version, '1.6.0', 'Manifest version must be 1.6.0');
+  assert.strictEqual(manifest.version_name, 'v1.6.0 Alpha', 'Manifest version_name must be v1.6.0 Alpha');
 
   const webRes = manifest.web_accessible_resources[0].resources;
   assert(webRes.includes('assets/chilling-cat.webm'), 'manifest resources must include chilling-cat.webm');
@@ -2204,7 +2204,7 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert(fs.existsSync(path.join(__dirname, '../assets/chilling-cat.mp4')), 'chilling-cat.mp4 must exist');
 
   const popupHtml = fs.readFileSync(path.join(__dirname, '../popup/popup.html'), 'utf8');
-  assert(popupHtml.includes('v1.5.1 Alpha'), 'popup.html must display v1.5.1 Alpha');
+  assert(popupHtml.includes('v1.6.0 Alpha'), 'popup.html must display v1.6.0 Alpha');
 
   const popupJs = fs.readFileSync(path.join(__dirname, '../popup/popup.js'), 'utf8');
   assert(popupJs.includes("currentSettings.bgImage.includes('assets/chilling-cat')"), 'popup.js must normalize chilling-cat');
@@ -2213,7 +2213,7 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert(contentCode.includes("bgImage.includes('assets/chilling-cat')"), 'content.js must normalize chilling-cat');
   assert(contentCode.includes('_cfErrorHandlerAdded'), 'content.js must include video error fallback');
 
-  console.log('✓ Test 42 passed: Chilling Cat WebM/MP4 dual compatibility and v1.5.1 Alpha verified');
+  console.log('✓ Test 42 passed: Chilling Cat WebM/MP4 dual compatibility and v1.6.0 Alpha verified');
 
   // ==========================================
   // Test 43: Google Translate Draft First -> AI Replacement
@@ -2348,6 +2348,29 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert(contentCode.includes('if (isCustomContestSubdomain()) return;'), 'autoFillProblemOnSubmitPage must skip custom contest subdomains');
   assert(!contentCode.includes("href.endsWith('/submit')"), 'setupSubmitNavigation must NOT rewrite native /group/.../submit or /contest/.../submit links to /problemset/submit');
   console.log('✓ Test 46 passed: Custom Contest Subdomains & Group Submit Navigation verified');
+
+  // ==========================================
+  // Test 47: CSES (cses.fi) Dual Flags (EN/VI) & Translation (No Background)
+  // ==========================================
+  console.log('Test 47: CSES (cses.fi) Dual Flags (EN/VI) & Translation');
+  assert(manifestData.content_scripts[0].matches.some(m => m.includes('cses.fi')), 'content_scripts[0] matches must include cses.fi');
+  assert(!manifestData.content_scripts[1].matches.some(m => m.includes('cses.fi')), 'cf-mathjax-bridge.js must NOT be injected on cses.fi');
+  assert(manifestData.web_accessible_resources[0].matches.some(m => m.includes('cses.fi')), 'web_accessible_resources matches must include cses.fi');
+  assert(manifestData.host_permissions.some(m => m.includes('cses.fi')), 'host_permissions must include cses.fi');
+
+  assert(contentCode.includes('isCSES'), 'content.js must define isCSES');
+  assert(contentCode.includes('function renderCsesLanguageFlags'), 'content.js must define renderCsesLanguageFlags');
+  assert(contentCode.includes('function translateCsesTitleElements'), 'content.js must define translateCsesTitleElements');
+  assert(contentCode.includes('async function applyCsesTranslation'), 'content.js must define applyCsesTranslation');
+  assert(contentCode.includes('function isTargetVietnameseActive'), 'content.js must define isTargetVietnameseActive');
+  assert(contentCode.includes('translateElementsBatch(statementTargets'), 'applyCsesTranslation must call translateElementsBatch for CSES .md problem statements');
+  assert(contentCode.includes('function colorizeMathElements(root) {\n    if (isCSES) return;'), 'colorizeMathElements must skip CSES to preserve native KaTeX colors');
+  assert(contentCode.includes('cses-lang-en-btn') && contentCode.includes('cses-lang-vi-btn'), 'content.js must render both UK and Vietnam flag buttons on CSES');
+  assert(contentCode.includes('`${cleanTrans} (${origText})`'), 'CSES translated titles/topics must append original English in parentheses');
+  assert(contentCode.includes("'.math'"), 'TRANSLATION_IGNORE_SELECTOR must include .math for CSES KaTeX formulas');
+  assert(contentCode.includes('if (!isCSES && hasVisualChange)'), 'CSES must NOT apply custom background settings');
+  assert(cssStyles.includes('#cses-lang-flags') && cssStyles.includes('.cses-lang-flag-btn.active'), 'content.css must style CSES dual language flag switcher');
+  console.log('✓ Test 47 passed: CSES (cses.fi) Dual Flags & Translation verified');
 
   console.log('\nALL content.js TESTS PASSED SUCCESSFULLY!');
 }
