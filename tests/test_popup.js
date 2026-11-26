@@ -76,7 +76,7 @@ function createMockEl(id, tagName = 'div', type = '') {
 
 // Create required DOM elements for popup
 const ids = [
-  'toggle-enabled', 'toggle-codeforces', 'toggle-vjudge', 'sites-card', 'controls-section', 'btn-reset',
+  'toggle-enabled', 'toggle-codeforces', 'toggle-vjudge', 'toggle-vnoj', 'sites-card', 'controls-section', 'btn-reset',
   'tab-btn-upload', 'tab-btn-url', 'panel-upload', 'panel-url',
   'dropzone', 'file-input', 'empty-state',
   'url-input', 'btn-apply-url', 'url-status',
@@ -527,16 +527,19 @@ async function runPopupTests() {
   assert(tabsCreated.some(t => t.url === 'https://github.com/PTK-2411/oj-effect'), 'btn-github must open https://github.com/PTK-2411/oj-effect');
   console.log('✓ Test 11 passed: GitHub button opens oj-effect repository');
 
-  // Test 12: Target sites toggle switches for Codeforces and VJudge
-  console.log('Test 12: Target sites toggle switches for Codeforces and VJudge');
+  // Test 12: Target sites toggle switches for Codeforces, VJudge and VNOJ
+  console.log('Test 12: Target sites toggle switches for Codeforces, VJudge and VNOJ');
   const toggleCodeforcesEl = elements['toggle-codeforces'];
   const toggleVJudgeEl = elements['toggle-vjudge'];
+  const toggleVNOJEl = elements['toggle-vnoj'];
   assert(toggleCodeforcesEl, 'toggle-codeforces element must exist in popup');
   assert(toggleVJudgeEl, 'toggle-vjudge element must exist in popup');
+  assert(toggleVNOJEl, 'toggle-vnoj element must exist in popup');
 
   // Verify initial state
   assert.strictEqual(toggleCodeforcesEl.checked, true, 'toggle-codeforces should be checked by default');
   assert.strictEqual(toggleVJudgeEl.checked, true, 'toggle-vjudge should be checked by default');
+  assert.strictEqual(toggleVNOJEl.checked, true, 'toggle-vnoj should be checked by default');
 
   // Toggle Codeforces off
   toggleCodeforcesEl.checked = false;
@@ -548,6 +551,11 @@ async function runPopupTests() {
   toggleVJudgeEl.dispatchEvent('change');
   assert.strictEqual(storage['enableVJudge'], false, 'Toggling VJudge off should update storage.enableVJudge to false');
 
+  // Toggle VNOJ off
+  toggleVNOJEl.checked = false;
+  toggleVNOJEl.dispatchEvent('change');
+  assert.strictEqual(storage['enableVNOJ'], false, 'Toggling VNOJ off should update storage.enableVNOJ to false');
+
   // Toggle back on
   toggleCodeforcesEl.checked = true;
   toggleCodeforcesEl.dispatchEvent('change');
@@ -557,7 +565,11 @@ async function runPopupTests() {
   toggleVJudgeEl.dispatchEvent('change');
   assert.strictEqual(storage['enableVJudge'], true, 'Toggling VJudge on should update storage.enableVJudge to true');
 
-  console.log('✓ Test 12 passed: Target sites toggle switches for Codeforces and VJudge verified');
+  toggleVNOJEl.checked = true;
+  toggleVNOJEl.dispatchEvent('change');
+  assert.strictEqual(storage['enableVNOJ'], true, 'Toggling VNOJ on should update storage.enableVNOJ to true');
+
+  console.log('✓ Test 12 passed: Target sites toggle switches for Codeforces, VJudge and VNOJ verified');
 
   console.log('\nALL popup.js TESTS PASSED SUCCESSFULLY!');
 }

@@ -2319,15 +2319,35 @@ Hacks are disabled for problems A-D. In all problems, system tests are equal to 
   assert(!cssStyles.includes('.fixed-left-panel-layout'), 'content.css must NOT override .fixed-left-panel-layout');
   assert(!contentCode.includes('alignVJudgeSidebar'), 'content.js must NOT contain alignVJudgeSidebar');
 
-  // Verify content.js defines isVJudge and handles VJudge separately (strictly no translation on VJudge)
+  // Verify content.js defines isVJudge, isVNOJ, and isBgOnlySite (strictly no translation on VJudge / VNOJ)
   assert(contentCode.includes('isVJudge'), 'content.js must define isVJudge');
+  assert(contentCode.includes('isVNOJ'), 'content.js must define isVNOJ');
+  assert(contentCode.includes('isBgOnlySite'), 'content.js must define isBgOnlySite');
   assert(contentCode.includes('data-bs-theme'), 'content.js must sync data-bs-theme for VJudge');
   assert(contentCode.includes('vjudge-custom-bg-active'), 'content.js must toggle vjudge-custom-bg-active on VJudge');
-  assert(contentCode.includes('enableCodeforces') && contentCode.includes('enableVJudge'), 'content.js must handle enableCodeforces and enableVJudge settings');
-  assert(contentCode.includes('if (isVJudge) return;\n    const targetLang'), 'applyVietnameseTranslation must short-circuit on VJudge');
-  assert(contentCode.includes('if (isVJudge) return;\n    removeProblemStatementChangeNotice'), 'applyDynamicContentTranslation must short-circuit on VJudge');
+  assert(contentCode.includes('vnoj-custom-bg-active'), 'content.js must toggle vnoj-custom-bg-active on VNOJ');
+  assert(contentCode.includes('enableCodeforces') && contentCode.includes('enableVJudge') && contentCode.includes('enableVNOJ'), 'content.js must handle enableCodeforces, enableVJudge, and enableVNOJ settings');
+  assert(contentCode.includes('if (isBgOnlySite) return;\n    const targetLang'), 'applyVietnameseTranslation must short-circuit on VJudge/VNOJ');
+  assert(contentCode.includes('if (isBgOnlySite) return;\n    removeProblemStatementChangeNotice'), 'applyDynamicContentTranslation must short-circuit on VJudge/VNOJ');
+
+  // Verify manifest & CSS support oj.vnoi.info (background only, no blur, z-index: -1)
+  assert(manifestData.content_scripts[0].matches.some(m => m.includes('oj.vnoi.info')), 'content_scripts matches must include oj.vnoi.info');
+  assert(manifestData.web_accessible_resources[0].matches.some(m => m.includes('oj.vnoi.info')), 'web_accessible_resources matches must include oj.vnoi.info');
+  assert(manifestData.host_permissions.some(m => m.includes('oj.vnoi.info')), 'host_permissions must include oj.vnoi.info');
+  assert(cssStyles.includes('html.vnoj-custom-bg-active'), 'content.css must define html.vnoj-custom-bg-active');
+  assert(cssStyles.includes('html.vnoj-custom-bg-active #cf-custom-bg-layer'), 'content.css must scope #cf-custom-bg-layer for VNOJ');
 
   console.log('✓ Test 45 passed: VJudge (vjudge.net) Custom Background ONLY verified');
+
+  // ==========================================
+  // Test 46: Custom Contest Subdomains (*.contest.codeforces.com) & Group Submit Navigation
+  // ==========================================
+  console.log('Test 46: Custom Contest Subdomains & Group Submit Navigation');
+  assert(contentCode.includes('function isCustomContestSubdomain'), 'content.js must define isCustomContestSubdomain');
+  assert(contentCode.includes("if (isCustomContestSubdomain() || pathname.includes('/group/')) return;"), 'setupSubmitNavigation must skip custom contest subdomains and /group/ contests');
+  assert(contentCode.includes('if (isCustomContestSubdomain()) return;'), 'autoFillProblemOnSubmitPage must skip custom contest subdomains');
+  assert(!contentCode.includes("href.endsWith('/submit')"), 'setupSubmitNavigation must NOT rewrite native /group/.../submit or /contest/.../submit links to /problemset/submit');
+  console.log('✓ Test 46 passed: Custom Contest Subdomains & Group Submit Navigation verified');
 
   console.log('\nALL content.js TESTS PASSED SUCCESSFULLY!');
 }

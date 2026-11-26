@@ -2,6 +2,8 @@
   'use strict';
 
   const isVJudge = typeof window !== 'undefined' && window.location && Boolean(window.location.hostname && window.location.hostname.includes('vjudge.net'));
+  const isVNOJ = typeof window !== 'undefined' && window.location && Boolean(window.location.hostname && window.location.hostname.includes('oj.vnoi.info'));
+  const isBgOnlySite = isVJudge || isVNOJ;
 
   function isExcludedPage() {
     try {
@@ -33,7 +35,7 @@
   let bgYtEl = null;
 
   function isCloudflareChallenge() {
-    if (isVJudge) return false;
+    if (isBgOnlySite) return false;
     if (typeof window._cf_chl_opt !== 'undefined') return true;
     if (document.title && (
       document.title.includes('Just a moment') ||
@@ -200,6 +202,7 @@
       enabled = true,
       enableCodeforces = true,
       enableVJudge = true,
+      enableVNOJ = true,
       bgType = 'video',
       bgImage = DEFAULT_BG,
       bgHistory = [],
@@ -211,7 +214,11 @@
       themeMode = 'dark'
     } = settings || {};
 
-    const isSiteEnabled = enabled && (isVJudge ? (enableVJudge !== false) : (enableCodeforces !== false));
+    const isSiteEnabled = enabled && (
+      isVJudge ? (enableVJudge !== false)
+      : isVNOJ ? (enableVNOJ !== false)
+      : (enableCodeforces !== false)
+    );
 
     // If bgImage is empty or was the YouTube 784dsKVrdjQ link, use the downloaded 1080p video
     if (!bgImage || (typeof bgImage === 'string' && bgImage.includes('784dsKVrdjQ'))) {
@@ -235,6 +242,7 @@
     if (!isSiteEnabled || !bgImage) {
       docEl.classList.remove('cf-custom-bg-active');
       docEl.classList.remove('vjudge-custom-bg-active');
+      docEl.classList.remove('vnoj-custom-bg-active');
       docEl.classList.remove('cf-dark-mode');
       docEl.classList.remove('cf-light-mode');
       if (isVJudge) {
@@ -308,19 +316,27 @@
     if (isVJudge) {
       docEl.classList.add('vjudge-custom-bg-active');
       docEl.classList.remove('cf-custom-bg-active');
+      docEl.classList.remove('vnoj-custom-bg-active');
+    } else if (isVNOJ) {
+      docEl.classList.add('vnoj-custom-bg-active');
+      docEl.classList.remove('cf-custom-bg-active');
+      docEl.classList.remove('vjudge-custom-bg-active');
     } else {
       docEl.classList.add('cf-custom-bg-active');
       docEl.classList.remove('vjudge-custom-bg-active');
+      docEl.classList.remove('vnoj-custom-bg-active');
     }
 
-    // Apply Dark Reader or Light mode
-    const isDark = themeMode !== 'light';
-    docEl.classList.toggle('cf-dark-mode', isDark);
-    docEl.classList.toggle('cf-light-mode', !isDark);
-    if (isVJudge) {
-      docEl.setAttribute('data-bs-theme', isDark ? 'dark' : 'light');
+    // Apply Dark Reader or Light mode (never touch VNOJ theme/classes)
+    if (!isVNOJ) {
+      const isDark = themeMode !== 'light';
+      docEl.classList.toggle('cf-dark-mode', isDark);
+      docEl.classList.toggle('cf-light-mode', !isDark);
+      if (isVJudge) {
+        docEl.setAttribute('data-bs-theme', isDark ? 'dark' : 'light');
+      }
+      renderThemeToggle(isDark ? 'dark' : 'light');
     }
-    renderThemeToggle(isDark ? 'dark' : 'light');
 
     // Ensure layer elements exist inside document.body
     ensureBgLayer();
@@ -491,6 +507,7 @@
   // =========================================================
 
   function replaceCodeforcesLogo(themeMode) {
+    if (isBgOnlySite) return;
     try {
       const mode = themeMode || (lastSettings && lastSettings.themeMode) || 'dark';
       const isDark = mode === 'dark';
@@ -1047,7 +1064,7 @@
   }
 
   function translateTimeAndDateElements(root, enable) {
-    if (isVJudge) return;
+    if (isBgOnlySite) return;
     try {
       const container = root || document;
       if (!container || !container.querySelectorAll) return;
@@ -1095,7 +1112,7 @@
   }
 
   function translateNode(node, enable, dict) {
-    if (isVJudge) return;
+    if (isBgOnlySite) return;
     if (!node) return;
 
     if (node.nodeType === Node.ELEMENT_NODE) {
@@ -2459,7 +2476,7 @@
   }
 
   async function applyDynamicContentTranslation(enable) {
-    if (isVJudge) return;
+    if (isBgOnlySite) return;
     removeProblemStatementChangeNotice();
     document.querySelectorAll('.cf-comment-trans-link, .cf-problem-translate-bar, .cf-topic-translate-bar').forEach(el => el.remove());
 
@@ -2486,7 +2503,7 @@
   }
 
   function translateSideboxTitles(enable, dict) {
-    if (isVJudge) return;
+    if (isBgOnlySite) return;
     if (!dict) dict = window.CF_TRANSLATIONS || {};
     const captions = document.querySelectorAll('.sidebox .caption, .sidebox .caption.titled, .roundbox .caption, .caption.titled');
     captions.forEach(caption => {
@@ -2521,7 +2538,7 @@
   let isAutoTranslating = false;
 
   async function applyVietnameseTranslation(isVi) {
-    if (isVJudge) return;
+    if (isBgOnlySite) return;
     const targetLang = isVi ? 'vi' : 'en';
     const langChanged = (currentCfLang !== targetLang);
     currentCfLang = targetLang;
@@ -2866,17 +2883,27 @@
     return null;
   }
 
+  function isCustomContestSubdomain() {
+    const hostname = ((window.location && window.location.hostname) || '').toLowerCase();
+    if (!hostname.includes('codeforces.')) return false;
+    return /\.contest\.codeforces\.(com|net|ru)$/i.test(hostname) ||
+      !/^(www\.|m\d+\.|mirror\.)?codeforces\.(com|net|ru)$/i.test(hostname);
+  }
+
   function setupSubmitNavigation() {
+    const pathname = (window.location && window.location.pathname) || '';
+    if (isCustomContestSubdomain() || pathname.includes('/group/')) return;
+
     const prob = getCurrentProblem();
     if (!prob) return;
 
     function updateLinks() {
       const links = document.querySelectorAll(
-        'a[href="/problemset/submit"], a[href^="/problemset/submit?"], .second-level-menu a[href*="submit"]'
+        'a[href="/problemset/submit"], a[href^="/problemset/submit?"]'
       );
       links.forEach(link => {
         const href = link.getAttribute('href') || '';
-        if (href.includes('/problemset/submit') || href.endsWith('/submit')) {
+        if (href === '/problemset/submit' || href.startsWith('/problemset/submit?')) {
           link.setAttribute('href', `/problemset/submit?problem=${encodeURIComponent(prob.code)}`);
         }
       });
@@ -2895,7 +2922,7 @@
       const a = e.target.closest && e.target.closest('a');
       if (a && a.textContent && a.textContent.trim().toUpperCase() === 'SUBMIT') {
         const href = a.getAttribute('href') || '';
-        if (href.includes('/problemset/submit') && !href.includes('problem=')) {
+        if ((href === '/problemset/submit' || href.startsWith('/problemset/submit?')) && !href.includes('problem=')) {
           e.preventDefault();
           window.location.href = `/problemset/submit?problem=${encodeURIComponent(prob.code)}`;
         }
@@ -2904,6 +2931,7 @@
   }
 
   function autoFillProblemOnSubmitPage() {
+    if (isCustomContestSubdomain()) return;
     const pathname = (window.location && window.location.pathname) || '';
     if (!pathname.includes('/submit')) return;
 
@@ -3770,7 +3798,7 @@
       teardownForCloudflare();
       return;
     }
-    if (isVJudge) {
+    if (isBgOnlySite) {
       if (!document.body) return;
       attachBgLayer();
       if (!isInitialized) {
@@ -3779,6 +3807,7 @@
           'enabled',
           'enableCodeforces',
           'enableVJudge',
+          'enableVNOJ',
           'bgType',
           'bgImage',
           'bgHistory',
@@ -3824,6 +3853,7 @@
         'enabled',
         'enableCodeforces',
         'enableVJudge',
+        'enableVNOJ',
         'bgType',
         'bgImage',
         'bgHistory',
@@ -3872,13 +3902,13 @@
     }
   }
 
-  // Handle Cloudflare challenge vs Codeforces / VJudge initialization
+  // Handle Cloudflare challenge vs Codeforces / VJudge / VNOJ initialization
   if (isCloudflareChallenge()) {
     teardownForCloudflare();
     const cfObserver = new MutationObserver(() => {
-      if (!isCloudflareChallenge() && (isVJudge ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body))) {
+      if (!isCloudflareChallenge() && (isBgOnlySite ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body))) {
         cfObserver.disconnect();
-        if (!isVJudge) startHeaderObserver();
+        if (!isBgOnlySite) startHeaderObserver();
         checkAndInit();
       }
     });
@@ -3887,17 +3917,17 @@
     const initObserver = new MutationObserver(() => {
       if (isCloudflareChallenge()) {
         teardownForCloudflare();
-      } else if (isVJudge ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body)) {
+      } else if (isBgOnlySite ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body)) {
         initObserver.disconnect();
-        if (!isVJudge) startHeaderObserver();
+        if (!isBgOnlySite) startHeaderObserver();
         checkAndInit();
       }
     });
     initObserver.observe(document.documentElement, { childList: true, subtree: true });
 
-    if (isVJudge ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body)) {
+    if (isBgOnlySite ? document.body : (document.getElementById('header') || document.getElementById('body') || document.getElementById('pageContent') || document.body)) {
       initObserver.disconnect();
-      if (!isVJudge) startHeaderObserver();
+      if (!isBgOnlySite) startHeaderObserver();
       checkAndInit();
     }
   }
@@ -4050,7 +4080,7 @@
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       if (!isCloudflareChallenge()) {
-        if (!isVJudge) {
+        if (!isBgOnlySite) {
           startHeaderObserver();
           checkAndInit();
           if (currentCfLang === 'vi') {
@@ -4071,7 +4101,7 @@
     });
   } else {
     if (!isCloudflareChallenge()) {
-      if (!isVJudge) {
+      if (!isBgOnlySite) {
         startHeaderObserver();
         checkAndInit();
         if (currentCfLang === 'vi') {
@@ -4093,7 +4123,7 @@
     window.addEventListener('pageshow', (event) => {
       if (event.persisted && !isCloudflareChallenge()) {
         checkAndInit();
-        if (!isVJudge && currentCfLang === 'vi') {
+        if (!isBgOnlySite && currentCfLang === 'vi') {
           applyDynamicContentTranslation(true);
         }
       }
@@ -4101,14 +4131,14 @@
 
     window.addEventListener('popstate', () => {
       checkAndInit();
-      if (!isVJudge && currentCfLang === 'vi') {
+      if (!isBgOnlySite && currentCfLang === 'vi') {
         applyDynamicContentTranslation(true);
       }
     });
   }
 
   document.addEventListener('mouseover', (e) => {
-    if (!isVJudge && e.target && e.target.closest && e.target.closest('.second-level-menu, .second-level-menu-list, ul')) {
+    if (!isBgOnlySite && e.target && e.target.closest && e.target.closest('.second-level-menu, .second-level-menu-list, ul')) {
       removeLavaLampBack();
     }
   }, { passive: true });
@@ -4121,11 +4151,11 @@
         return;
       }
 
-      if (!isVJudge && changes.cfStreak && changes.cfStreak.newValue) {
+      if (!isBgOnlySite && changes.cfStreak && changes.cfStreak.newValue) {
         renderStreakBadge(changes.cfStreak.newValue);
       }
 
-      if (!isVJudge && changes.translationEngine) {
+      if (!isBgOnlySite && changes.translationEngine) {
         const newEng = changes.translationEngine.newValue || 'google';
         const changed = newEng !== currentTranslationEngine;
         currentTranslationEngine = newEng;
@@ -4158,7 +4188,7 @@
         currentXkiroApiKey = changes.xkiroApiKey.newValue || '';
       }
 
-      if (!isVJudge && changes.cfLang) {
+      if (!isBgOnlySite && changes.cfLang) {
         const newLang = changes.cfLang.newValue || 'en';
         currentCfLang = newLang;
         renderVietnameseFlag(newLang);
@@ -4170,6 +4200,7 @@
         'enabled',
         'enableCodeforces',
         'enableVJudge',
+        'enableVNOJ',
         'bgType',
         'bgImage',
         'bgHistory',

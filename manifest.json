@@ -29,6 +29,8 @@
     "*://codeforces.ru/*",
     "*://*.vjudge.net/*",
     "*://vjudge.net/*",
+    "*://*.oj.vnoi.info/*",
+    "*://oj.vnoi.info/*",
     "<all_urls>"
   ],
   "background": {
@@ -60,7 +62,9 @@
         "*://*.codeforces.ru/*",
         "*://codeforces.ru/*",
         "*://*.vjudge.net/*",
-        "*://vjudge.net/*"
+        "*://vjudge.net/*",
+        "*://*.oj.vnoi.info/*",
+        "*://oj.vnoi.info/*"
       ],
       "exclude_globs": [
         "*://*.codeforces.com/*/hacks/*/test*",
@@ -127,7 +131,9 @@
         "*://*.codeforces.ru/*",
         "*://codeforces.ru/*",
         "*://*.vjudge.net/*",
-        "*://vjudge.net/*"
+        "*://vjudge.net/*",
+        "*://*.oj.vnoi.info/*",
+        "*://oj.vnoi.info/*"
       ]
     }
   ]

@@ -5,6 +5,7 @@
   const toggleEnabled = document.getElementById('toggle-enabled');
   const toggleCodeforces = document.getElementById('toggle-codeforces');
   const toggleVJudge = document.getElementById('toggle-vjudge');
+  const toggleVNOJ = document.getElementById('toggle-vnoj');
   const sitesCard = document.getElementById('sites-card');
   const controlsSection = document.getElementById('controls-section');
   const btnReset = document.getElementById('btn-reset');
@@ -101,6 +102,7 @@
     enabled: true,
     enableCodeforces: true,
     enableVJudge: true,
+    enableVNOJ: true,
     bgType: 'video',
     bgImage: DEFAULT_BG,
     bgHistory: [
@@ -376,6 +378,10 @@
     if (toggleVJudge) {
       toggleVJudge.checked = settings.enableVJudge !== false;
       toggleVJudge.disabled = !settings.enabled;
+    }
+    if (toggleVNOJ) {
+      toggleVNOJ.checked = settings.enableVNOJ !== false;
+      toggleVNOJ.disabled = !settings.enabled;
     }
 
     if (!settings.enabled) {
@@ -983,6 +989,13 @@
     });
   }
 
+  if (toggleVNOJ) {
+    toggleVNOJ.addEventListener('change', () => {
+      saveSettings({ enableVNOJ: toggleVNOJ.checked });
+      updateUI(currentSettings);
+    });
+  }
+
   // Source Tabs Navigation
   tabBtnUpload.addEventListener('click', () => {
     tabBtnUpload.classList.add('active');
@@ -1295,7 +1308,8 @@
       bgSize: DEFAULT_SETTINGS.bgSize,
       themeMode: DEFAULT_SETTINGS.themeMode,
       enableCodeforces: true,
-      enableVJudge: true
+      enableVJudge: true,
+      enableVNOJ: true
     });
     updateUI(currentSettings);
   });
