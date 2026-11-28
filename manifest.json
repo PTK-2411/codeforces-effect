@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "OJ Effect",
-  "version": "1.6.0",
-  "version_name": "v1.6.0 Alpha",
+  "version": "1.6.1",
+  "version_name": "v1.6.1 Alpha",
   "homepage_url": "https://github.com/PTK-2411/oj-effect",
   "description": "OJ Effect - Tùy chỉnh hình nền, giao diện hiệu ứng blur glassmorphism, streak tracker và dịch thuật các nền tảng Online Judge.",
   "permissions": [

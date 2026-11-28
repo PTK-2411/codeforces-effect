@@ -807,6 +807,7 @@
   let currentGeminiModel = 'auto';
   let currentGeminiCustomModel = '';
   let currentXkiroApiKey = '';
+  let currentXkiroModel = 'qwen/qwen3.8-omni-flash:free';
   let translateObserver = null;
   let translateDebounceTimer = null;
   let currentTranslationSession = 1;
@@ -1967,7 +1968,8 @@
               geminiApiKey: geminiApiKey || currentGeminiApiKey,
               geminiModel: geminiModel || currentGeminiModel,
               geminiCustomModel: currentGeminiCustomModel,
-              xkiroApiKey: currentXkiroApiKey
+              xkiroApiKey: currentXkiroApiKey,
+              xkiroModel: currentXkiroModel
             }, resolve);
           });
 
@@ -4008,7 +4010,8 @@
             geminiApiKey: currentGeminiApiKey,
             geminiModel: currentGeminiModel,
             geminiCustomModel: currentGeminiCustomModel,
-            xkiroApiKey: currentXkiroApiKey
+            xkiroApiKey: currentXkiroApiKey,
+            xkiroModel: currentXkiroModel
           }, resolve);
         });
 
@@ -4127,13 +4130,15 @@
           'geminiApiKey',
           'geminiModel',
           'geminiCustomModel',
-          'xkiroApiKey'
+          'xkiroApiKey',
+          'xkiroModel'
         ], (result) => {
           currentTranslationEngine = (result && result.translationEngine) || 'google';
           currentGeminiApiKey = (result && result.geminiApiKey) || '';
           currentGeminiModel = (result && result.geminiModel) || 'auto';
           currentGeminiCustomModel = (result && result.geminiCustomModel) || '';
           currentXkiroApiKey = (result && result.xkiroApiKey) || '';
+          currentXkiroModel = (result && result.xkiroModel) || 'qwen/qwen3.8-omni-flash:free';
           const lang = (result && result.csesLang) || 'en';
           currentCsesLang = lang;
           renderCsesLanguageFlags(lang);
@@ -4214,7 +4219,8 @@
         'geminiApiKey',
         'geminiModel',
         'geminiCustomModel',
-        'xkiroApiKey'
+        'xkiroApiKey',
+        'xkiroModel'
       ], (result) => {
         applySettings(result);
         if (result && result.themeMode) {
@@ -4225,6 +4231,7 @@
         currentGeminiModel = (result && result.geminiModel) || 'auto';
         currentGeminiCustomModel = (result && result.geminiCustomModel) || '';
         currentXkiroApiKey = (result && result.xkiroApiKey) || '';
+        currentXkiroModel = (result && result.xkiroModel) || 'qwen/qwen3.8-omni-flash:free';
         const lang = (result && result.cfLang) || 'vi';
         currentCfLang = lang;
         renderVietnameseFlag(lang);
@@ -4545,6 +4552,10 @@
 
       if (changes.xkiroApiKey) {
         currentXkiroApiKey = changes.xkiroApiKey.newValue || '';
+      }
+
+      if (changes.xkiroModel) {
+        currentXkiroModel = changes.xkiroModel.newValue || 'qwen/qwen3.8-omni-flash:free';
       }
 
       if (isCSES && changes.csesLang) {

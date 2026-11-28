@@ -2127,35 +2127,60 @@ html.cf-custom-bg-active .sidebox form table table {
   display: table !important;
   width: 100% !important;
   max-width: 100% !important;
-  table-layout: fixed !important;
+  table-layout: auto !important;
   box-sizing: border-box !important;
   background: rgba(255, 255, 255, 0.08) !important;
   border: 1px solid rgba(255, 255, 255, 0.22) !important;
   border-radius: 8px !important;
-  padding: 3px 4px !important;
-  margin: 3px 0 5px 0 !important;
+  padding: 4px 6px !important;
+  margin: 4px 0 6px 0 !important;
 }
 
 html.cf-custom-bg-active #gymContestsFilter table table td,
 html.cf-custom-bg-active #gym-filter-form table table td,
 html.cf-custom-bg-active .sidebox form table table td {
-  padding: 2px 2px !important;
+  padding: 3px 4px !important;
   vertical-align: middle !important;
   box-sizing: border-box !important;
 }
 
 /* from and to labels */
-html.cf-custom-bg-active #gymContestsFilter table table td:not(:has(select)):not(:has(input)):not(:has(.star-rating)),
-html.cf-custom-bg-active #gym-filter-form table table td:not(:has(select)):not(:has(input)):not(:has(.star-rating)),
-html.cf-custom-bg-active .sidebox form table table td:not(:has(select)):not(:has(input)):not(:has(.star-rating)) {
+html.cf-custom-bg-active #gymContestsFilter table table td:not(:has(select)):not(:has(input)):not(:has(.star-rating)):not(:has(.ui-stars-star)),
+html.cf-custom-bg-active #gym-filter-form table table td:not(:has(select)):not(:has(input)):not(:has(.star-rating)):not(:has(.ui-stars-star)),
+html.cf-custom-bg-active .sidebox form table table td:not(:has(select)):not(:has(input)):not(:has(.star-rating)):not(:has(.ui-stars-star)) {
   color: #cbd5e1 !important;
   font-size: 11px !important;
   font-weight: 600 !important;
   text-transform: lowercase !important;
-  width: 1% !important;
+  width: auto !important;
   white-space: nowrap !important;
   padding: 0 4px !important;
   text-align: center !important;
+}
+
+/* Prevent star rating / difficulty widgets from overlapping or showing white box */
+html.cf-custom-bg-active #gymContestsFilter .ui-stars-wrapper,
+html.cf-custom-bg-active #gym-filter-form .ui-stars-wrapper,
+html.cf-custom-bg-active #gymContestsFilter .star-rating,
+html.cf-custom-bg-active #gym-filter-form .star-rating {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  background: transparent !important;
+  vertical-align: middle !important;
+}
+
+html.cf-custom-bg-active #gymContestsFilter .ui-stars-star a,
+html.cf-custom-bg-active #gym-filter-form .ui-stars-star a {
+  background-color: transparent !important;
+}
+
+/* Remove white sprite box on star-rating in Dark Mode */
+html.cf-dark-mode.cf-custom-bg-active .sidebox ul.star-rating,
+html.cf-dark-mode.cf-custom-bg-active #gymContestsFilter ul.star-rating,
+html.cf-dark-mode.cf-custom-bg-active #gym-filter-form ul.star-rating {
+  filter: invert(1) hue-rotate(180deg) !important;
+  mix-blend-mode: screen !important;
 }
 
 /* Compact selects inside range containers */
@@ -2322,16 +2347,29 @@ html.cf-custom-bg-active .sidebox form table {
   box-sizing: border-box !important;
 }
 
-html.cf-custom-bg-active .sidebox select,
-html.cf-custom-bg-active .sidebox form select,
-html.cf-custom-bg-active .sidebox table select {
+html.cf-custom-bg-active .sidebox select:not(.SumoUnder):not([style*="display: none"]):not([style*="display:none"]),
+html.cf-custom-bg-active .sidebox form select:not(.SumoUnder):not([style*="display: none"]):not([style*="display:none"]),
+html.cf-custom-bg-active .sidebox table select:not(.SumoUnder):not([style*="display: none"]):not([style*="display:none"]) {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
-  display: block !important;
+}
+
+/* Keep SumoSelect underlying native select hidden so it never overlaps CaptionCont */
+html.cf-custom-bg-active .SumoSelect > select,
+html.cf-custom-bg-active select.SumoUnder {
+  position: absolute !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  overflow: hidden !important;
 }
 
 html.cf-custom-bg-active .sidebox td:has(select) {
@@ -2978,8 +3016,8 @@ html.cf-custom-bg-active .sidebox .table-form td:not(.field-name) {
   padding: 3px 0 !important;
 }
 
-html.cf-custom-bg-active .sidebox form select,
-html.cf-custom-bg-active .sidebox .table-form select {
+html.cf-custom-bg-active .sidebox form select:not(.SumoUnder):not([style*="display: none"]):not([style*="display:none"]),
+html.cf-custom-bg-active .sidebox .table-form select:not(.SumoUnder):not([style*="display: none"]):not([style*="display:none"]) {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
@@ -3031,13 +3069,14 @@ html.cf-custom-bg-active .sidebox form td .cf-sidebox-btn {
 }
 
 /* Contest materials & Sidebox list item framing ("khung lại" thông báo/tài liệu thành thẻ kính bo góc) */
-html.cf-custom-bg-active .sidebox ul {
+/* Exclude form widgets (star-rating, SumoSelect options) so they never stack or overlap */
+html.cf-custom-bg-active .sidebox ul:not(form ul):not(.star-rating):not(.options) {
   list-style: none !important;
   padding: 0 !important;
   margin: 8px 0 !important;
 }
 
-html.cf-custom-bg-active .sidebox ul li {
+html.cf-custom-bg-active .sidebox ul:not(form ul):not(.star-rating):not(.options) > li {
   list-style: none !important;
   background: rgba(255, 255, 255, 0.12) !important;
   border: 1px solid rgba(255, 255, 255, 0.28) !important;
@@ -3055,14 +3094,14 @@ html.cf-custom-bg-active .sidebox ul li {
   width: 100% !important;
 }
 
-html.cf-custom-bg-active .sidebox ul li:hover {
+html.cf-custom-bg-active .sidebox ul:not(form ul):not(.star-rating):not(.options) > li:hover {
   background: rgba(255, 255, 255, 0.22) !important;
   border-color: rgba(255, 255, 255, 0.5) !important;
   transform: translateY(-1px) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22) !important;
 }
 
-html.cf-custom-bg-active .sidebox ul li a {
+html.cf-custom-bg-active .sidebox ul:not(form ul):not(.star-rating):not(.options) > li a {
   text-decoration: none !important;
   font-weight: 500 !important;
   font-size: 13px !important;

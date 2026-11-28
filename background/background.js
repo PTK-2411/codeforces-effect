@@ -575,14 +575,16 @@ ${text}`;
   }
 }
 
-// xKiro (Mistral) Prompt Execution with optional SSE streaming
-async function executeXkiroPrompt(prompt, apiKey, model = 'mistralai/mistral-small-2603', onChunk) {
+const DEFAULT_XKIRO_MODEL = 'qwen/qwen3.8-omni-flash:free';
+
+// xKiro Prompt Execution with optional SSE streaming
+async function executeXkiroPrompt(prompt, apiKey, model = DEFAULT_XKIRO_MODEL, onChunk) {
   if (!apiKey || !apiKey.trim()) {
     throw new Error('Chưa cấu hình xKiro API Key. Vui lòng mở popup tiện ích để nhập API Key từ xkiro.com.');
   }
 
   const cleanKey = apiKey.trim();
-  const targetModel = model || 'mistralai/mistral-small-2603';
+  const targetModel = (model && model.trim()) || DEFAULT_XKIRO_MODEL;
   const isStream = typeof onChunk === 'function';
 
   const resp = await fetch('https://api.xkiro.com/v1/chat/completions', {
@@ -624,8 +626,8 @@ async function executeXkiroPrompt(prompt, apiKey, model = 'mistralai/mistral-sma
   return text.trim();
 }
 
-// Single item xKiro (Mistral) translation with fallback to Google Translate
-async function translateWithXkiro(text, apiKey, model = 'mistralai/mistral-small-2603') {
+// Single item xKiro translation with fallback to Google Translate
+async function translateWithXkiro(text, apiKey, model = DEFAULT_XKIRO_MODEL) {
   const viHash = await getOrInitAlreadyViHash();
 
   const prompt = `You are a professional translator for competitive programming, algorithms, and technical texts.
@@ -655,7 +657,7 @@ ${text}`;
 }
 
 // Unified Single Translation Handler
-async function handleTranslation(text, engine, geminiApiKey, geminiModel, geminiCustomModel, xkiroApiKey) {
+async function handleTranslation(text, engine, geminiApiKey, geminiModel, geminiCustomModel, xkiroApiKey, xkiroModel) {
   if (!text || !text.trim()) return '';
   await initCachePromise;
 
@@ -677,7 +679,7 @@ async function handleTranslation(text, engine, geminiApiKey, geminiModel, gemini
     }
   } else if (eng === 'xkiro' && xkiroApiKey) {
     try {
-      result = await translateWithXkiro(text, xkiroApiKey);
+      result = await translateWithXkiro(text, xkiroApiKey, xkiroModel);
     } catch (err) {
       console.warn('[CF Translator] xKiro lỗi, fallback sang Google Translate:', err.message);
       result = await translateWithGoogle(text);
@@ -699,7 +701,7 @@ async function handleTranslation(text, engine, geminiApiKey, geminiModel, gemini
 }
 
 // Unified Batch Translation Handler with progressive streaming delivery
-async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, geminiCustomModel, xkiroApiKey, onItemReady) {
+async function handleBatchTranslation(items, engine, geminiApiKey, geminiModel, geminiCustomModel, xkiroApiKey, onItemReady, xkiroModel) {
   if (!Array.isArray(items) || items.length === 0) return [];
   await initCachePromise;
 
@@ -972,7 +974,7 @@ ${promptBody}`;
 
       if (batchTexts.length === 1) {
         try {
-          const trans = await translateWithXkiro(batchTexts[0], xkiroApiKey);
+          const trans = await translateWithXkiro(batchTexts[0], xkiroApiKey, xkiroModel);
           translationCache.set(`${eng}:${batchTexts[0]}`, trans);
           results[batchIndices[0]] = trans;
           if (typeof onItemReady === 'function') {
@@ -1066,7 +1068,7 @@ ${promptBody}`;
       };
 
       try {
-        const batchOutput = await executeXkiroPrompt(fullPrompt, xkiroApiKey, 'mistralai/mistral-small-2603', handleStreamDelta);
+        const batchOutput = await executeXkiroPrompt(fullPrompt, xkiroApiKey, xkiroModel || DEFAULT_XKIRO_MODEL, handleStreamDelta);
 
         // Emit final item upon stream completion
         if (nextItemToEmit === batchIndices.length - 1) {
@@ -1208,11 +1210,12 @@ async function testGeminiConnection(apiKey) {
 }
 
 // Test xKiro API key connection
-async function testXKiroConnection(apiKey) {
+async function testXKiroConnection(apiKey, model = DEFAULT_XKIRO_MODEL) {
   if (!apiKey || !apiKey.trim()) {
     throw new Error('Vui lòng nhập API Key.');
   }
   const cleanKey = apiKey.trim();
+  const targetModel = (model && model.trim()) || DEFAULT_XKIRO_MODEL;
   const resp = await fetch('https://api.xkiro.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -1220,7 +1223,7 @@ async function testXKiroConnection(apiKey) {
       'Authorization': `Bearer ${cleanKey}`
     },
     body: JSON.stringify({
-      model: 'mistralai/mistral-small-2603',
+      model: targetModel,
       messages: [{ role: 'user', content: 'Hello!' }]
     })
   });
@@ -1232,7 +1235,7 @@ async function testXKiroConnection(apiKey) {
   if (data?.error) {
     throw new Error(data.error.message || 'Lỗi kết nối xKiro');
   }
-  return { valid: true, model: 'mistralai/mistral-small-2603' };
+  return { valid: true, model: targetModel };
 }
 
 // Listen for messages from popup or content script
@@ -1250,7 +1253,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       message.geminiApiKey,
       message.geminiModel,
       message.geminiCustomModel,
-      message.xkiroApiKey
+      message.xkiroApiKey,
+      message.xkiroModel
     )
       .then(translatedText => {
         sendResponse({ success: true, text: translatedText });
@@ -1280,7 +1284,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       message.geminiModel,
       message.geminiCustomModel,
       message.xkiroApiKey,
-      onItemReady
+      onItemReady,
+      message.xkiroModel
     )
       .then(translatedItems => {
         sendResponse({ success: true, texts: translatedItems });
@@ -1299,7 +1304,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
     return true;
   } else if (message && message.action === 'testXKiroKey') {
-    testXKiroConnection(message.apiKey)
+    testXKiroConnection(message.apiKey, message.model)
       .then(info => {
         sendResponse({ success: true, ...info });
       })

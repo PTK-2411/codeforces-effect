@@ -14,7 +14,7 @@
         <img src="../icons/icon32.png" alt="OJ Logo" class="brand-icon">
         <div class="brand-text">
           <h1>OJ Effect</h1>
-          <span class="version-tag">v1.6.0 Alpha</span>
+          <span class="version-tag">v1.6.1 Alpha</span>
         </div>
       </div>
       <div class="header-actions">
@@ -276,7 +276,7 @@
           <div class="pill-group" id="trans-engine-options">
             <button type="button" class="pill-btn active" data-engine="google">🌐 Google Translate (Mặc định)</button>
             <button type="button" class="pill-btn" data-engine="gemini">✨ Google AI Studio (Gemini)</button>
-            <button type="button" class="pill-btn" data-engine="xkiro">🌪️ Mistral (xKiro)</button>
+            <button type="button" class="pill-btn" data-engine="xkiro">🌪️ xKiro</button>
           </div>
           <div id="gemini-key-container" class="gemini-key-container hidden" style="margin-top: 8px;">
             <div style="display: flex; gap: 6px; align-items: center;">
@@ -323,8 +323,8 @@
             </div>
 
             <div style="margin-top: 8px;">
-              <label class="control-hint" style="display: block; margin-bottom: 4px; font-weight: 500;">Mô hình Mistral:</label>
-              <input type="text" id="xkiro-model" class="url-input" value="mistralai/mistral-small-2603" readonly style="font-size: 11px; padding: 6px 10px; width: 100%; opacity: 0.85; cursor: default;">
+              <label class="control-hint" style="display: block; margin-bottom: 4px; font-weight: 500;">Mô hình xKiro:</label>
+              <input type="text" id="xkiro-model" class="url-input" value="qwen/qwen3.8-omni-flash:free" placeholder="Mặc định: qwen/qwen3.8-omni-flash:free" style="font-size: 11px; padding: 6px 10px; width: 100%;">
             </div>
 
             <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 6px;">
@@ -333,7 +333,7 @@
             </div>
 
             <p class="control-hint" style="margin-top: 6px; font-size: 10.5px; line-height: 1.3;">
-              Dịch thuật với mô hình <b>mistralai/mistral-small-2603</b> qua endpoint <a href="https://api.xkiro.com" target="_blank" style="color: #60a5fa; text-decoration: underline;">api.xkiro.com</a>.
+              Dịch thuật qua endpoint <a href="https://api.xkiro.com" target="_blank" style="color: #60a5fa; text-decoration: underline;">api.xkiro.com</a> (mặc định: <b>qwen/qwen3.8-omni-flash:free</b>).
             </p>
           </div>
         </div>

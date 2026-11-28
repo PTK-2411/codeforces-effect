@@ -316,13 +316,19 @@ async function runPopupTests() {
   assert.strictEqual(elements['trans-engine-badge'].textContent, 'Google');
   console.log('✓ Test 6 passed: Switched back to Google Translate engine successfully');
 
-  // Test 6b: Switch to xKiro (Mistral) engine & test connection
-  console.log('Test 6b: Switch to xKiro (Mistral) engine, toggle visibility and test connection');
+  // Test 6b: Switch to xKiro engine & test connection & custom model input
+  console.log('Test 6b: Switch to xKiro engine, custom model input, toggle visibility and test connection');
   xkiroBtn.click();
   assert.strictEqual(storage.translationEngine, 'xkiro', 'Storage should record translationEngine as xkiro');
-  assert.strictEqual(elements['trans-engine-badge'].textContent, 'xKiro Mistral');
+  assert.strictEqual(elements['trans-engine-badge'].textContent, 'xKiro');
   assert(!elements['xkiro-key-container'].classList.contains('hidden'), 'xkiro container should be visible');
   assert(elements['gemini-key-container'].classList.contains('hidden'), 'gemini container should be hidden');
+  assert.strictEqual(elements['xkiro-model'].value, 'qwen/qwen3.8-omni-flash:free', 'Default xKiro model must be qwen/qwen3.8-omni-flash:free');
+
+  // Input custom xKiro model
+  elements['xkiro-model'].value = 'openai/gpt-4o-mini';
+  elements['xkiro-model'].dispatchEvent('input');
+  assert.strictEqual(storage.xkiroModel, 'openai/gpt-4o-mini', 'Custom xKiro model input must be saved to storage');
 
   // Input xKiro API key
   elements['xkiro-api-key'].value = 'valid-xkiro-key';

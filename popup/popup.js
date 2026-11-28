@@ -70,6 +70,7 @@
   const geminiTestStatus = document.getElementById('gemini-test-status');
   const xkiroKeyContainer = document.getElementById('xkiro-key-container');
   const xkiroApiKeyInput = document.getElementById('xkiro-api-key');
+  const xkiroModelInput = document.getElementById('xkiro-model');
   const btnToggleXkiroVisibility = document.getElementById('btn-toggle-xkiro-visibility');
   const btnTestXkiro = document.getElementById('btn-test-xkiro');
   const xkiroTestStatus = document.getElementById('xkiro-test-status');
@@ -135,7 +136,8 @@
     geminiApiKey: '',
     geminiModel: 'auto',
     geminiCustomModel: '',
-    xkiroApiKey: ''
+    xkiroApiKey: '',
+    xkiroModel: 'qwen/qwen3.8-omni-flash:free'
   };
 
   let currentSettings = { ...DEFAULT_SETTINGS };
@@ -453,7 +455,7 @@
       if (engine === 'gemini') {
         transEngineBadge.textContent = 'Gemini AI';
       } else if (engine === 'xkiro') {
-        transEngineBadge.textContent = 'xKiro Mistral';
+        transEngineBadge.textContent = 'xKiro';
       } else {
         transEngineBadge.textContent = 'Google';
       }
@@ -484,6 +486,9 @@
     }
     if (xkiroApiKeyInput) {
       xkiroApiKeyInput.value = settings.xkiroApiKey || '';
+    }
+    if (xkiroModelInput) {
+      xkiroModelInput.value = settings.xkiroModel || 'qwen/qwen3.8-omni-flash:free';
     }
     const currentModel = settings.geminiModel || 'auto';
     if (geminiModelSelect) {
@@ -1364,7 +1369,7 @@
         if (engine === 'gemini') {
           transEngineBadge.textContent = 'Gemini AI';
         } else if (engine === 'xkiro') {
-          transEngineBadge.textContent = 'xKiro Mistral';
+          transEngineBadge.textContent = 'xKiro';
         } else {
           transEngineBadge.textContent = 'Google';
         }
@@ -1487,9 +1492,18 @@
     });
   }
 
+  if (xkiroModelInput) {
+    xkiroModelInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      saveSettings({ xkiroModel: val || 'qwen/qwen3.8-omni-flash:free' });
+      if (xkiroTestStatus) xkiroTestStatus.textContent = '';
+    });
+  }
+
   if (btnTestXkiro) {
     btnTestXkiro.addEventListener('click', () => {
       const apiKey = xkiroApiKeyInput ? xkiroApiKeyInput.value.trim() : '';
+      const model = (xkiroModelInput && xkiroModelInput.value.trim()) || currentSettings.xkiroModel || 'qwen/qwen3.8-omni-flash:free';
       if (!apiKey) {
         if (xkiroTestStatus) {
           xkiroTestStatus.textContent = '⚠️ Chưa nhập API Key';
@@ -1503,7 +1517,7 @@
         xkiroTestStatus.className = 'url-status-hint';
       }
 
-      chrome.runtime.sendMessage({ action: 'testXKiroKey', apiKey }, (response) => {
+      chrome.runtime.sendMessage({ action: 'testXKiroKey', apiKey, model }, (response) => {
         if (!xkiroTestStatus) return;
         if (response && response.success) {
           xkiroTestStatus.textContent = '✔️ Kết nối thành công!';
